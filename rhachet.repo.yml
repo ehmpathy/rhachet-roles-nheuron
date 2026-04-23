@@ -1,0 +1,17 @@
+slug: nheuron
+readme: dist/domain.roles/readme.md
+roles:
+  - slug: playwright
+    readme: dist/domain.roles/playwright/readme.md
+    briefs:
+      dirs: dist/domain.roles/playwright/briefs
+    skills:
+      dirs: dist/domain.roles/playwright/skills
+    boot: dist/domain.roles/playwright/boot.yml
+  - slug: inspector
+    readme: dist/domain.roles/inspector/readme.md
+    briefs:
+      dirs: dist/domain.roles/inspector/briefs
+    skills:
+      dirs: dist/domain.roles/inspector/skills
+    boot: dist/domain.roles/inspector/boot.yml
