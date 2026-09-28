@@ -1,8 +1,44 @@
 org: ehmpathy
 extends:
+  - .agent/repo=bhrain/role=reviewer/keyrack.yml
   - .agent/repo=ehmpathy/role=mechanic/keyrack.yml
-env.all: null
+env.all:
+  - AWS_PROFILE
 env.prod: null
 env.prep:
   - EHMPATHY_SEATURTLE_PROD_GITHUB_TOKEN
-env.test: null
+  - FIREWORKS_API_KEY
+
+  # the ses mailbox the gatherer reads + sends from (jelly@one.nheuron.com)
+  - SES_MAIL_BUCKET
+  - SES_REGION
+  # the config set every send names, so bounce/complaint/delivery events reach
+  # cloudwatch — ses binds a config set per-send, never per-identity.
+  # SEND-only: `gather.mail` reads without it; `sendReplyViaSes` refuses without it
+  - SES_CONFIG_SET
+
+  # the cloudflare user token that applies the mail dns records into the nheuron.com zone
+  # (My Profile > API Tokens, NOT an account token; needs Zone:Read + DNS:Edit)
+  - CLOUDFLARE_API_TOKEN
+  - CLOUDFLARE_ACCOUNT_ID
+  # the 3 easy-dkim tokens (comma-separated) that the applied ses identity emits. NOT a
+  # secret — they become public dns the moment they are declared — but they are unknowable
+  # until the aws mail wish applies, so they arrive by fill rather than by literal. this is
+  # what keeps the dns wish applyable as committed, with no code edit between the two applies
+  - SES_DKIM_TOKENS
+
+  # the root email of each declared aws account — its natural key at create time, which aws
+  # forbids reuse of, so it never lands in git. only the account wish reads these.
+  - NHEURON_PROD_ACCOUNT_EMAIL
+  - NHEURON_PREP_ACCOUNT_EMAIL
+env.test:
+  # the gmail service account (ci/automation path) — takes precedence over oauth
+  - GMAIL_SERVICE_ACCOUNT_JSON
+  - GMAIL_SERVICE_ACCOUNT_SUBJECT
+
+  # the gmail oauth client (the interactive `gather.auth` path). read by
+  # `getGmailAuthAdapter.genAuthRefresh`; declared here so the refresh reads a
+  # keyrack-sourced value rather than a hand-exported one
+  # (`rule.require.credentials-from-keyrack`)
+  - GATHER_GMAIL_CLIENT_ID
+  - GATHER_GMAIL_CLIENT_SECRET

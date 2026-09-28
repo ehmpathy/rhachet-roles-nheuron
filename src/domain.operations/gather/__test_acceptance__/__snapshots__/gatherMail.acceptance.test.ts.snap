@@ -1,0 +1,156 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`gather.mail given: [case1] help flag when: [t0] --help is passed then: displays help message 1`] = `
+"gather.mail - collect mail from authenticated source
+
+usage:
+  gather.mail.sh [options]
+
+options:
+  --from <mechanism>   mail source: gmail, ses (required)
+  --address <email>    email address to collect from (required)
+  --since <date>       only list mail since this date (ISO format)
+                       default: the prior run's cursor — so a bare re-run
+                       collects, and lists, only what arrived since it.
+                       pass --since explicitly to re-scan a wider window.
+                       it narrows what you SEE on both mechanisms, but only
+                       narrows what GMAIL fetches — see below.
+  --query <query>      search query to filter mail (gmail only — ses refuses it)
+  --format <format>    output format: tree, json (default: tree)
+  --help               show this help message
+
+  what each mechanism can filter on:
+    gmail   --since, --query (gmail search syntax), and an --address
+            scoped as user@gmail.com/labels=work,urgent
+    ses     --since only. ses mail is read from an s3 prefix of raw rfc822,
+            which has no search index and no labels, so it REFUSES a --query
+            or a /labels= scope rather than ignore one.
+
+  what a scoped run costs:
+    a --query or /labels= run is NOT cached and never incremental — it
+    re-fetches its whole range on every call, and lists only what it
+    matched. a bare run is cached and incremental. the output names which
+    one you got, on its "scope:" line.
+
+  what --since costs, per mechanism:
+    gmail   pushed into the api query as an "after:" term, so the remote
+            never sends the older mail — you pay for the window alone.
+    ses     applied locally, AFTER the walk. s3 filters on key prefix only,
+            so there is no date bound to push down: every object under the
+            inbound prefix is listed, read, and parsed first. the walk is
+            capped instead — past 200 pages it REFUSES rather than return
+            a partial mailbox as a whole one.
+
+examples:
+  gather.mail.sh --from gmail --address user@gmail.com
+  gather.mail.sh --from gmail --address user@gmail.com --since 2024-01-01
+  gather.mail.sh --from gmail --address user@gmail.com --query "from:boss@company.com"
+  gather.mail.sh --from gmail --address user@gmail.com/labels=work,urgent
+  gather.mail.sh --from gmail --address user@gmail.com --format json
+  gather.mail.sh --from ses --address jelly@one.nheuron.com --since 2026-08-01
+"
+`;
+
+exports[`gather.mail given: [case2] absent required args when: [t0] no --from provided then: exits with error code 2 1`] = `
+"error: BadRequestError: --from is required
+
+{
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case2] absent required args when: [t1] --from provided but no --address then: exits with error code 2 1`] = `
+"error: BadRequestError: --address is required
+
+{
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case3] invalid mechanism when: [t0] unsupported mechanism provided then: exits with error code 2 1`] = `
+"error: BadRequestError: invalid mechanism 'slack'
+
+{
+  "validMechanisms": [
+    "gmail",
+    "ses"
+  ],
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case4] invalid format when: [t0] unsupported format provided then: exits with error code 2 1`] = `
+"error: BadRequestError: invalid format 'xml'
+
+{
+  "validFormats": [
+    "tree",
+    "json"
+  ],
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case5] not authenticated (auth check exercises) when: [t0] no token exists for address then: exits with clear error and hint 1`] = `
+"error: BadRequestError: not authenticated
+
+{
+  "mechanism": "gmail",
+  "hint": "gmail authenticates via a service account. fill GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT, then run: rhx keyrack unlock --owner ehmpath --env test"
+}
+"
+`;
+
+exports[`gather.mail given: [case6] positive path constraint: gmail api requires real credentials when: [t0] authenticated with fake token (gmail api rejects) then: exits with api error (proves full flow path) 1`] = `
+"error: UnexpectedCodePathError: gmail messages.list failed
+
+{
+  "status": 401,
+  "body": "{\\n  \\"error\\": {\\n    \\"code\\": 401,\\n    \\"message\\": \\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\\",\\n    \\"errors\\": [\\n      {\\n        \\"message\\": \\"Invalid Credentials\\",\\n        \\"domain\\": \\"global\\",\\n        \\"reason\\": \\"authError\\",\\n        \\"location\\": \\"Authorization\\",\\n        \\"locationType\\": \\"header\\"\\n      }\\n    ],\\n    \\"status\\": \\"UNAUTHENTICATED\\"\\n  }\\n}\\n"
+}
+"
+`;
+
+exports[`gather.mail given: [case8] ses collection with no aws configured when: [t0] SES_MAIL_BUCKET and SES_REGION are absent then: exits 2 and names the keyrack unlock, never gather.auth 1`] = `
+"error: BadRequestError: not authenticated
+
+{
+  "mechanism": "ses",
+  "hint": "ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep"
+}
+"
+`;
+
+exports[`gather.mail given: [case9] a --query against ses, which cannot honor one when: [t0] gather.mail is invoked with --query then: exits 2 and refuses the flag, rather than return it all 1`] = `
+"error: BadRequestError: ses cannot honor --query
+
+{
+  "filter": {
+    "query": "from:boss@company.com",
+    "labels": []
+  },
+  "why": "ses mail is read from an s3 prefix of raw rfc822; there is no search index to query",
+  "hint": "narrow with --since instead, or use --from gmail for a search expression"
+}
+"
+`;
+
+exports[`gather.mail given: [case10] a /labels= scope against ses when: [t0] gather.mail is invoked with a scoped address then: exits 2 and names the suffix to drop 1`] = `
+"error: BadRequestError: ses cannot honor a /labels= scope
+
+{
+  "filter": {
+    "query": null,
+    "labels": [
+      "work"
+    ]
+  },
+  "why": "labels are a gmail concept; rfc822 mail in s3 carries none",
+  "hint": "drop the /labels= suffix from --address"
+}
+"
+`;

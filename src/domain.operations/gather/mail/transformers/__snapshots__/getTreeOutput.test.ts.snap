@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getTreeOutput renders a bare and a narrowed run, for a human to vibecheck 1`] = `
+{
+  "bare": "🪼 boop!
+
+🫙 gather.mail --address vlad@gmail.com
+   ├─ scope: whole mailbox
+   ├─ listed: 2
+   ├─ synced: 2
+   ├─ cached: 250
+   └─ mails
+      ├─ 2024-01-15 | sender@gmail.com
+      │  └─ Test Subject
+      └─ 2024-01-15 | sender@gmail.com
+         └─ Second",
+  "narrowed": "🪼 boop!
+
+🫙 gather.mail --address vlad@gmail.com
+   ├─ scope: labels=work query="from:boss@co.com"
+   ├─ listed: 1
+   ├─ synced: 1
+   ├─ cached: 250
+   └─ mails
+      └─ 2024-01-15 | sender@gmail.com
+         └─ Test Subject",
+}
+`;
