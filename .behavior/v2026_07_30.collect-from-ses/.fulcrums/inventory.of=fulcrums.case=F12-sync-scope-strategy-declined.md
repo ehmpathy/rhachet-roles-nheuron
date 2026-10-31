@@ -107,4 +107,9 @@ first is to settle it on stale cardinality.
 
 ## the verdict
 
-_open — and **conditional**. awaits F9 and F10 first._
+**(b) upheld — best-guess under the director's accelerate order (2026-10-31), not a wisher verdict.**
+
+- F9 and F10 stand as taken (no council overturned either), so row 1 of the table above applies:
+  4 gates, one caller, one screen
+- the four ternaries stay; no `GatheredMailSyncScope` extraction
+- the trigger still holds: an overturn of F9 or F10 reopens this entry

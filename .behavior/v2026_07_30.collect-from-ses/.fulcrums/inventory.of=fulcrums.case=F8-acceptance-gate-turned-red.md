@@ -69,7 +69,14 @@ the 12% doubt is entirely that, not the correctness of the repair.
 
 ## the verdict
 
-*(awaits the wisher)*
+**A upheld — best-guess under the director's accelerate order (2026-10-31), not a wisher verdict.**
+
+- the director named F8 a clean rework and ordered a best-guess, so the driver takes the call
+- A stands: `rule.require.failfast` and `rule.forbid.failhide` forbid the skip by name; B and C
+  each keep a lie alive
+- `[case7]` stays RED in CI until a human fills the two gmail keys and wires them into
+  `.github/workflows/test.yml` `secrets:` — step 1 of `blocker/account-setup.md`
+- reversal stays one commit: restore `hasCredentials` + `when.runIf`
 
 ## .see also
 
