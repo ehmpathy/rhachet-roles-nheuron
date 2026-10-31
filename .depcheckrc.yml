@@ -27,3 +27,7 @@ ignores:
   - rhachet-roles-nheuron
   - rhachet-roles-rhachet
   - test-fns
+ignore-patterns:
+  # the actor's brain home (plugins, sessions), also reached via the `.claude` symlink; not our source
+  - .agent/.actors
+  - .claude/plugins
