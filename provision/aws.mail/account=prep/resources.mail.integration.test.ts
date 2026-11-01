@@ -157,6 +157,17 @@ describe('getResourcesOfMail', () => {
         },
       );
 
+      then('the list is scoped to the prefix, not the whole bucket', () => {
+        // ListBucket targets the bucket arn, so its resource cannot hold the prefix wall;
+        // the s3:prefix condition does. without it a stolen credential lists every key
+        const list = grant.document.statements.find(
+          (statement) => statement.action === 's3:ListBucket',
+        );
+        expect(list.condition.StringLike['s3:prefix']).toBe(
+          `${MAIL_OBJECT_KEY_PREFIX}*`,
+        );
+      });
+
       then('the send is scoped by from-address to the mail subdomain', () => {
         // ses:SendRawEmail takes `resource: '*'` — the from-address condition IS the
         // wall, so a reviewer must not read the wildcard resource as over-broad, and

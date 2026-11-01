@@ -24,8 +24,8 @@ how each mechanism authenticates:
 
 note:
   NEITHER mechanism has an interactive auth flow today. \`--from ses\` has none by design
-  (iam needs no grant); \`--from gmail\` without --address is NOT YET IMPLEMENTED and will
-  exit 2. to authenticate, unlock the credentials above — then use --address to confirm.
+  (iam needs no grant); \`--from gmail\` without --address refuses with exit 2 and names
+  the service account keys to fill. unlock the credentials above, then use --address to confirm.
 "
 `;
 
@@ -108,6 +108,20 @@ exports[`gather.auth given: [case9] ses auth flow (there is none) when: [t0] --f
 
 {
   "hint": "ses authenticates via AWS_PROFILE from keyrack. run: rhx keyrack unlock --owner ehmpath --env prep"
+}
+"
+`;
+
+exports[`gather.auth given: [case10] a typo in a flag name when: [t0] gather.auth is invoked with --adress then: exits 2, names the unknown flag and the allowed set 1`] = `
+"error: BadRequestError: unknown flag '--adress'
+
+{
+  "allowedFlags": [
+    "--from",
+    "--address",
+    "--help"
+  ],
+  "hint": "run with --help for usage; a typo returns no error otherwise"
 }
 "
 `;

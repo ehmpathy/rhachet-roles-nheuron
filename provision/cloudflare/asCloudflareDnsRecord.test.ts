@@ -92,4 +92,32 @@ describe('asCloudflareDnsRecord', () => {
       });
     });
   });
+
+  given('[case4] an mx value that is not "PRIORITY HOST"', () => {
+    when('[t0] the value is a bare host, with no priority', () => {
+      then('it refuses, rather than declare priority NaN', () => {
+        expect(() =>
+          asCloudflareDnsRecord({
+            record: {
+              name: 'one.nheuron.com',
+              type: 'MX',
+              value: 'inbound-smtp.us-east-1.amazonaws.com',
+            },
+            zoneRef: ZONE_REF,
+          }),
+        ).toThrow('mx record value is not "PRIORITY HOST"');
+      });
+    });
+
+    when('[t1] the value is a priority with no host', () => {
+      then('it refuses, rather than declare an empty host', () => {
+        expect(() =>
+          asCloudflareDnsRecord({
+            record: { name: 'one.nheuron.com', type: 'MX', value: '10' },
+            zoneRef: ZONE_REF,
+          }),
+        ).toThrow('mx record value is not "PRIORITY HOST"');
+      });
+    });
+  });
 });

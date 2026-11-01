@@ -46,8 +46,8 @@ how each mechanism authenticates:
 
 note:
   NEITHER mechanism has an interactive auth flow today. \`--from ses\` has none by design
-  (iam needs no grant); \`--from gmail\` without --address is NOT YET IMPLEMENTED and will
-  exit 2. to authenticate, unlock the credentials above — then use --address to confirm.
+  (iam needs no grant); \`--from gmail\` without --address refuses with exit 2 and names
+  the service account keys to fill. unlock the credentials above, then use --address to confirm.
 `.trim(),
   );
 };
@@ -97,10 +97,10 @@ export const gatherAuth = async (): Promise<number> => {
     return 0;
   }
 
-  // parse args
-  const options = parseArgs(process.argv);
-
   try {
+    // parse args — inside the try, so an unknown flag refuses via the exit-code path
+    const options = parseArgs(process.argv);
+
     // guard: required args
     if (!options.from) {
       throw new BadRequestError('--from is required', {

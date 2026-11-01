@@ -36,9 +36,9 @@ export const getAllCachedMailExids = async (input: {
  *   invertible — so the filename is a lossless carrier of the exid, and no body parse is
  *   owed to read it back.
  *
- * .note = `decodeURIComponent` THROWS on a malformed escape (`%zz`), so the throw is caught
- *   and turned into a null the caller drops. a throw here would let one stray file in the
- *   cache dir fail an entire gather.
+ * .note = `decodeURIComponent` THROWS a `URIError` on a malformed escape (`%zz`). only that
+ *   class is caught and turned into a null the caller drops; any other throw is rethrown. a
+ *   `URIError` here would let one stray file in the cache dir fail an entire gather.
  */
 const asExidFromCacheFilename = (input: { file: string }): string | null => {
   const encoded = input.file.slice(
@@ -48,7 +48,8 @@ const asExidFromCacheFilename = (input: { file: string }): string | null => {
 
   try {
     return decodeURIComponent(encoded);
-  } catch {
+  } catch (error) {
+    if (!(error instanceof URIError)) throw error;
     return null;
   }
 };

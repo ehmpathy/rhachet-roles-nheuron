@@ -3,6 +3,7 @@ import {
   type DeclaredCloudflareDomainZone,
 } from 'declastruct-cloudflare';
 import type { RefByUnique } from 'domain-objects';
+import { BadRequestError } from 'helpful-errors';
 
 import type { SesMailDnsRecord } from './asSesMailDnsRecords';
 
@@ -34,6 +35,15 @@ export const asCloudflareDnsRecord = (input: {
   const [mxPriorityRaw, ...mxHostParts] = record.value.split(' ');
   const priority = isMx ? Number(mxPriorityRaw) : undefined;
   const content = isMx ? mxHostParts.join(' ') : record.value;
+
+  // a malformed mx would declare `priority: NaN` or an empty host, and cloudflare would hold
+  // a record that routes no mail — refuse it here instead
+  if (isMx && (!Number.isInteger(priority) || content.length === 0))
+    BadRequestError.throw('mx record value is not "PRIORITY HOST"', {
+      name: record.name,
+      value: record.value,
+      hint: "an mx value must read like '10 inbound-smtp.us-east-1.amazonaws.com'",
+    });
 
   return new DeclaredCloudflareDomainDnsRecord({
     zone: zoneRef,

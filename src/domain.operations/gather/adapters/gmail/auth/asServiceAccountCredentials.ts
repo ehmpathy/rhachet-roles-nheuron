@@ -46,8 +46,9 @@ export const asServiceAccountCredentials = (input: {
   const parsed = (() => {
     try {
       return JSON.parse(input.json) as Record<string, unknown>;
-    } catch {
+    } catch (error) {
       throw new BadRequestError('service account json parse failed', {
+        cause: error instanceof Error ? error : undefined,
         hint: 'ensure GMAIL_SERVICE_ACCOUNT_JSON contains valid json',
       });
     }

@@ -74,7 +74,7 @@ export interface SesMailKey {
  *        ListObjectsV2 already returns LastModified per object, so the receipt
  *        time rides along at no extra request.
  */
-export const getAllMailKeysFromSes = async (
+const getAllMailKeysFromSes = async (
   input: { bucket: string; prefix: string; s3: S3Client },
   context: { log: GatherLogMethods },
 ): Promise<SesMailKey[]> => {
@@ -154,7 +154,7 @@ export const getAllMailKeysFromSes = async (
  * .what = read + parse one mail object from the inbound bucket
  * .why = ses stores raw rfc822 bytes; mailparser turns them into structured mail
  */
-export const getOneMailFromSes = async (input: {
+const getOneMailFromSes = async (input: {
   bucket: string;
   key: string;
   receivedAt: Date;

@@ -1,25 +1,5 @@
-/**
- * .what = encode a header value that may hold non-ascii chars
- * .why = rfc2047 requires non-ascii header text be encoded; a raw utf-8 subject
- *        would otherwise arrive as mojibake in most mail clients
- */
-export const asEncodedHeaderValue = (input: { value: string }): string => {
-  // biome-ignore lint/suspicious/noControlCharactersInRegex: ascii range check
-  const isAscii = /^[\x00-\x7F]*$/.test(input.value);
-  if (isAscii) return input.value;
-
-  const encoded = Buffer.from(input.value, 'utf-8').toString('base64');
-  return `=?UTF-8?B?${encoded}?=`;
-};
-
-/**
- * .what = strip CR/LF from a header value
- * .why = a newline in a header value would inject additional headers into the
- *        message — the mail equivalent of an injection attack. so any caller
- *        input that lands in a header is flattened first.
- */
-export const asSafeHeaderValue = (input: { value: string }): string =>
-  input.value.replace(/[\r\n]+/g, ' ').trim();
+import { asEncodedHeaderValue } from './asEncodedHeaderValue';
+import { asSafeHeaderValue } from './asSafeHeaderValue';
 
 /**
  * .what = build a raw rfc822/mime message ready for ses:SendRawEmail

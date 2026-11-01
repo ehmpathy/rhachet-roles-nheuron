@@ -105,3 +105,51 @@
 {"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-maintenance"}
 {"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: ergo-friction-hazards"}
 {"stone":"5.1.execution.from_vision","status":"blocked"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: has-pruned-yagni"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-pruned-yagni"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: has-pruned-backcompat"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-pruned-backcompat"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: has-consistent-mechanisms"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: has-consistent-mechanisms"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-consistent-mechanisms"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: has-consistent-conventions"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-consistent-conventions"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: behavior-declaration-coverage"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: behavior-declaration-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: behavior-declaration-adherance"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: behavior-declaration-adherance"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: role-standards-adherance"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: role-standards-adherance"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: role-standards-coverage"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: role-standards-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"poured","level":1}
+{"stone":"5.1.execution.from_vision","status":"poured","level":3}
+{"stone":"5.1.execution.from_vision","status":"malfunction","reason":"1 of 11 reviewers malfunctioned; 1 reviewer rejected and awaits your answer\nr11 enroll-impl-arch-defects: review tally fallback failed (the sub-brain that tallies a prose review could not be reached). see .agent/repo=bhrain/role=reviewer/briefs/contract.reviewer-output.md"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"enroll-impl-behavior-intent","about":"blocker.1","given":"5.1.execution.from_vision._.review.i001.8817bbfe490cb9e183.r010._.given.by_peer.enroll-impl-behavior-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F14-r10-graded-the-gmail-behavior.md","reason":"disputed review.peer: enroll-impl-behavior-intent blocker.1"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"enroll-impl-behavior-intent","about":"blocker.2","given":"5.1.execution.from_vision._.review.i001.8817bbfe490cb9e183.r010._.given.by_peer.enroll-impl-behavior-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F14-r10-graded-the-gmail-behavior.md","reason":"disputed review.peer: enroll-impl-behavior-intent blocker.2"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"enroll-impl-behavior-intent","about":"nitpick.1","given":"5.1.execution.from_vision._.review.i001.8817bbfe490cb9e183.r010._.given.by_peer.enroll-impl-behavior-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F14-r10-graded-the-gmail-behavior.md","reason":"disputed review.peer: enroll-impl-behavior-intent nitpick.1"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"enroll-impl-behavior-intent","about":"nitpick.2","given":"5.1.execution.from_vision._.review.i001.8817bbfe490cb9e183.r010._.given.by_peer.enroll-impl-behavior-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: enroll-impl-behavior-intent nitpick.2"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"enroll-impl-behavior-intent","about":"nitpick.3","given":"5.1.execution.from_vision._.review.i001.8817bbfe490cb9e183.r010._.given.by_peer.enroll-impl-behavior-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F14-r10-graded-the-gmail-behavior.md","reason":"disputed review.peer: enroll-impl-behavior-intent nitpick.3"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: enroll-impl-behavior-intent"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: enroll-impl-arch-defects"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: repo-rules"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: mech-failhides"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: mech-decode-friction"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: arch-opport-decomposition"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: arch-smell-scopeleaks"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: arch-hazards-maintenance"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: arch-hazards-behavior"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (17 > 0), after 2 blockers shed (2 disputed + 0 conceded better), 3 nitpicks shed (3 disputed + 0 conceded better)"}

@@ -23,6 +23,7 @@ ignores:
   - rhachet-roles-ehmpathy
   - rhachet-brains-anthropic
   - rhachet-brains-fireworksai
+  - rhachet-brains-openrouter
   - rhachet-brains-xai
   - rhachet-roles-nheuron
   - rhachet-roles-rhachet

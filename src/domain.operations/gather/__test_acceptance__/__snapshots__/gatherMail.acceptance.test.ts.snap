@@ -154,3 +154,20 @@ exports[`gather.mail given: [case10] a /labels= scope against ses when: [t0] gat
 }
 "
 `;
+
+exports[`gather.mail given: [case12] a typo in a flag name when: [t0] gather.mail is invoked with --qurey then: exits 2, names the unknown flag and the allowed set 1`] = `
+"error: BadRequestError: unknown flag '--qurey'
+
+{
+  "allowedFlags": [
+    "--from",
+    "--address",
+    "--since",
+    "--query",
+    "--format",
+    "--help"
+  ],
+  "hint": "run with --help for usage; a typo returns no error otherwise"
+}
+"
+`;

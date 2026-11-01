@@ -3,27 +3,20 @@ import type { PaginationInput } from 'pagination-fns';
 import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 
 /**
- * .what = format date for gmail api query
- * .why = gmail uses YYYY/MM/DD format for date filters
+ * .what = cast a date bound into the epoch seconds gmail's `after:` / `before:` accept
+ * .why = ⚠️ a `YYYY/MM/DD` bound is read by gmail as a calendar day in its OWN zone (pacific),
+ *   never the instant the caller holds. a sync cursor at `2024-01-15T03:00Z` rendered as
+ *   `after:2024/01/15` asked gmail for mail from `08:00Z` on — so mail delivered between the
+ *   cursor and pacific midnight was never fetched on an incremental run, and never recovered
+ *   (`rule.forbid.time-assumptions`). epoch seconds name the instant itself, on every host
+ *   and in every zone.
  *
- * ⚠️ .note = the calendar parts are read in **UTC**, never local. `--since 2026-08-01` parses
- *   as midnight UTC, so the local-timezone read of that same instant is a DIFFERENT calendar
- *   day west of Greenwich — and the query built from it asked gmail for a different window
- *   than the human typed. the same command, on two machines, fetched two ranges:
- *
- *   | host zone | `--since 2026-08-01` became | what the human got |
- *   |-----------|------------------------------|---------------------|
- *   | UTC-5     | `after:2026/07/31`           | mail from BEFORE the date they asked for |
- *   | UTC       | `after:2026/08/01`           | correct |
- *   | UTC+8     | `after:2026/08/01`           | correct — but the `uptil` bound skews the other way |
- *
- *   the suite forces `TZ=UTC`, so every test agreed with the code and none could see this
- *   (`rule.forbid.time-assumptions`). the clamp below pins a bound whose local and UTC
- *   calendar days DIFFER, so a revert to the local read goes red rather than stays invisible.
+ * .note = the bound is rounded OUTWARD (`floor` for a lower bound, `ceil` for an upper one),
+ *   so the remote fetch never holds less than the range. the precise bound is applied after,
+ *   by `getMailsWithinRange`; an extra sub-second of mail fetched is benign, one dropped is not.
  */
-const formatDateForGmail = (date: Date): string => {
-  return `${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${String(date.getUTCDate()).padStart(2, '0')}`;
-};
+const asEpochSeconds = (input: { at: Date; round: 'floor' | 'ceil' }): number =>
+  Math[input.round](input.at.getTime() / 1000);
 
 /**
  * .what = cast a page range + a caller's filter into the one gmail `q` expression they mean
@@ -48,21 +41,17 @@ export const asGmailQuery = (input: {
 
   // build parts immutably via filter
   const parts = [
-    // gmail api query: after:YYYY/MM/DD (>= since)
+    // since = inclusive lower bound → after:<epoch seconds, floored>
     page.range.since?.deliveredAt
-      ? `after:${formatDateForGmail(page.range.since.deliveredAt)}`
+      ? `after:${asEpochSeconds({ at: page.range.since.deliveredAt, round: 'floor' })}`
       : null,
-    // gmail api query: before:YYYY/MM/DD (< until)
+    // until = exclusive upper bound → before:<epoch seconds, ceiled>
     page.range.until?.deliveredAt
-      ? `before:${formatDateForGmail(page.range.until.deliveredAt)}`
+      ? `before:${asEpochSeconds({ at: page.range.until.deliveredAt, round: 'ceil' })}`
       : null,
-    // gmail api: before: is exclusive, so uptil (<=) needs next day
+    // uptil = inclusive upper bound; before: is exclusive, so one second past it
     page.range.uptil?.deliveredAt
-      ? `before:${formatDateForGmail(
-          new Date(
-            page.range.uptil.deliveredAt.getTime() + 24 * 60 * 60 * 1000,
-          ),
-        )}`
+      ? `before:${asEpochSeconds({ at: page.range.uptil.deliveredAt, round: 'floor' }) + 1}`
       : null,
     // the `/labels=work,urgent` scope → `label:work label:urgent`
     ...filter.labels.map((label) => `label:${label}`),

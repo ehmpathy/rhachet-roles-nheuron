@@ -66,6 +66,22 @@ not argue against it.
 - `provision/aws.mail/account=prep/resources.mail.ts` — where the guard would sit, beside the
   extant region guard that handles the analogous (and lesser) hazard in code
 
+## a third option the council should weigh first: refuse the ROOT account, not confirm prep
+
+peer r11 (i002) found that the "no value exists yet" objection blocks only a POSITIVE check
+(*is this prep?*). a NEGATIVE check (*is this NOT root?*) needs the root account id, which the
+human holds from `bootstrap.md` before this wish can run. the worst miss — mail landed in the
+management account — is then caught on apply #1:
+
+```ts
+if (account === NHEURON_ROOT_ACCOUNT_ID)
+  BadRequestError.throw('mail wish applied against the root account', { account, hint: '...' });
+```
+
+its cost is one more keyrack key (`NHEURON_ROOT_ACCOUNT_ID`, env `prep`) the human fills, sourced
+the same way as the two account emails. that new credential is the wisher's call, so it stays
+here rather than lands in code. it leaves F6 (the bucket account-suffix) unchanged.
+
 ## the verdict
 
 open — awaits the fulcrum council.

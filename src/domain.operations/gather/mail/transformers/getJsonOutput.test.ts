@@ -183,6 +183,17 @@ describe('getJsonOutput', () => {
       filter: { query: 'from:boss@co.com', labels: ['work'] },
     });
 
+    // function: the top-level keys a consumer reads, and the counts it got
+    const parsed = JSON.parse(result);
+    expect(Object.keys(parsed)).toEqual(['scope', 'stats', 'mails']);
+    expect(parsed.stats).toEqual({
+      foundUptil: '2024-01-15T12:00:00.000Z',
+      listed: 1,
+      synced: 7,
+      cached: 42,
+    });
+    expect(parsed.mails).toHaveLength(1);
+
     // the raw string, not the parsed object — key ORDER and indentation are part of what a
     // human reads when they eyeball a pipe's output
     expect(result).toMatchSnapshot();

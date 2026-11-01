@@ -9,6 +9,10 @@ import { setGatheredMails } from '@src/domain.operations/gather/mail/setGathered
 import { asCliArgOptions } from './asCliArgOptions';
 import { getExitCodeForError } from './getExitCodeForError';
 import { getIsHelpAsked } from './getIsHelpAsked';
+import {
+  isGatherOutputFormat,
+  VALID_OUTPUT_FORMATS,
+} from './isGatherOutputFormat';
 
 /**
  * .what = prints help message for gather.mail
@@ -120,10 +124,10 @@ export const gatherMail = async (): Promise<number> => {
     return 0;
   }
 
-  // parse args
-  const options = parseArgs(process.argv);
-
   try {
+    // parse args — inside the try, so an unknown flag refuses via the exit-code path
+    const options = parseArgs(process.argv);
+
     // guard: required args
     if (!options.from) {
       throw new BadRequestError('--from is required', {
@@ -146,11 +150,10 @@ export const gatherMail = async (): Promise<number> => {
     }
 
     // guard: valid format (type guard narrows type)
-    const validFormats: Array<'tree' | 'json'> = ['tree', 'json'];
     const format = options.format ?? 'tree';
-    if (!validFormats.includes(format as 'tree' | 'json')) {
+    if (!isGatherOutputFormat(format)) {
       throw new BadRequestError(`invalid format '${format}'`, {
-        validFormats,
+        validFormats: VALID_OUTPUT_FORMATS,
         hint: 'run with --help for usage',
       });
     }
@@ -162,9 +165,7 @@ export const gatherMail = async (): Promise<number> => {
         address: options.address,
         since: options.since ?? null,
         query: options.query ?? null,
-        // note: as-cast here is safe because we validated format above
-        // this is an external boundary (CLI input)
-        format: format as 'tree' | 'json',
+        format,
       },
       {
         log: console,

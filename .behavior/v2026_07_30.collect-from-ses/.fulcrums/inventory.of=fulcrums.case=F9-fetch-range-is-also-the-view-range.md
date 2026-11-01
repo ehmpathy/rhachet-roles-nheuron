@@ -117,6 +117,16 @@ that reads only this file meets both cases, not just mine.
 `F12` — F9's verdict is one of the two conditions that would flip the declined
 `GatheredMailSyncScope` extraction.
 
+## i002 (2026-11-01): two more lanes on the same line
+
+- **r9 (ergonomics)** names what a human sees: a bare re-run prints `scope: whole mailbox` above
+  `listed: 1` / `cached: 2`, and no line names the cursor that narrowed the view. the json output
+  carries `foundUptil`; the tree does not. so even if (b) stands, the tree owes the bound it
+  applied — the cheapest repair either verdict leaves open
+- **r11 (architecture)** traced the conflation to one `page` value at `setMailsFromAdapter.ts:88`,
+  threaded to the fetch (`:111`) and the cache read-back (`:136-139`). the split is a second local
+  value, no new caller
+
 ## the verdict
 
 _open — awaits the council. one reviewer dissents; see the counter-argument above._

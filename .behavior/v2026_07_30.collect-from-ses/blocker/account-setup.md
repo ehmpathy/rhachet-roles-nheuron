@@ -9,14 +9,13 @@
 
 | track | steps | closes |
 |---|---|---|
-| A — gmail credentials | A1–A4 | live `[case7]` via `TEST_LIVE=gmail` (r008 blocker.1, gmail half) |
+| A — gmail credentials | A1–A3 | live `[case7]` via `TEST_LIVE=gmail` (r008 blocker.1, gmail half) |
 | B — aws accounts | B1–B6 | the `nheuron-prod` + `nheuron-prep` accounts the mailbox lives in |
 | C — ses mailbox | C1–C3 | `jelly@one.nheuron.com` identity, inbound bucket, dkim tokens |
 | D — dns | D1–D4 | mx, spf, dkim, dmarc on `one.nheuron.com` |
 | E — live loop | E1–E3 | r008 blocker.1 (ses live read) + blocker.2 (real send) |
-| F — ci aws auth | F1 | `suite / test-integration` in CI |
 
-tracks A and F are independent of B–E. B → C → D → E has a hard order.
+track A is independent of B–E. B → C → D → E has a hard order.
 
 ## prereqs
 
@@ -35,7 +34,7 @@ tracks A and F are independent of B–E. B → C → D → E has a hard order.
 
 **A1** 🧑 create the service account, its json key, gmail api, and domain-wide delegation (scope `https://www.googleapis.com/auth/gmail.readonly`).
 console path: `.agent/repo=.this/role=any/briefs/howto.create-gmail-service-account.md` steps 1–5.
-unblocks: the key json and the subject address that A2 + A3 need.
+unblocks: the key json and the subject address that A2 needs.
 
 **A2** 🤖 fill the four test keys into keyrack:
 ```sh
@@ -45,21 +44,16 @@ rhx keyrack fill --owner ehmpath --env test
 #   GATHER_GMAIL_CLIENT_ID          oauth client id (the interactive gather.auth path)
 #   GATHER_GMAIL_CLIENT_SECRET      oauth client secret
 ```
-unblocks: local acceptance `[case7]`.
+unblocks: A3.
 
-**A3** 🤖 optional — only to run the live gmail case in ci under `TEST_LIVE=gmail`. set the two ci secrets (the workflows already pass them to the acceptance job):
-```sh
-gh secret set GMAIL_SERVICE_ACCOUNT_JSON --repo ehmpathy/rhachet-roles-nheuron < path/to/key.json
-gh secret set GMAIL_SERVICE_ACCOUNT_SUBJECT --repo ehmpathy/rhachet-roles-nheuron --body 'robot@yourdomain.com'
-```
-unblocks: the live gmail case in ci, once a flag targets it. ci is green without it.
-
-**A4** ⛳ check:
+**A3** 🤖 read mail by hand, then run the live gmail case:
 ```sh
 rhx keyrack unlock --owner ehmpath --env test
 rhx gather.mail --from gmail --address robot@yourdomain.com
+TEST_LIVE=gmail npm run test:acceptance -- gatherMail
 ```
-expect: mail listed, no `token exchange failed`.
+⛳ mail listed, no `token exchange failed`; `[case7]` passes.
+unblocks: r008 blocker.1 (gmail half). ci never runs this case; no ci secret is owed.
 
 ---
 
@@ -170,20 +164,3 @@ unblocks: r008 blocker.1 (ses half). ⛳ your mail appears with from, subject, s
 **E3** 🧑 tell the driver "mailbox live". the driver composes the reply path, sends from `jelly@`, and re-arrives the stone.
 ⚠️ a new ses account sits in the sandbox: it sends only to verified addresses until aws grants production access (the mail wish requests it; aws answers within ~24h). to prove the send sooner, verify your E1 address: ses console → identities → **Create identity** → email address.
 unblocks: r008 blocker.2.
-
----
-
-## track F — ci aws auth
-
-**F1** 🤖 point ci at an oidc role in the account the integration tests target (the one `AWS_PROFILE=demo-agent` reaches locally):
-```sh
-gh variable set CREDS_CICD_AWS_DEV_OIDC_ROLE_ARN --repo ehmpathy/rhachet-roles-nheuron --body 'arn:aws:iam::<account-id>:role/<github-oidc-role>'
-```
-the role's trust policy must name `token.actions.githubusercontent.com` for `repo:ehmpathy/rhachet-roles-nheuron:*`.
-unblocks: `suite / test-integration` (aws-backed cases) in CI. without it, `.test.yml` skips aws auth and those cases fail.
-
----
-
-## note — not a blocker
-
-the `nheuron-mail-clone` role trusts `ec2.amazonaws.com`, so no local principal can assume it today (see the yield § "one decision the wisher owes before step 4"). E2 does not need it: it reads under the `nheuron-prep` admin profile. the least-privilege path stays open as a follow-up.

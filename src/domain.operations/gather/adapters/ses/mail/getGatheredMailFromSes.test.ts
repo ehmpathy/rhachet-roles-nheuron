@@ -5,11 +5,9 @@ import { given, then, useBeforeAll, when } from 'test-fns';
 
 import { getMailsWithinRange } from '@src/domain.operations/gather/mail/transformers/getMailsWithinRange';
 
-import {
-  getDeliveredAtFromParsed,
-  getGatheredMailFromSes,
-  getSnippetFromBody,
-} from './getGatheredMailFromSes';
+import { getDeliveredAtFromParsed } from './getDeliveredAtFromParsed';
+import { getGatheredMailFromSes } from './getGatheredMailFromSes';
+import { getSnippetFromBody } from './getSnippetFromBody';
 
 /**
  * .what = build a raw rfc822 message for a test

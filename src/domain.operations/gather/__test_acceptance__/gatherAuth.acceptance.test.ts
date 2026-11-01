@@ -9,14 +9,19 @@ import { execSync } from 'node:child_process';
  * .why = isolate error extraction to reduce cognitive complexity
  */
 const getExecError = (error: unknown): { exitCode: number; stderr: string } => {
-  // guard: not an object
-  if (!error || typeof error !== 'object') {
-    return { exitCode: 0, stderr: '' };
-  }
+  // guard: a spawn failure or a signal kill carries no numeric status — the command never
+  // reported an exit, so rethrow it rather than pass it off as a clean exit 0
+  if (
+    !error ||
+    typeof error !== 'object' ||
+    !('status' in error) ||
+    typeof error.status !== 'number'
+  )
+    throw error;
 
   // extract via immutable construction
-  const exitCode = 'status' in error ? (error.status as number) : 0;
-  const stderr = 'stderr' in error ? (error.stderr as string) : '';
+  const exitCode = error.status;
+  const stderr = 'stderr' in error ? String(error.stderr) : '';
 
   return { exitCode, stderr };
 };
@@ -329,6 +334,22 @@ describe('gather.auth', () => {
         expect(result.exitCode).toBe(2);
         expect(result.stderr).toContain('ses needs no auth flow');
         expect(result.stderr).toContain('rhx keyrack unlock');
+        expect(result.stderr).toMatchSnapshot();
+      });
+    });
+  });
+
+  given('[case10] a typo in a flag name', () => {
+    when('[t0] gather.auth is invoked with --adress', () => {
+      then('exits 2, names the unknown flag and the allowed set', () => {
+        const result = execAndCapture(
+          `node -e "import('rhachet-roles-nheuron/cli/gatherAuth').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --from gmail --adress test@gmail.com`,
+        );
+
+        // exit 2 (caller-must-fix), never the exit 1 of an unhandled rejection
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain("unknown flag '--adress'");
+        expect(result.stderr).toContain('run with --help for usage');
         expect(result.stderr).toMatchSnapshot();
       });
     });

@@ -4,10 +4,8 @@ import { GatherContactRef } from '@src/domain.objects/GatherContactRef';
 import { GatheredMail } from '@src/domain.objects/GatheredMail';
 import { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 
-import {
-  getLatestMailDate,
-  getSyncStatsFromMails,
-} from './getSyncStatsFromMails';
+import { getLatestMailDate } from './getLatestMailDate';
+import { getSyncStatsFromMails } from './getSyncStatsFromMails';
 
 /**
  * .what = build a GatheredMail that holds only the field these transformers read

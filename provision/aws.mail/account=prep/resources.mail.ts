@@ -202,11 +202,15 @@ export const getResourcesOfMail = (input: {
     }),
     document: {
       statements: [
-        // the gatherer lists the prefix to enumerate mail, then reads each object
+        // the gatherer lists the prefix to enumerate mail, then reads each object.
+        // ListBucket targets the bucket arn, so the prefix wall is the s3:prefix condition
         {
           effect: 'Allow',
           action: 's3:ListBucket',
           resource: `arn:aws:s3:::${MAIL_BUCKET}`,
+          condition: {
+            StringLike: { 's3:prefix': `${MAIL_OBJECT_KEY_PREFIX}*` },
+          },
         },
         {
           effect: 'Allow',

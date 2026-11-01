@@ -221,7 +221,7 @@ have 3 dkim tokens saved.
    ```
    ⛳ your test email appears, parsed (from, subject, snippet).
 
-5. 🤖 **reply as jelly** — the send half, r008 blocker.2 — via the `setReplyViaSes`
+5. 🤖 **reply as jelly** — the send half, r008 blocker.2 — via the `sendReplyViaSes`
    communicator (from `jelly@one.nheuron.com` to your address).
    ⛳ your address receives jelly's reply.
 

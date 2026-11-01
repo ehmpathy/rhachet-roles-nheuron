@@ -1,10 +1,8 @@
 import { given, then, when } from 'test-fns';
 
-import {
-  asEncodedHeaderValue,
-  asRawMimeMessage,
-  asSafeHeaderValue,
-} from './asRawMimeMessage';
+import { asEncodedHeaderValue } from './asEncodedHeaderValue';
+import { asRawMimeMessage } from './asRawMimeMessage';
+import { asSafeHeaderValue } from './asSafeHeaderValue';
 
 /**
  * .what = read the decoded body back out of a raw mime message

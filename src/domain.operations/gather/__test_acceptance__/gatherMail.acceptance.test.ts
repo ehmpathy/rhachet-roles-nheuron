@@ -10,14 +10,19 @@ import { execSync } from 'node:child_process';
  * .why = isolate error extraction to reduce cognitive complexity
  */
 const getExecError = (error: unknown): { exitCode: number; stderr: string } => {
-  // guard: not an object
-  if (!error || typeof error !== 'object') {
-    return { exitCode: 0, stderr: '' };
-  }
+  // guard: a spawn failure or a signal kill carries no numeric status — the command never
+  // reported an exit, so rethrow it rather than pass it off as a clean exit 0
+  if (
+    !error ||
+    typeof error !== 'object' ||
+    !('status' in error) ||
+    typeof error.status !== 'number'
+  )
+    throw error;
 
   // extract via immutable construction
-  const exitCode = 'status' in error ? (error.status as number) : 0;
-  const stderr = 'stderr' in error ? (error.stderr as string) : '';
+  const exitCode = error.status;
+  const stderr = 'stderr' in error ? String(error.stderr) : '';
 
   return { exitCode, stderr };
 };
@@ -268,6 +273,10 @@ describe('gather.mail', () => {
   given.runIf(isLiveTargeted({ mechanism: 'gmail' }))(
     '[case7] positive path: real gmail api via service account (TEST_LIVE=gmail)',
     () => {
+      /**
+       * .what = the workspace address the service account impersonates
+       * .why = a targeted live case with no credential must fail loud, never pass vacuous
+       */
       const getGmailSubjectOrThrow = (): string => {
         const serviceAccountJson = process.env.GMAIL_SERVICE_ACCOUNT_JSON;
         const subject = process.env.GMAIL_SERVICE_ACCOUNT_SUBJECT;
@@ -330,8 +339,12 @@ describe('gather.mail', () => {
   given.runIf(isLiveTargeted({ mechanism: 'ses' }))(
     '[case11] positive path: real ses mailbox (TEST_LIVE=ses)',
     () => {
+      /**
+       * .what = the applied mailbox address, once its config is present
+       * .why = a targeted live case with no mailbox config must fail loud, never skip quietly
+       */
       const getSesAddressOrThrow = (): string => {
-        // targeted with no mailbox config = loud, never a quiet skip
+        // reject a targeted run with no mailbox config
         if (!process.env.SES_MAIL_BUCKET || !process.env.SES_REGION)
           throw new BadRequestError(
             'TEST_LIVE=ses targets the live ses case, but the mailbox config is absent',
@@ -348,15 +361,23 @@ describe('gather.mail', () => {
         return 'jelly@one.nheuron.com';
       };
 
+      // the live run sends a test mail first (account-setup step E1), so an empty read is a
+      // failure here: the vision's read move is "each mail appears, parsed"
       when('[t0] gather.mail reads the applied mailbox', () => {
-        then('returns mail in json format', () => {
+        then('returns each mail parsed, with sender and subject', () => {
           const address = getSesAddressOrThrow();
           const result = execAndCapture(
             `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from ses --address ${address} --format json`,
           );
           expect(result.exitCode).toBe(0);
           const parsed = JSON.parse(result.stdout);
-          expect(Array.isArray(parsed.mails)).toBe(true);
+          expect(parsed.mails.length).toBeGreaterThan(0);
+          parsed.mails.forEach(
+            (mail: { sender: { address: string }; subject: string }) => {
+              expect(mail.sender.address).toMatch(/@/);
+              expect(typeof mail.subject).toBe('string');
+            },
+          );
         });
       });
     },
@@ -433,6 +454,22 @@ describe('gather.mail', () => {
 
         expect(result.exitCode).toBe(2);
         expect(result.stderr).toContain('cannot honor a /labels= scope');
+        expect(result.stderr).toMatchSnapshot();
+      });
+    });
+  });
+
+  given('[case12] a typo in a flag name', () => {
+    when('[t0] gather.mail is invoked with --qurey', () => {
+      then('exits 2, names the unknown flag and the allowed set', () => {
+        const result = execAndCapture(
+          `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address test@gmail.com --qurey "from:boss@company.com"`,
+        );
+
+        // exit 2 (caller-must-fix), never the exit 1 of an unhandled rejection
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain("unknown flag '--qurey'");
+        expect(result.stderr).toContain('run with --help for usage');
         expect(result.stderr).toMatchSnapshot();
       });
     });

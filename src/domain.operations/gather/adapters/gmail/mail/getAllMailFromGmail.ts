@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { UnexpectedCodePathError } from 'helpful-errors';
 
 import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
+import { getAllInBoundedBatches } from '@src/domain.operations/gather/mail/getAllInBoundedBatches';
 
 import { fetchWithTimeout } from '../fetchWithTimeout';
 import { getAllMessagesFromBatchResponse } from './getAllMessagesFromBatchResponse';
@@ -157,7 +158,8 @@ const batchGetMessages = async (input: {
 
 /**
  * .what = fetch all mail from gmail api with pagination
- * .why = communicator handles raw api i/o; orchestrator handles cache
+ * .why = composes the id list, the chunk, and the bounded batch walk; the cache stays with
+ *   the caller
  */
 export const getAllMailFromGmail = async (
   input: {
@@ -196,28 +198,18 @@ export const getAllMailFromGmail = async (
   // chunk ids into batches (max 50 per batch per google docs)
   const batches = getChunkedArray({ items: ids, chunkSize: 50 });
 
-  // fetch all batches sequentially (gmail rate limits); collect via async reduce
-  const emptyMailsPromise: Promise<GmailMessage[]> = (async () => [])();
-  const allMails = await batches.reduce<Promise<GmailMessage[]>>(
-    async (accPromise, batchIds, batchIndex) => {
-      const acc = await accPromise;
-
-      log.debug('gmail.getAllMail: batch fetch', {
-        batchIndex,
-        batchSize: batchIds.length,
-      });
-
-      const batchMails = await batchGetMessages({
+  // fetch all batches one at a time (gmail rate limits), in order
+  const mailsPerBatch = await getAllInBoundedBatches({
+    queued: batches,
+    bound: 1,
+    read: (batchIds) =>
+      batchGetMessages({
         accessToken: input.accessToken,
         messageIds: batchIds,
         log,
-      });
-
-      // immutable concat via spread
-      return [...acc, ...batchMails];
-    },
-    emptyMailsPromise,
-  );
+      }),
+  });
+  const allMails = mailsPerBatch.flat();
 
   log.debug('gmail.getAllMail: complete', {
     totalMails: allMails.length,

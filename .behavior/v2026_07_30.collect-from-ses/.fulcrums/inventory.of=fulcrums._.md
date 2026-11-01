@@ -18,6 +18,8 @@ the forks taken mid-drive on best-guess rather than escalated, per
 | [F11](inventory.of=fulcrums.case=F11-since-does-not-bound-the-ses-walk.md) | `--since` bounds the gmail fetch but not the ses one; capped, not pushed down | clean | open | 76% |
 | [F12](inventory.of=fulcrums.case=F12-sync-scope-strategy-declined.md) | the `GatheredMailSyncScope` extraction, declined four times — **conditional on F9 + F10** | clean | best-guessed: (b) upheld | 79% |
 | [F13](inventory.of=fulcrums.case=F13-upgrade-churn-restored-in-git-only.md) | the upgrade's `.claude` relocation restored in git, not on disk; dispatcher `extends` kept | clean | open | 80% |
+| [F14](inventory.of=fulcrums.case=F14-r10-graded-the-gmail-behavior.md) | peer r10 graded the gmail behavior's wish; its five concerns disputed as scope, caught for the gmail route | clean | open | 85% |
+| [F15](inventory.of=fulcrums.case=F15-provision-wishes-source-at-load.md) | the provision wishes source keyrack, and refuse absent account emails, at module load | clean | open | 72% |
 
 ## ⚠️ a note on when these were recorded
 

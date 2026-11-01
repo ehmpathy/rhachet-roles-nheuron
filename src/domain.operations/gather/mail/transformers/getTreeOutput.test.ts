@@ -179,6 +179,17 @@ describe('getTreeOutput', () => {
       filter: { query: 'from:boss@co.com', labels: ['work'] },
     });
 
+    // function: each run names its own slice and its own three counts
+    expect(bare).toContain('├─ scope: whole mailbox');
+    expect(bare).toContain('├─ listed: 2');
+    expect(bare).toContain('├─ cached: 250');
+    expect(narrowed).toContain(
+      '├─ scope: labels=work query="from:boss@co.com"',
+    );
+    expect(narrowed).toContain('├─ listed: 1');
+    expect(narrowed).toContain('├─ cached: 250');
+
+    // aesthetic: the whole block, for the reviewer
     expect({ bare, narrowed }).toMatchSnapshot();
   });
 });

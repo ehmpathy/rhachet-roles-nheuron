@@ -1,57 +1,9 @@
-import * as crypto from 'crypto';
 import { UnexpectedCodePathError } from 'helpful-errors';
 
 import { fetchWithTimeout } from '../fetchWithTimeout';
-import {
-  asServiceAccountCredentials,
-  type ServiceAccountCredentials,
-} from './asServiceAccountCredentials';
-
-/**
- * .what = base64url encode for jwt
- * .why = jwt requires url-safe base64 without pad characters
- */
-const base64url = (input: string | Buffer): string => {
-  const base64 = Buffer.from(input).toString('base64');
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-};
-
-/**
- * .what = create signed jwt for service account auth
- * .why = google requires jwt assertion for service account token exchange
- */
-const createSignedJwt = (input: {
-  credentials: ServiceAccountCredentials;
-  subject: string;
-  scope: string;
-}): string => {
-  const now = Math.floor(Date.now() / 1000);
-
-  // jwt header
-  const header = { alg: 'RS256', typ: 'JWT' };
-
-  // jwt claims
-  const claims = {
-    iss: input.credentials.client_email,
-    sub: input.subject, // impersonate this user
-    aud: input.credentials.token_uri,
-    iat: now,
-    exp: now + 3600, // 1 hour
-    scope: input.scope,
-  };
-
-  // encode header and claims
-  const headerB64 = base64url(JSON.stringify(header));
-  const claimsB64 = base64url(JSON.stringify(claims));
-  const unsigned = `${headerB64}.${claimsB64}`;
-
-  // sign with private key
-  const signer = crypto.createSign('RSA-SHA256');
-  signer.update(unsigned);
-  const signature = signer.sign(input.credentials.private_key);
-
-  return `${unsigned}.${base64url(signature)}`;
-};
+import { asServiceAccountCredentials } from './asServiceAccountCredentials';
+import { asSignedServiceAccountJwt } from './asSignedServiceAccountJwt';
+import { getExpiresAtFromTokenResponse } from './getExpiresAtFromTokenResponse';
 
 /**
  * .what = exchange jwt for access token via google token endpoint
@@ -68,10 +20,11 @@ export const getServiceAccountAccessToken = async (input: {
   });
 
   // create signed jwt
-  const jwt = createSignedJwt({
+  const jwt = asSignedServiceAccountJwt({
     credentials,
     subject: input.subject,
     scope: input.scope ?? 'https://www.googleapis.com/auth/gmail.readonly',
+    now: new Date(),
   });
 
   // exchange jwt for access token — bounded by a timeout so a hung token endpoint
@@ -137,6 +90,6 @@ export const getServiceAccountAccessToken = async (input: {
 
   return {
     accessToken: data.access_token,
-    expiresAt: new Date(Date.now() + data.expires_in * 1000),
+    expiresAt: getExpiresAtFromTokenResponse({ expiresIn: data.expires_in }),
   };
 };
