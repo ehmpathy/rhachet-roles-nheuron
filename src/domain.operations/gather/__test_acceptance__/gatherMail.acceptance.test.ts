@@ -58,6 +58,18 @@ const execAndCapture = (
 };
 
 /**
+ * .what = whether the `TEST_LIVE` flag targets the live api of one mechanism
+ * .why = a live case needs real credentials and a real mailbox, which ci never holds. it runs
+ *   only when a human names its mechanism (`TEST_LIVE=gmail,ses`); absent the flag, it skips
+ *   by name. once targeted, absent credentials still throw: the flag is a demand for proof
+ */
+const isLiveTargeted = (input: { mechanism: 'gmail' | 'ses' }): boolean =>
+  (process.env.TEST_LIVE ?? '')
+    .split(',')
+    .map((part) => part.trim())
+    .includes(input.mechanism);
+
+/**
  * .what = acceptance tests for gather.mail cli
  * .why = verify cli works via built artifact
  */
@@ -155,17 +167,8 @@ describe('gather.mail', () => {
        *         after auth check passes. with a fake token, the API returns
        *         an error. this proves the full flow path works correctly.
        *
-       *         a truly positive path (mail returned) requires real credentials
-       *         which cannot be automated in CI. manual test instructions below.
-       *
-       *         to verify positive path manually (gmail authenticates via a
-       *         keyrack service account, NOT a browser oauth grant — that flow
-       *         no longer exists and `gather.auth --from gmail` exits 2):
-       *         1. fill the service account: rhx keyrack fill --owner ehmpath --env test
-       *            (GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT)
-       *         2. unlock it: rhx keyrack unlock --owner ehmpath --env test
-       *         3. run: rhx gather.mail --from gmail --address your@gmail.com
-       *         4. observe mail output in tree format
+       *         a truly positive path (mail returned) needs real credentials, so it
+       *         lives in [case7], behind `TEST_LIVE=gmail`.
        */
       const testAddress = 'test-api-attempt@example.com';
 
@@ -249,77 +252,115 @@ describe('gather.mail', () => {
     },
   );
 
-  given('[case7] positive path: real gmail api via service account', () => {
-    /**
-     * .what = test positive path with real gmail api via service account
-     * .why = proves mail collection works end-to-end
-     *
-     * requires:
-     * - GMAIL_SERVICE_ACCOUNT_JSON: service account credentials
-     * - GMAIL_SERVICE_ACCOUNT_SUBJECT: workspace email to impersonate
-     *
-     * setup:
-     * 1. follow howto.create-gmail-service-account.[guide].md
-     * 2. run: rhx keyrack fill --owner ehmpath --env test
-     * 3. run: rhx keyrack unlock --owner ehmpath --env test
-     *
-     * ⚠️ .note = this case once wrapped itself in `when.runIf(hasCredentials)`, so an absent
-     *   credential SKIPPED it and the suite went green while the only positive path in the
-     *   whole file had never run. that is the exact shape `rule.forbid.failhide` names a
-     *   blocker ("silent skip") and `rule.require.failfast` forbids ("absent resource =
-     *   unacceptable"), and `philosophy.verification-strictness` grades a credential excuse
-     *   a blocker rather than a deferral.
-     *
-     *   so it now THROWS. a red suite that names the exact fill command is honest; a green
-     *   suite that proved naught is a lie about coverage.
-     */
-    const getGmailSubjectOrThrow = (): string => {
-      const serviceAccountJson = process.env.GMAIL_SERVICE_ACCOUNT_JSON;
-      const subject = process.env.GMAIL_SERVICE_ACCOUNT_SUBJECT;
+  /**
+   * .what = positive path against the real gmail api, via service account
+   * .why = proves mail collection works end-to-end
+   *
+   * run it:
+   * 1. follow `.agent/repo=.this/role=any/briefs/howto.create-gmail-service-account.md`
+   * 2. rhx keyrack unlock --owner ehmpath --env test
+   * 3. TEST_LIVE=gmail npm run test:acceptance
+   *
+   * .note = the gate is the named flag, never the presence of a credential. absent the flag, the
+   *   case skips by name and ci stays green; targeted with no credential, it throws. so a skip
+   *   always reads as "not asked", never as "asked, and the key was absent"
+   */
+  given.runIf(isLiveTargeted({ mechanism: 'gmail' }))(
+    '[case7] positive path: real gmail api via service account (TEST_LIVE=gmail)',
+    () => {
+      const getGmailSubjectOrThrow = (): string => {
+        const serviceAccountJson = process.env.GMAIL_SERVICE_ACCOUNT_JSON;
+        const subject = process.env.GMAIL_SERVICE_ACCOUNT_SUBJECT;
 
-      // `BadRequestError` is this repo's caller-must-fix class (exit 2) — the
-      // `ConstraintError` of `rule.require.failfast`, by the name helpful-errors ships
-      if (!serviceAccountJson || !subject)
-        throw new BadRequestError(
-          'the gmail service account is required for the positive-path acceptance case',
-          {
-            present: {
-              GMAIL_SERVICE_ACCOUNT_JSON: !!serviceAccountJson,
-              GMAIL_SERVICE_ACCOUNT_SUBJECT: !!subject,
+        // `BadRequestError` is this repo's caller-must-fix class (exit 2) — the
+        // `ConstraintError` of `rule.require.failfast`, by the name helpful-errors ships
+        if (!serviceAccountJson || !subject)
+          throw new BadRequestError(
+            'TEST_LIVE=gmail targets the live gmail case, but the service account is absent',
+            {
+              present: {
+                GMAIL_SERVICE_ACCOUNT_JSON: !!serviceAccountJson,
+                GMAIL_SERVICE_ACCOUNT_SUBJECT: !!subject,
+              },
+              hint: 'rhx keyrack unlock --owner ehmpath --env test (see howto.create-gmail-service-account), or drop gmail from TEST_LIVE',
             },
-            why: 'this is the ONLY case that proves gmail collection actually works; skipped, the suite claims a coverage it does not hold',
-            hint: 'local: rhx keyrack unlock --owner ehmpath --env test. ci: add both keys to .github/workflows/test.yml `secrets:` (see howto.create-gmail-service-account)',
-          },
-        );
+          );
 
-      return subject;
-    };
+        return subject;
+      };
 
-    when('[t0] service account authenticates to gmail api', () => {
-      then('returns mail in tree format', () => {
-        const subject = getGmailSubjectOrThrow();
-        const result = execAndCapture(
-          `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address ${subject}`,
-        );
-        expect(result.exitCode).toBe(0);
-        expect(result.stdout).toContain('gather.mail');
-        // snapshot the structure (content varies)
-        expect(result.stdout).toMatchSnapshot();
+      when('[t0] service account authenticates to gmail api', () => {
+        then('returns mail in tree format', () => {
+          const subject = getGmailSubjectOrThrow();
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address ${subject}`,
+          );
+          expect(result.exitCode).toBe(0);
+          expect(result.stdout).toContain('gather.mail');
+          // snapshot the structure (content varies)
+          expect(result.stdout).toMatchSnapshot();
+        });
+
+        then('returns mail in json format', () => {
+          const subject = getGmailSubjectOrThrow();
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address ${subject} --format json`,
+          );
+          expect(result.exitCode).toBe(0);
+          // verify valid json output
+          const parsed = JSON.parse(result.stdout);
+          expect(Array.isArray(parsed.mails)).toBe(true);
+          expect(result.stdout).toMatchSnapshot();
+        });
       });
+    },
+  );
 
-      then('returns mail in json format', () => {
-        const subject = getGmailSubjectOrThrow();
-        const result = execAndCapture(
-          `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address ${subject} --format json`,
-        );
-        expect(result.exitCode).toBe(0);
-        // verify valid json output
-        const parsed = JSON.parse(result.stdout);
-        expect(Array.isArray(parsed.mails)).toBe(true);
-        expect(result.stdout).toMatchSnapshot();
+  /**
+   * .what = positive path against the real ses mailbox `jelly@one.nheuron.com`
+   * .why = proves the ses read works end-to-end on the applied mailbox (r008 blocker.1, ses half)
+   *
+   * run it:
+   * 1. apply the mailbox: `.behavior/v2026_07_30.collect-from-ses/blocker/account-setup.md` tracks B–D
+   * 2. rhx keyrack unlock --owner ehmpath --env prep
+   * 3. AWS_PROFILE=nheuron-prep TEST_LIVE=ses npm run test:acceptance
+   *
+   * .note = same gate as [case7]: the named flag, never the presence of a credential
+   */
+  given.runIf(isLiveTargeted({ mechanism: 'ses' }))(
+    '[case11] positive path: real ses mailbox (TEST_LIVE=ses)',
+    () => {
+      const getSesAddressOrThrow = (): string => {
+        // targeted with no mailbox config = loud, never a quiet skip
+        if (!process.env.SES_MAIL_BUCKET || !process.env.SES_REGION)
+          throw new BadRequestError(
+            'TEST_LIVE=ses targets the live ses case, but the mailbox config is absent',
+            {
+              present: {
+                SES_MAIL_BUCKET: !!process.env.SES_MAIL_BUCKET,
+                SES_REGION: !!process.env.SES_REGION,
+                AWS_PROFILE: !!process.env.AWS_PROFILE,
+              },
+              hint: 'rhx keyrack unlock --owner ehmpath --env prep, with AWS_PROFILE=nheuron-prep, or drop ses from TEST_LIVE',
+            },
+          );
+
+        return 'jelly@one.nheuron.com';
+      };
+
+      when('[t0] gather.mail reads the applied mailbox', () => {
+        then('returns mail in json format', () => {
+          const address = getSesAddressOrThrow();
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from ses --address ${address} --format json`,
+          );
+          expect(result.exitCode).toBe(0);
+          const parsed = JSON.parse(result.stdout);
+          expect(Array.isArray(parsed.mails)).toBe(true);
+        });
       });
-    });
-  });
+    },
+  );
 
   /**
    * .what = the `--from ses` contract, for the path a human reaches WITHOUT live aws
@@ -332,8 +373,7 @@ describe('gather.mail', () => {
    *   'ses needs no auth flow'. so the error named a fix that could not fix it, which is
    *   worse than an error with no hint at all (`rule.require.errors-name-the-fix`).
    *
-   * .note = the live read (a real mailbox, real mail) is blocked on the human-only apply and
-   *   is tracked as the one unticked verification in the yield.
+   * .note = the live read (a real mailbox, real mail) is [case11], behind `TEST_LIVE=ses`.
    */
   given('[case8] ses collection with no aws configured', () => {
     when('[t0] SES_MAIL_BUCKET and SES_REGION are absent', () => {

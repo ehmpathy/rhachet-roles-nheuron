@@ -12,7 +12,7 @@ the forks taken mid-drive on best-guess rather than escalated, per
 | [F5](inventory.of=fulcrums.case=F5-account-mismatch-guarded-by-prose.md) | the account mismatch is guarded by a human check, not by code | clean | open | 70% |
 | [F6](inventory.of=fulcrums.case=F6-bucket-name-carries-no-account-id.md) | the inbound bucket name carries no account discriminator | clean | open | 75% |
 | [F7](inventory.of=fulcrums.case=F7-deleted-another-behaviors-orphans.md) | six of the gmail behavior's orphaned operations deleted from this stone | clean | open | 78% |
-| [F8](inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md) | the gmail behavior's acceptance gate turned RED, green only by a human's hand | clean | best-guessed: A upheld | 88% |
+| [F8](inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md) | the gmail behavior's acceptance gate turned RED, green only by a human's hand | clean | ruled: D, a `TEST_LIVE` flag gate (commander) | 88% |
 | [F9](inventory.of=fulcrums.case=F9-fetch-range-is-also-the-view-range.md) | the fetch range doubles as the view range, so a bare re-run shows a delta | clean | open | 61% |
 | [F10](inventory.of=fulcrums.case=F10-filtered-runs-are-non-incremental.md) | a filtered run is non-incremental, rather than separately cached | clean | open | 81% |
 | [F11](inventory.of=fulcrums.case=F11-since-does-not-bound-the-ses-walk.md) | `--since` bounds the gmail fetch but not the ses one; capped, not pushed down | clean | open | 76% |

@@ -69,14 +69,19 @@ the 12% doubt is entirely that, not the correctness of the repair.
 
 ## the verdict
 
-**A upheld — best-guess under the director's accelerate order (2026-10-31), not a wisher verdict.**
+**overruled by the commander (2026-11-01): D — a named flag gate.** neither A, B, nor C.
 
-- the director named F8 a clean rework and ordered a best-guess, so the driver takes the call
-- A stands: `rule.require.failfast` and `rule.forbid.failhide` forbid the skip by name; B and C
-  each keep a lie alive
-- `[case7]` stays RED in CI until a human fills the two gmail keys and wires them into
-  `.github/workflows/test.yml` `secrets:` — step 1 of `blocker/account-setup.md`
-- reversal stays one commit: restore `hasCredentials` + `when.runIf`
+| option | what it does |
+|---|---|
+| **D — named flag (ruled)** | a live case runs only when `TEST_LIVE` names its mechanism (`gmail`, `ses`); absent the flag it skips by name. targeted with no credential, it throws |
+
+- a red CI on absent gmail secrets was the defect, not the absent account setup
+- no oauth or live-api case runs in CI unless a named flag targets it
+- D keeps the half of A that mattered: a skip never hides an absent credential. the gate is
+  the human's ask, so a skip reads "not asked", never "asked, key absent"
+- `[case7]` (gmail) and `[case11]` (ses, new) sit behind the flag in
+  `gatherMail.acceptance.test.ts`
+- account setup is a risk ask for the live run only, never a merge gate
 
 ## .see also
 

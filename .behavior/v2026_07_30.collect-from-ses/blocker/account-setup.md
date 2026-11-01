@@ -1,6 +1,7 @@
-# p0 ask: account setup for collect-from-ses
+# risk ask: account setup for the collect-from-ses live run
 
-> the one human ask that unblocks stone `5.1.execution.from_vision`.
+> a risk ask for the live run only — never a merge gate. ci stays green without it: the live
+> cases sit behind `TEST_LIVE` and skip when no flag names them.
 > run top to bottom. each step = one command or one console path, then what it unblocks.
 > 🧑 = human by hand · 🤖 = command · ⛳ = check before you go on.
 
@@ -8,7 +9,7 @@
 
 | track | steps | closes |
 |---|---|---|
-| A — gmail credentials | A1–A4 | acceptance `[case7]` in CI (r008 blocker.1, gmail half; fulcrum F8) |
+| A — gmail credentials | A1–A4 | live `[case7]` via `TEST_LIVE=gmail` (r008 blocker.1, gmail half) |
 | B — aws accounts | B1–B6 | the `nheuron-prod` + `nheuron-prep` accounts the mailbox lives in |
 | C — ses mailbox | C1–C3 | `jelly@one.nheuron.com` identity, inbound bucket, dkim tokens |
 | D — dns | D1–D4 | mx, spf, dkim, dmarc on `one.nheuron.com` |
@@ -46,12 +47,12 @@ rhx keyrack fill --owner ehmpath --env test
 ```
 unblocks: local acceptance `[case7]`.
 
-**A3** 🤖 set the two ci secrets (the workflows already pass them to the acceptance job):
+**A3** 🤖 optional — only to run the live gmail case in ci under `TEST_LIVE=gmail`. set the two ci secrets (the workflows already pass them to the acceptance job):
 ```sh
 gh secret set GMAIL_SERVICE_ACCOUNT_JSON --repo ehmpathy/rhachet-roles-nheuron < path/to/key.json
 gh secret set GMAIL_SERVICE_ACCOUNT_SUBJECT --repo ehmpathy/rhachet-roles-nheuron --body 'robot@yourdomain.com'
 ```
-unblocks: `suite / test-acceptance-locally` in CI.
+unblocks: the live gmail case in ci, once a flag targets it. ci is green without it.
 
 **A4** ⛳ check:
 ```sh
@@ -162,8 +163,9 @@ unblocks: inbound delivery + signed sends.
 ```sh
 rhx keyrack unlock --owner ehmpath --env prep
 AWS_PROFILE=nheuron-prep rhx gather.mail --from ses --address jelly@one.nheuron.com --since 2026-10-01
+AWS_PROFILE=nheuron-prep TEST_LIVE=ses npm run test:acceptance -- gatherMail   # the live [case11]
 ```
-unblocks: r008 blocker.1 (ses half). ⛳ your mail appears with from, subject, snippet.
+unblocks: r008 blocker.1 (ses half). ⛳ your mail appears with from, subject, snippet; `[case11]` passes.
 
 **E3** 🧑 tell the driver "mailbox live". the driver composes the reply path, sends from `jelly@`, and re-arrives the stone.
 ⚠️ a new ses account sits in the sandbox: it sends only to verified addresses until aws grants production access (the mail wish requests it; aws answers within ~24h). to prove the send sooner, verify your E1 address: ses console → identities → **Create identity** → email address.
