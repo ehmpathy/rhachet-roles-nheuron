@@ -52,7 +52,7 @@ examples:
 `;
 
 exports[`gather.mail given: [case2] absent required args when: [t0] no --from provided then: exits with error code 2 1`] = `
-"error: BadRequestError: --from is required
+"✋ ConstraintError: BadRequestError: --from is required
 
 {
   "hint": "run with --help for usage"
@@ -61,7 +61,7 @@ exports[`gather.mail given: [case2] absent required args when: [t0] no --from pr
 `;
 
 exports[`gather.mail given: [case2] absent required args when: [t1] --from provided but no --address then: exits with error code 2 1`] = `
-"error: BadRequestError: --address is required
+"✋ ConstraintError: BadRequestError: --address is required
 
 {
   "hint": "run with --help for usage"
@@ -70,7 +70,7 @@ exports[`gather.mail given: [case2] absent required args when: [t1] --from provi
 `;
 
 exports[`gather.mail given: [case3] invalid mechanism when: [t0] unsupported mechanism provided then: exits with error code 2 1`] = `
-"error: BadRequestError: invalid mechanism 'slack'
+"✋ ConstraintError: BadRequestError: invalid mechanism 'slack'
 
 {
   "validMechanisms": [
@@ -83,7 +83,7 @@ exports[`gather.mail given: [case3] invalid mechanism when: [t0] unsupported mec
 `;
 
 exports[`gather.mail given: [case4] invalid format when: [t0] unsupported format provided then: exits with error code 2 1`] = `
-"error: BadRequestError: invalid format 'xml'
+"✋ ConstraintError: BadRequestError: invalid format 'xml'
 
 {
   "validFormats": [
@@ -96,7 +96,7 @@ exports[`gather.mail given: [case4] invalid format when: [t0] unsupported format
 `;
 
 exports[`gather.mail given: [case5] not authenticated (auth check exercises) when: [t0] no token exists for address then: exits with clear error and hint 1`] = `
-"error: BadRequestError: not authenticated
+"✋ ConstraintError: BadRequestError: not authenticated
 
 {
   "mechanism": "gmail",
@@ -106,7 +106,7 @@ exports[`gather.mail given: [case5] not authenticated (auth check exercises) whe
 `;
 
 exports[`gather.mail given: [case6] positive path constraint: gmail api requires real credentials when: [t0] authenticated with fake token (gmail api rejects) then: exits with api error (proves full flow path) 1`] = `
-"error: UnexpectedCodePathError: gmail messages.list failed
+"💥 MalfunctionError: UnexpectedCodePathError: gmail messages.list failed
 
 {
   "status": 401,
@@ -116,7 +116,7 @@ exports[`gather.mail given: [case6] positive path constraint: gmail api requires
 `;
 
 exports[`gather.mail given: [case8] ses collection with no aws configured when: [t0] SES_MAIL_BUCKET and SES_REGION are absent then: exits 2 and names the keyrack unlock, never gather.auth 1`] = `
-"error: BadRequestError: not authenticated
+"✋ ConstraintError: BadRequestError: not authenticated
 
 {
   "mechanism": "ses",
@@ -126,7 +126,7 @@ exports[`gather.mail given: [case8] ses collection with no aws configured when: 
 `;
 
 exports[`gather.mail given: [case9] a --query against ses, which cannot honor one when: [t0] gather.mail is invoked with --query then: exits 2 and refuses the flag, rather than return it all 1`] = `
-"error: BadRequestError: ses cannot honor --query
+"✋ ConstraintError: BadRequestError: ses cannot honor --query
 
 {
   "filter": {
@@ -140,7 +140,7 @@ exports[`gather.mail given: [case9] a --query against ses, which cannot honor on
 `;
 
 exports[`gather.mail given: [case10] a /labels= scope against ses when: [t0] gather.mail is invoked with a scoped address then: exits 2 and names the suffix to drop 1`] = `
-"error: BadRequestError: ses cannot honor a /labels= scope
+"✋ ConstraintError: BadRequestError: ses cannot honor a /labels= scope
 
 {
   "filter": {
@@ -156,7 +156,7 @@ exports[`gather.mail given: [case10] a /labels= scope against ses when: [t0] gat
 `;
 
 exports[`gather.mail given: [case12] a typo in a flag name when: [t0] gather.mail is invoked with --qurey then: exits 2, names the unknown flag and the allowed set 1`] = `
-"error: BadRequestError: unknown flag '--qurey'
+"✋ ConstraintError: BadRequestError: unknown flag '--qurey'
 
 {
   "allowedFlags": [

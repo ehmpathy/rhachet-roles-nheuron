@@ -21,9 +21,25 @@ const REPLY = {
 };
 
 /**
+ * .what = put an env key back to a prior value, or remove it when it had none
+ * .why = `process.env.X = undefined` stores the STRING `'undefined'`, which is truthy — so a
+ *   bare restore of an unset key leaks a fake config into every later suite in the worker
+ */
+const setEnvOrDel = (input: {
+  key: string;
+  value: string | undefined;
+}): void => {
+  if (input.value === undefined) {
+    delete process.env[input.key];
+    return;
+  }
+  process.env[input.key] = input.value;
+};
+
+/**
  * .what = runs a send against a deliberately-shaped env, and restores it after
  * .why = the guards under test read `getSesConfig()`, which reads the env. an assignment
- *   left behind would leak into whatever suite ran next, so the restore is not optional.
+ *   left behind would leak into whatever suite ran next, so the restore sits in a `finally`.
  */
 const sendWithEnv = async (env: {
   bucket: string;
@@ -40,13 +56,13 @@ const sendWithEnv = async (env: {
   process.env.SES_REGION = env.region;
   process.env.SES_CONFIG_SET = env.configSet;
 
-  const error = await getError(() => sendReplyViaSes(REPLY, { log }));
-
-  process.env.SES_MAIL_BUCKET = before.bucket;
-  process.env.SES_REGION = before.region;
-  process.env.SES_CONFIG_SET = before.configSet;
-
-  return error;
+  try {
+    return await getError(() => sendReplyViaSes(REPLY, { log }));
+  } finally {
+    setEnvOrDel({ key: 'SES_MAIL_BUCKET', value: before.bucket });
+    setEnvOrDel({ key: 'SES_REGION', value: before.region });
+    setEnvOrDel({ key: 'SES_CONFIG_SET', value: before.configSet });
+  }
 };
 
 /**

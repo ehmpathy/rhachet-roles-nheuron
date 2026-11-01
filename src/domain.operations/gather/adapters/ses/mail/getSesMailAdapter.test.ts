@@ -5,6 +5,22 @@ import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 import { getSesMailAdapter } from './getSesMailAdapter';
 
 /**
+ * .what = put an env key back to a prior value, or remove it when it had none
+ * .why = `process.env.X = undefined` stores the STRING `'undefined'`, which is truthy — so a
+ *   bare restore of an unset key leaks a fake config into every later suite in the worker
+ */
+const setEnvOrDel = (input: {
+  key: string;
+  value: string | undefined;
+}): void => {
+  if (input.value === undefined) {
+    delete process.env[input.key];
+    return;
+  }
+  process.env[input.key] = input.value;
+};
+
+/**
  * .what = clamps that ses REFUSES a filter it cannot honor, rather than drops it
  * .why = `--query` and `/labels=` were once parsed at the cli and discarded before any adapter
  *   saw them, so a filtered gather returned the WHOLE mailbox with exit 0. gmail's half of that
@@ -78,17 +94,25 @@ describe('getSesMailAdapter.getFilterRefusal', () => {
   });
 
   given('[case5] a purity claim the orchestrator depends on', () => {
+    // save, blank, and restore the env around the case. `afterAll` runs however the case
+    // exits, and an unset key is deleted, never assigned — `process.env.X = undefined`
+    // stores the truthy string 'undefined' and leaks it to every later suite in the worker
+    const envPrior = {
+      bucket: process.env.SES_MAIL_BUCKET,
+      region: process.env.SES_REGION,
+    };
+    beforeAll(() => {
+      process.env.SES_MAIL_BUCKET = '';
+      process.env.SES_REGION = '';
+    });
+    afterAll(() => {
+      setEnvOrDel({ key: 'SES_MAIL_BUCKET', value: envPrior.bucket });
+      setEnvOrDel({ key: 'SES_REGION', value: envPrior.region });
+    });
+
     when('[t0] the filter is read with NO ses config in the env', () => {
       then('it still answers — it reads no env and opens no client', () => {
-        const bucketBefore = process.env.SES_MAIL_BUCKET;
-        const regionBefore = process.env.SES_REGION;
-        process.env.SES_MAIL_BUCKET = '';
-        process.env.SES_REGION = '';
-
         const refusal = readRefusal({ query: 'has:attachment', labels: [] });
-
-        process.env.SES_MAIL_BUCKET = bucketBefore;
-        process.env.SES_REGION = regionBefore;
 
         // the contract says PURE, and the orchestrator calls this BEFORE it authenticates.
         // reach for `getSesConfig()` inside it and this goes red rather than silently

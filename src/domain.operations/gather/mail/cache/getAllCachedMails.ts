@@ -84,8 +84,9 @@ const getOneCachedMail = async (input: {
   const data = (() => {
     try {
       return JSON.parse(content) as Record<string, unknown>;
-    } catch {
+    } catch (error) {
       return BadRequestError.throw('a cached mail is not valid json', {
+        cause: error instanceof Error ? error : undefined,
         file: input.file,
         why: 'a crash mid-write leaves a truncated cache file',
         hint: `delete the cache file and re-gather: ${filePath}`,

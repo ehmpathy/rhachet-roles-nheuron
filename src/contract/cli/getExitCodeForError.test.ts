@@ -39,11 +39,10 @@ describe('getExitCodeForError', () => {
           sink,
         );
 
-        // .note = `helpful-errors` prefixes the class into `.message`, so the human sees
-        //   the error KIND as well as its text. pinned as-is rather than trimmed — the
-        //   kind is what tells a human whether they mis-called or the tool broke
+        // .note = the qualified header names who fixes it; `helpful-errors` prefixes the
+        //   thrown kind into `.message`, which stays after the header as the detail
         expect(sink.state.lines).toEqual([
-          'error: BadRequestError: --from is required',
+          '✋ ConstraintError: BadRequestError: --from is required',
         ]);
         // ⚠️ a stack trace as a human's only error output is a blocker
         expect(sink.state.lines.join('')).not.toContain('at ');
@@ -74,7 +73,9 @@ describe('getExitCodeForError', () => {
         expect(getExitCodeForError({ error: 'a bare string' }, sink)).toEqual(
           1,
         );
-        expect(sink.state.lines).toEqual(['error: a bare string']);
+        expect(sink.state.lines).toEqual([
+          '💥 MalfunctionError: a bare string',
+        ]);
       });
     });
   });

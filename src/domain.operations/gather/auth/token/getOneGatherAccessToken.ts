@@ -44,8 +44,9 @@ export const getOneGatherAccessToken = async (input: {
   const parsed = (() => {
     try {
       return JSON.parse(content) as Record<string, unknown>;
-    } catch {
+    } catch (error) {
       return BadRequestError.throw('token cache is not valid json', {
+        cause: error instanceof Error ? error : undefined,
         tokenPath,
         why: 'a crash mid-write leaves a truncated file',
         hint: `delete it and re-run: gather.auth --from ${input.repo.mechanism}`,

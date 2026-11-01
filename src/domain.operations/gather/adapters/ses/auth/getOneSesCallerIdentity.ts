@@ -1,4 +1,5 @@
 import { GetCallerIdentityCommand, type STSClient } from '@aws-sdk/client-sts';
+import { UnexpectedCodePathError } from 'helpful-errors';
 
 import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
 
@@ -47,7 +48,16 @@ export const getOneSesCallerIdentity = async (
     }
   })();
 
-  if (!response?.Account || !response.Arn) return null;
+  // a credential fault already returned null above; no response here means the same
+  if (!response) return null;
+
+  // a call that SUCCEEDED yet names no account or arn is a malformed response, never an
+  // absent credential — an unlock cannot fix it, so it must not read as 'anonymous'
+  if (!response.Account || !response.Arn)
+    throw new UnexpectedCodePathError(
+      'sts GetCallerIdentity succeeded but named no account or arn',
+      { hasAccount: !!response.Account, hasArn: !!response.Arn },
+    );
 
   return { account: response.Account, arn: response.Arn };
 };

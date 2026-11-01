@@ -14,19 +14,24 @@ import { BadRequestError } from 'helpful-errors';
  *
  * .note = it takes the report sink rather than reach for `console` itself, so the map is
  *   testable without capture of a global.
+ *
+ * .note = each report opens with its qualified class behind its glyph — `✋ ConstraintError:`
+ *   (the caller fixes, exit 2) or `💥 MalfunctionError:` (the system fixes, exit 1) — so the
+ *   human reads who owns the fix before the detail (`rule.require.qualified-error-headers`).
+ *   the thrown kind (`BadRequestError: …`) stays after it, as the detail.
  */
 export const getExitCodeForError = (
   input: { error: unknown },
   context: { setStderr: (content: string) => void },
 ): number => {
   if (input.error instanceof BadRequestError) {
-    context.setStderr(`error: ${input.error.message}`);
+    context.setStderr(`✋ ConstraintError: ${input.error.message}`);
     return 2; // caller-must-fix
   }
 
   // catch-all: an unexpected error still earns human-readable output
   const message =
     input.error instanceof Error ? input.error.message : String(input.error);
-  context.setStderr(`error: ${message}`);
+  context.setStderr(`💥 MalfunctionError: ${message}`);
   return 1; // unexpected
 };

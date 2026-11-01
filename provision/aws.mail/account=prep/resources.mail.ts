@@ -29,6 +29,9 @@ import {
   MAIL_RULE,
   MAIL_RULE_SET,
 } from '../../resources.common.mail';
+import { asIamRootPrincipalArn } from './asIamRootPrincipalArn';
+import { asS3BucketArn } from './asS3BucketArn';
+import { asS3ObjectArn } from './asS3ObjectArn';
 
 // source aws credentials from keyrack — this wish applies into the nheuron-prep account
 keyrack.source({ env: 'prep', owner: 'ehmpath', mode: 'lenient' });
@@ -116,7 +119,10 @@ export const getResourcesOfMail = (input: {
           effect: 'Allow',
           principal: { service: 'ses.amazonaws.com' },
           action: 's3:PutObject',
-          resource: `arn:aws:s3:::${MAIL_BUCKET}/${MAIL_OBJECT_KEY_PREFIX}*`,
+          resource: asS3ObjectArn({
+            bucket: MAIL_BUCKET,
+            prefix: MAIL_OBJECT_KEY_PREFIX,
+          }),
           condition: {
             StringEquals: { 'aws:SourceAccount': account },
             ArnLike: { 'aws:SourceArn': receiptRuleArn },
@@ -189,7 +195,7 @@ export const getResourcesOfMail = (input: {
     policies: [
       {
         effect: 'Allow',
-        principal: { aws: `arn:aws:iam::${account}:root` },
+        principal: { aws: asIamRootPrincipalArn({ account }) },
         action: 'sts:AssumeRole',
       },
     ],
@@ -207,7 +213,7 @@ export const getResourcesOfMail = (input: {
         {
           effect: 'Allow',
           action: 's3:ListBucket',
-          resource: `arn:aws:s3:::${MAIL_BUCKET}`,
+          resource: asS3BucketArn({ bucket: MAIL_BUCKET }),
           condition: {
             StringLike: { 's3:prefix': `${MAIL_OBJECT_KEY_PREFIX}*` },
           },
@@ -215,7 +221,10 @@ export const getResourcesOfMail = (input: {
         {
           effect: 'Allow',
           action: 's3:GetObject',
-          resource: `arn:aws:s3:::${MAIL_BUCKET}/${MAIL_OBJECT_KEY_PREFIX}*`,
+          resource: asS3ObjectArn({
+            bucket: MAIL_BUCKET,
+            prefix: MAIL_OBJECT_KEY_PREFIX,
+          }),
         },
         // the respond path — send scoped to the mail subdomain, never the apex
         {

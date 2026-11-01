@@ -22,6 +22,22 @@ const log = {
 };
 
 /**
+ * .what = put an env key back to a prior value, or remove it when it had none
+ * .why = `process.env.X = undefined` stores the STRING `'undefined'`, which is truthy — so a
+ *   bare restore of an unset key leaks a fake credential into every later suite in the worker
+ */
+const setEnvOrDel = (input: {
+  key: string;
+  value: string | undefined;
+}): void => {
+  if (input.value === undefined) {
+    delete process.env[input.key];
+    return;
+  }
+  process.env[input.key] = input.value;
+};
+
+/**
  * .what = clamps that `gather.auth` cannot report a readiness `gather.mail` will refuse
  * .why = ⚠️ `getAuthStatus` returned `authenticated` the moment both service-account env keys
  *   were merely PRESENT, with no check that either held a real credential. so a human who
@@ -47,8 +63,11 @@ describe('getGmailAuthAdapter.getAuthStatus', () => {
   };
 
   afterAll(() => {
-    process.env.GMAIL_SERVICE_ACCOUNT_JSON = envPrior.json;
-    process.env.GMAIL_SERVICE_ACCOUNT_SUBJECT = envPrior.subject;
+    setEnvOrDel({ key: 'GMAIL_SERVICE_ACCOUNT_JSON', value: envPrior.json });
+    setEnvOrDel({
+      key: 'GMAIL_SERVICE_ACCOUNT_SUBJECT',
+      value: envPrior.subject,
+    });
   });
 
   given('[case1] both keys filled with a real service account', () => {
