@@ -7,7 +7,7 @@ import type { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
 
 import { genOncePerCall } from '../../../genOncePerCall';
-import { getSesConfig } from '../getSesConfig';
+import { getSesConfigOrNull } from '../getSesConfigOrNull';
 import {
   getOneSesCallerIdentity,
   type SesCallerIdentity,
@@ -73,17 +73,8 @@ export const getSesAuthAdapter = (): GatherAuthAdapter => {
       adapterContext: { log: GatherLogMethods },
     ): Promise<GatherAuthStatus> => {
       // an absent config means we cannot even reach aws — that reads as anonymous rather
-      // than an error, since `gather.auth` exists precisely to report a not-yet-set-up state.
-      // the catch allowlists ONLY that case and rethrows every other error, so a real fault
-      // can never masquerade as "not authenticated" (rule.forbid.failhide)
-      const config = (() => {
-        try {
-          return getSesConfig();
-        } catch (error) {
-          if (error instanceof BadRequestError) return null;
-          throw error;
-        }
-      })();
+      // than an error, since `gather.auth` exists precisely to report a not-yet-set-up state
+      const config = getSesConfigOrNull();
       if (!config) return 'anonymous';
 
       const identity = await getOneIdentityOnce({
@@ -133,7 +124,10 @@ export const getSesAuthAdapter = (): GatherAuthAdapter => {
       _input: { repo: GatheredMailRepo },
       adapterContext: { log: GatherLogMethods },
     ): Promise<string | null> => {
-      const config = getSesConfig();
+      // an absent config yields null, the same answer gmail gives — never a throw, so a
+      // caller that skips the status check sees one contract on both mechanisms
+      const config = getSesConfigOrNull();
+      if (!config) return null;
 
       // ⚠️ this still ASKS for the identity rather than assume `getAuthStatus` proved it.
       // the memo makes the ask free within one invocation, but the call stays because the

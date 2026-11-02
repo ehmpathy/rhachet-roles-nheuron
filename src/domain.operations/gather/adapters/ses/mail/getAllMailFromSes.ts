@@ -116,6 +116,18 @@ const getAllMailKeysFromSes = async (
           !!candidate.receivedAt,
       );
 
+    // name every undated skip, so an unexpected drop is observable rather than invisible
+    const keysUndated = (response.Contents ?? [])
+      .filter((object) => !!object.Key && !object.LastModified)
+      .map((object) => object.Key);
+    if (keysUndated.length > 0)
+      context.log.warn(
+        'ses.getAllMailKeys: skipped keys with no receipt time',
+        {
+          keysUndated,
+        },
+      );
+
     const found = [...input2.found, ...keys];
 
     context.log.debug('ses.getAllMailKeys: page', {

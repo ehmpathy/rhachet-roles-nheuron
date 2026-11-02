@@ -17,7 +17,7 @@ options:
                        narrows what GMAIL fetches — see below.
   --query <query>      search query to filter mail (gmail only — ses refuses it)
   --format <format>    output format: tree, json (default: tree)
-  --help               show this help message
+  -h, --help           show this help message
 
   what each mechanism can filter on:
     gmail   --since, --query (gmail search syntax), and an --address
@@ -27,10 +27,11 @@ options:
             or a /labels= scope rather than ignore one.
 
   what a scoped run costs:
-    a --query or /labels= run is NOT cached and never incremental — it
-    re-fetches its whole range on every call, and lists only what it
-    matched. a bare run is cached and incremental. the output names which
-    one you got, on its "scope:" line.
+    a --query or /labels= run is never served FROM the cache and never
+    incremental — it re-fetches its whole range on every call, and lists
+    only what it matched. what it fetched is still kept in the cache, so
+    the "cached:" count may grow. a bare run is served from the cache and
+    incremental. the output names which one you got, on its "scope:" line.
 
   what --since costs, per mechanism:
     gmail   pushed into the api query as an "after:" term, so the remote
@@ -168,6 +169,44 @@ exports[`gather.mail given: [case12] a typo in a flag name when: [t0] gather.mai
     "--help"
   ],
   "hint": "run with --help for usage; a typo returns no error otherwise"
+}
+"
+`;
+
+exports[`gather.mail given: [case13] an address scope segment with no = when: [t0] gather.mail is invoked with --address vlad@example.com/inbox then: exits 2 and names the key=value shape 1`] = `
+"✋ ConstraintError: BadRequestError: address scope segment 'inbox' is not a key=value pair
+
+{
+  "address": "vlad@example.com/inbox",
+  "segment": "inbox",
+  "hint": "scope segments look like labels=work,urgent — separate multiple with &"
+}
+"
+`;
+
+exports[`gather.mail given: [case14] an address scope key we cannot honor when: [t0] gather.mail is invoked with --address vlad@example.com/folder=inbox then: exits 2 and names the keys it can honor 1`] = `
+"✋ ConstraintError: BadRequestError: address scope has a key we cannot honor
+
+{
+  "keysUnsupported": [
+    "folder"
+  ],
+  "keysSupported": [
+    "labels"
+  ],
+  "why": "an ignored scope would widen the result silently — you would get more mail than you asked for, with no error",
+  "hint": "drop it, or use one of: labels"
+}
+"
+`;
+
+exports[`gather.mail given: [case15] an unreadable --since when: [t0] gather.mail is invoked with --since yesterday then: exits 2 and names an iso date, before any auth check 1`] = `
+"✋ ConstraintError: BadRequestError: --since is not a date we can read
+
+{
+  "since": "yesterday",
+  "why": "an unreadable date would silently become no bound at all, and return the whole mailbox",
+  "hint": "use an ISO date, e.g. --since 2026-08-01"
 }
 "
 `;

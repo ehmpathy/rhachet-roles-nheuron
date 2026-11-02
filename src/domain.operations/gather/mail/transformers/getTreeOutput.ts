@@ -1,4 +1,5 @@
 import type { GatheredMail } from '@src/domain.objects/GatheredMail';
+import type { GatheredMailMechanism } from '@src/domain.objects/GatheredMailMechanism';
 import type { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
 import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 
@@ -32,6 +33,7 @@ const getMailLines = (input: {
 export const getTreeOutput = (input: {
   mails: GatheredMail[];
   stats: GatheredMailSyncStats;
+  mechanism: GatheredMailMechanism;
   address: string;
   filter: GatherMailFilter;
 }): string => {
@@ -45,7 +47,8 @@ export const getTreeOutput = (input: {
   const headerLines = [
     `\u{1fABC} boop!`, // jellyfish emoji
     '',
-    `\u{1FAD9} gather.mail --address ${input.address}`,
+    // a rerunnable command: --from is required, so the header names it too
+    `\u{1FAD9} gather.mail --from ${input.mechanism} --address ${input.address}`,
     `   \u251C\u2500 scope: ${getScopeDisplay({ filter: input.filter })}`,
     `   \u251C\u2500 listed: ${input.mails.length}`,
     `   \u251C\u2500 synced: ${input.stats.mailSyncedQuant}`,

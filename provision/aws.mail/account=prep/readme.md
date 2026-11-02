@@ -135,6 +135,8 @@ speculative abstraction (`rule.prefer.wet-over-dry`).
 ⚠️ a **mismatch** on any of the three fails **silently**, which is why they warrant a table
 rather than a sentence: a wrong bucket or region yields an empty mailbox rather than an error,
 and a wrong config set silences the send-event destination while each send still looks healthy.
+`provision/resources.common.mail.integration.test.ts` clamps all three against the constants;
+it runs under `TEST_LIVE=ses`, the one moment the prep keyrack is unlocked for a live read.
 
 ---
 

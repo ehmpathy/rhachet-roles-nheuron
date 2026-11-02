@@ -20,7 +20,7 @@
 #               — ses reads the whole s3 prefix, then applies the bound locally.
 #   --query     search query to filter mail (gmail only — ses refuses it)
 #   --format    output format: tree, json (default: tree)
-#   --help      show help message
+#   -h, --help  show help message
 #
 # what each mechanism can filter on:
 #   gmail   --since, --query (gmail search syntax), and an --address scoped

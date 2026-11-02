@@ -4,7 +4,7 @@ exports[`getTreeOutput renders a bare and a narrowed run, for a human to vibeche
 {
   "bare": "🪼 boop!
 
-🫙 gather.mail --address vlad@gmail.com
+🫙 gather.mail --from gmail --address vlad@gmail.com
    ├─ scope: whole mailbox
    ├─ listed: 2
    ├─ synced: 2
@@ -16,7 +16,7 @@ exports[`getTreeOutput renders a bare and a narrowed run, for a human to vibeche
          └─ Second",
   "narrowed": "🪼 boop!
 
-🫙 gather.mail --address vlad@gmail.com
+🫙 gather.mail --from gmail --address vlad@gmail.com
    ├─ scope: labels=work query="from:boss@co.com"
    ├─ listed: 1
    ├─ synced: 1

@@ -37,7 +37,7 @@ options:
                        narrows what GMAIL fetches — see below.
   --query <query>      search query to filter mail (gmail only — ses refuses it)
   --format <format>    output format: tree, json (default: tree)
-  --help               show this help message
+  -h, --help           show this help message
 
   what each mechanism can filter on:
     gmail   --since, --query (gmail search syntax), and an --address
@@ -47,10 +47,11 @@ options:
             or a /labels= scope rather than ignore one.
 
   what a scoped run costs:
-    a --query or /labels= run is NOT cached and never incremental — it
-    re-fetches its whole range on every call, and lists only what it
-    matched. a bare run is cached and incremental. the output names which
-    one you got, on its "scope:" line.
+    a --query or /labels= run is never served FROM the cache and never
+    incremental — it re-fetches its whole range on every call, and lists
+    only what it matched. what it fetched is still kept in the cache, so
+    the "cached:" count may grow. a bare run is served from the cache and
+    incremental. the output names which one you got, on its "scope:" line.
 
   what --since costs, per mechanism:
     gmail   pushed into the api query as an "after:" term, so the remote

@@ -42,6 +42,18 @@ const getEnvWithoutSes = (): NodeJS.ProcessEnv => ({
 });
 
 /**
+ * .what = the env a gmail case runs under: the current env with the service account cleared
+ * .why = a present service account short-circuits gmail auth to `authenticated` before the
+ *   token cache is read, so a human with an unlocked test keyrack would flip every gmail
+ *   negative-path verdict. clear it, and the verdict comes from the code, never the machine
+ */
+const getEnvWithoutGmail = (): NodeJS.ProcessEnv => ({
+  ...process.env,
+  GMAIL_SERVICE_ACCOUNT_JSON: '',
+  GMAIL_SERVICE_ACCOUNT_SUBJECT: '',
+});
+
+/**
  * .what = execute command and return result (success or error)
  * .why = enables const assignment instead of let + try/catch mutation
  */
@@ -93,6 +105,21 @@ describe('gather.mail', () => {
         expect(result).toContain('--format');
         expect(result).toContain('--help');
         expect(result).toMatchSnapshot();
+      });
+    });
+
+    when('[t1] -h is passed', () => {
+      then('displays the same help, which names the -h alias', () => {
+        const resultShort = execSync(
+          'node -e "import(\'rhachet-roles-nheuron/cli/gatherMail\').then(m => m.gatherMail()).then(c => process.exit(c))" -- -h',
+          { encoding: 'utf8' },
+        );
+        const resultLong = execSync(
+          'node -e "import(\'rhachet-roles-nheuron/cli/gatherMail\').then(m => m.gatherMail()).then(c => process.exit(c))" -- --help',
+          { encoding: 'utf8' },
+        );
+        expect(resultShort).toContain('-h, --help');
+        expect(resultShort).toEqual(resultLong);
       });
     });
   });
@@ -152,6 +179,7 @@ describe('gather.mail', () => {
       then('exits with clear error and hint', () => {
         const result = execAndCapture(
           'node -e "import(\'rhachet-roles-nheuron/cli/gatherMail\').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address no-token-test@example.com',
+          { env: getEnvWithoutGmail() },
         );
         expect(result.exitCode).toBe(2);
         expect(result.stderr).toContain('not authenticated');
@@ -248,6 +276,7 @@ describe('gather.mail', () => {
         then('exits with api error (proves full flow path)', () => {
           const result = execAndCapture(
             `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address ${testAddress}`,
+            { env: getEnvWithoutGmail() },
           );
           // gmail api should reject fake token
           expect(result.exitCode).toBe(1);
@@ -470,6 +499,75 @@ describe('gather.mail', () => {
         expect(result.exitCode).toBe(2);
         expect(result.stderr).toContain("unknown flag '--qurey'");
         expect(result.stderr).toContain('run with --help for usage');
+        expect(result.stderr).toMatchSnapshot();
+      });
+    });
+  });
+
+  /**
+   * .what = the three input refusals a human meets on a typo: a scope segment with no '=', a
+   *   scope key we cannot honor, and an unreadable --since
+   * .why = each is clamped at the unit grain, but only the cli proves the human reads it as
+   *   `✋ ConstraintError:` on stderr with its hint, at exit 2, before any credential is asked
+   *   for. each runs with no gmail credential, so a refusal that slid behind the auth guard
+   *   would surface here as `not authenticated` and go red
+   */
+  given('[case13] an address scope segment with no =', () => {
+    when(
+      '[t0] gather.mail is invoked with --address vlad@example.com/inbox',
+      () => {
+        then('exits 2 and names the key=value shape', () => {
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address "vlad@example.com/inbox"`,
+            { env: getEnvWithoutGmail() },
+          );
+
+          expect(result.exitCode).toBe(2);
+          expect(result.stderr).toContain(
+            "address scope segment 'inbox' is not a key=value pair",
+          );
+          expect(result.stderr).toContain('scope segments look like labels=');
+          expect(result.stderr).toMatchSnapshot();
+        });
+      },
+    );
+  });
+
+  given('[case14] an address scope key we cannot honor', () => {
+    when(
+      '[t0] gather.mail is invoked with --address vlad@example.com/folder=inbox',
+      () => {
+        then('exits 2 and names the keys it can honor', () => {
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address "vlad@example.com/folder=inbox"`,
+            { env: getEnvWithoutGmail() },
+          );
+
+          expect(result.exitCode).toBe(2);
+          expect(result.stderr).toContain(
+            'address scope has a key we cannot honor',
+          );
+          expect(result.stderr).toContain('drop it, or use one of: labels');
+          expect(result.stderr).toMatchSnapshot();
+        });
+      },
+    );
+  });
+
+  given('[case15] an unreadable --since', () => {
+    when('[t0] gather.mail is invoked with --since yesterday', () => {
+      then('exits 2 and names an iso date, before any auth check', () => {
+        const result = execAndCapture(
+          `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from gmail --address vlad@example.com --since yesterday`,
+          { env: getEnvWithoutGmail() },
+        );
+
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain('--since is not a date we can read');
+        expect(result.stderr).toContain('use an ISO date');
+
+        // ⚠️ the teeth — the date refusal comes first, never a credential detour
+        expect(result.stderr).not.toContain('not authenticated');
         expect(result.stderr).toMatchSnapshot();
       });
     });

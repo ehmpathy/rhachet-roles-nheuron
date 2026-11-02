@@ -79,7 +79,8 @@ lost** — the output says so in one line:
 
 to see the whole mailbox again, pass an explicit `--since` that reaches back past it.
 
-⚠️ **a scoped run — `--query` or `labels=` — is NOT cached, and never incremental.** the cache
+⚠️ **a scoped run — `--query` or `labels=` — is never served from the cache, and never
+incremental.** what it fetches is still written to the cache, so `cached:` may grow. the cache
 and the cursor are keyed on mechanism + address with no filter component, so each answers only
 *"what does this address hold, in full?"* — a question a scoped run cannot answer. three
 consequences, all deliberate:

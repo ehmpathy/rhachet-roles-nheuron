@@ -12,7 +12,7 @@
 # options:
 #   --from     mail source: gmail, ses (required)
 #   --address  email address to check status for (optional)
-#   --help     show help message
+#   -h, --help show help message
 #
 # note:
 #   NEITHER mechanism has an interactive auth flow today. ses has none by design

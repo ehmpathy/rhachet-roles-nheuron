@@ -36,7 +36,7 @@ keyrack.source({ env: 'prep', owner: 'ehmpath', mode: 'lenient' });
  *   alone. only the root dir mints accounts, so only the root dir pays the env cost.
  */
 export const NHEURON_PROD_ACCOUNT_EMAIL =
-  process.env.NHEURON_PROD_ACCOUNT_EMAIL ??
+  process.env.NHEURON_PROD_ACCOUNT_EMAIL ||
   BadRequestError.throw(
     'NHEURON_PROD_ACCOUNT_EMAIL absent — the nheuron-prod account root email is not sourced',
     {
@@ -45,7 +45,7 @@ export const NHEURON_PROD_ACCOUNT_EMAIL =
   );
 
 export const NHEURON_PREP_ACCOUNT_EMAIL =
-  process.env.NHEURON_PREP_ACCOUNT_EMAIL ??
+  process.env.NHEURON_PREP_ACCOUNT_EMAIL ||
   BadRequestError.throw(
     'NHEURON_PREP_ACCOUNT_EMAIL absent — the nheuron-prep account root email is not sourced',
     {

@@ -1,4 +1,4 @@
-import { BadRequestError } from 'helpful-errors';
+import { UnexpectedCodePathError } from 'helpful-errors';
 
 import { GatherContactRef } from '@src/domain.objects/GatherContactRef';
 import { GatheredMail } from '@src/domain.objects/GatheredMail';
@@ -167,12 +167,15 @@ export const getGatheredMailFromGmail = (input: {
   // (rule.forbid.behavior-hazards)
   const deliveredAtMs = parseInt(gmailMessage.internalDate, 10);
   if (Number.isNaN(deliveredAtMs))
-    BadRequestError.throw('gmail message has an unreadable internalDate', {
-      exid: gmailMessage.id,
-      internalDate: gmailMessage.internalDate,
-      why: 'an invalid delivery time mis-sorts the mail and drops it from every --since range',
-      hint: 'gmail should always return internalDate as a millisecond epoch string; re-run the fetch, and report it if it recurs',
-    });
+    UnexpectedCodePathError.throw(
+      'gmail message has an unreadable internalDate',
+      {
+        exid: gmailMessage.id,
+        internalDate: gmailMessage.internalDate,
+        why: 'an invalid delivery time mis-sorts the mail and drops it from every --since range',
+        hint: 'gmail should always return internalDate as a millisecond epoch string; re-run the fetch, and report it if it recurs',
+      },
+    );
 
   return new GatheredMail({
     exid: gmailMessage.id,

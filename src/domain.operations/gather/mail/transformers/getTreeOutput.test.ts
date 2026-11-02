@@ -42,11 +42,15 @@ describe('getTreeOutput', () => {
       mails: [],
       stats,
       address: 'vlad@gmail.com',
+      mechanism: 'gmail',
       filter: FILTER_WHOLE,
     });
 
     expect(result).toContain('boop!');
-    expect(result).toContain('gather.mail --address vlad@gmail.com');
+    // the header is a command a human can rerun: --from is required, so it is echoed
+    expect(result).toContain(
+      'gather.mail --from gmail --address vlad@gmail.com',
+    );
     expect(result).toContain('scope: whole mailbox');
     expect(result).toContain('synced: 10');
     expect(result).toContain('cached: 42');
@@ -68,6 +72,7 @@ describe('getTreeOutput', () => {
       mails: [createMail()],
       stats,
       address: 'vlad@gmail.com',
+      mechanism: 'gmail',
       filter: { query: 'from:boss@co.com', labels: ['work'] },
     });
 
@@ -90,6 +95,7 @@ describe('getTreeOutput', () => {
       mails: [mail],
       stats,
       address: 'test@gmail.com',
+      mechanism: 'gmail',
       filter: FILTER_WHOLE,
     });
 
@@ -110,6 +116,7 @@ describe('getTreeOutput', () => {
       mails: [mail],
       stats,
       address: 'test@gmail.com',
+      mechanism: 'gmail',
       filter: FILTER_WHOLE,
     });
 
@@ -131,6 +138,7 @@ describe('getTreeOutput', () => {
       mails: [],
       stats,
       address: 'test@gmail.com',
+      mechanism: 'gmail',
       filter: FILTER_WHOLE,
     });
 
@@ -167,6 +175,7 @@ describe('getTreeOutput', () => {
       mails: [createMail(), createMail({ exid: 'msg_456', subject: 'Second' })],
       stats: asStats({ cached: 250, synced: 2 }),
       address: 'vlad@gmail.com',
+      mechanism: 'gmail',
       filter: FILTER_WHOLE,
     });
 
@@ -176,6 +185,7 @@ describe('getTreeOutput', () => {
       mails: [createMail()],
       stats: asStats({ cached: 250, synced: 1 }),
       address: 'vlad@gmail.com',
+      mechanism: 'gmail',
       filter: { query: 'from:boss@co.com', labels: ['work'] },
     });
 

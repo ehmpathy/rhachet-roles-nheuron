@@ -41,6 +41,18 @@ const getEnvWithoutSes = (): NodeJS.ProcessEnv => ({
 });
 
 /**
+ * .what = the env a gmail case runs under: the current env with the service account cleared
+ * .why = a present service account short-circuits gmail auth to `authenticated` before the
+ *   token cache is read, so a human with an unlocked test keyrack would flip every gmail
+ *   status verdict. clear it, and the verdict comes from the code, never the machine
+ */
+const getEnvWithoutGmail = (): NodeJS.ProcessEnv => ({
+  ...process.env,
+  GMAIL_SERVICE_ACCOUNT_JSON: '',
+  GMAIL_SERVICE_ACCOUNT_SUBJECT: '',
+});
+
+/**
  * .what = execute command and return result (success or error)
  * .why = enables const assignment instead of let + try/catch mutation
  */
@@ -188,6 +200,7 @@ describe('gather.auth', () => {
         then('shows anonymous status', () => {
           const result = execAndCapture(
             `node -e "import('rhachet-roles-nheuron/cli/gatherAuth').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --from gmail --address ${testAddress}`,
+            { env: getEnvWithoutGmail() },
           );
           expect(result.exitCode).toBe(0);
           expect(result.stdout).toContain('boop! auth needed');
@@ -214,6 +227,7 @@ describe('gather.auth', () => {
         then('shows authenticated status', () => {
           const result = execAndCapture(
             `node -e "import('rhachet-roles-nheuron/cli/gatherAuth').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --from gmail --address ${testAddress}`,
+            { env: getEnvWithoutGmail() },
           );
           expect(result.exitCode).toBe(0);
           expect(result.stdout).toContain('boop! auth ready');
@@ -239,6 +253,7 @@ describe('gather.auth', () => {
       then('shows expired status', () => {
         const result = execAndCapture(
           `node -e "import('rhachet-roles-nheuron/cli/gatherAuth').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --from gmail --address ${testAddress}`,
+          { env: getEnvWithoutGmail() },
         );
         expect(result.exitCode).toBe(0);
         expect(result.stdout).toContain('boop! auth expired');
@@ -270,6 +285,7 @@ describe('gather.auth', () => {
         then('exits 2 and names the service-account fix', () => {
           const result = execAndCapture(
             'node -e "import(\'rhachet-roles-nheuron/cli/gatherAuth\').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --from gmail',
+            { env: getEnvWithoutGmail() },
           );
           expect(result.exitCode).toBe(2);
           expect(result.stderr).toContain('no interactive auth flow');

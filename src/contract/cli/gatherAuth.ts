@@ -31,7 +31,7 @@ usage:
 options:
   --from <mechanism>   mail source: gmail, ses (required)
   --address <email>    email address to check status for (optional)
-  --help               show this help message
+  -h, --help           show this help message
 
 examples:
   gather.auth.sh --from gmail --address user@gmail.com  # check auth status

@@ -9,6 +9,7 @@ import { getMailAdapterForMechanism } from '@src/domain.operations/gather/adapte
 import { genAuthReady } from './genAuthReady';
 import { setGatheredMailOutput } from './setGatheredMailOutput';
 import { setMailsFromAdapter } from './setMailsFromAdapter';
+import { asSinceDateOrThrow } from './transformers/asSinceDateOrThrow';
 import { getAddressScope } from './transformers/getAddressScope';
 import { getAllLabelsFromScope } from './transformers/getAllLabelsFromScope';
 
@@ -74,6 +75,10 @@ export const setGatheredMails = async (
       hint: refusal.hint,
     });
 
+  // refuse an unreadable --since BEFORE the auth check too, for the same reason: no
+  // credential makes a bad date readable. the range itself is still built downstream
+  if (input.since) asSinceDateOrThrow({ since: input.since });
+
   // guard: fail-fast if not authenticated; get token for downstream
   const { accessToken } = await genAuthReady(
     { repo, authAdapter },
@@ -94,6 +99,7 @@ export const setGatheredMails = async (
     {
       mails: result.mails,
       stats: result.stats,
+      mechanism: input.mechanism,
       address: addressScope.address.formed,
       filter,
       format: input.format,

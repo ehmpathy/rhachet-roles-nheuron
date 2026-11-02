@@ -13,8 +13,8 @@ import { getMailsWithinRange } from '@src/domain.operations/gather/mail/transfor
 import { getSyncStatsFromMails } from '@src/domain.operations/gather/mail/transformers/getSyncStatsFromMails';
 
 import { getSesConfig } from '../getSesConfig';
+import { asGatheredMailsFromSes } from './asGatheredMailsFromSes';
 import { getAllMailFromSes } from './getAllMailFromSes';
-import { getGatheredMailFromSes } from './getGatheredMailFromSes';
 
 /**
  * .what = ses adapter for the GatherMailAdapter interface
@@ -92,14 +92,10 @@ export const getSesMailAdapter = (): GatherMailAdapter => {
       );
 
       // cast each into the domain, keyed by its s3 key
-      const gathered = objects.map((object) =>
-        getGatheredMailFromSes({
-          parsed: object.parsed,
-          exid: object.key,
-          receivedAt: object.receivedAt,
-          ceiverAddress: repo.address,
-        }),
-      );
+      const gathered = asGatheredMailsFromSes({
+        objects,
+        ceiverAddress: repo.address,
+      });
 
       // apply the date range after the read, since s3 cannot filter by date.
       //

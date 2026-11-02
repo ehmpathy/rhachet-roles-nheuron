@@ -1,4 +1,5 @@
 import type { GatheredMail } from '@src/domain.objects/GatheredMail';
+import type { GatheredMailMechanism } from '@src/domain.objects/GatheredMailMechanism';
 import type { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
 import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 
@@ -19,6 +20,7 @@ export const setGatheredMailOutput = (
   input: {
     mails: GatheredMail[];
     stats: GatheredMailSyncStats;
+    mechanism: GatheredMailMechanism;
     address: string;
     /**
      * the slice of the mailbox this run asked for.
@@ -48,6 +50,7 @@ export const setGatheredMailOutput = (
       : getTreeOutput({
           mails: mailsSorted,
           stats: input.stats,
+          mechanism: input.mechanism,
           address: input.address,
           filter: input.filter,
         });
