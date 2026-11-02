@@ -1,6 +1,10 @@
 import { BadRequestError } from 'helpful-errors';
 import { getError, given, then, useBeforeAll, when } from 'test-fns';
 
+import {
+  getPlanOfWishLive,
+  isProvisionLiveTargeted,
+} from '../getPlanOfWishLive';
 import { getProviders, getResources } from './resources.mail.dns';
 
 /**
@@ -87,4 +91,38 @@ describe('resources.mail.dns', () => {
       });
     });
   });
+
+  /**
+   * .what = the real call: plan the wish against the live cloudflare api
+   * .why = the refusals above never reach cloudflare. this proves the token's scopes, the
+   *   zone, and every declared record shape round-trip against the real dns api. it runs
+   *   only under `TEST_LIVE=cloudflare`; targeted with no token, the plan fails loud
+   */
+  given.runIf(isProvisionLiveTargeted({ mechanism: 'cloudflare' }))(
+    '[case3] the prep keyrack is unlocked for a live cloudflare run (TEST_LIVE=cloudflare)',
+    () => {
+      when('[t0] the wish is planned against the live zone', () => {
+        const result = useBeforeAll(async () => ({
+          plan: getPlanOfWishLive({
+            wish: 'provision/cloudflare/resources.mail.dns.ts',
+          }),
+          declared: await getResources(),
+        }));
+
+        then('the plan holds one change per declared resource', () => {
+          expect(result.plan.changes).toHaveLength(result.declared.length);
+        });
+
+        then('the plan names the zone and the dns records', () => {
+          const classes = result.plan.changes.map(
+            (change) => change.forResource.class,
+          );
+          expect(classes).toContain('DeclaredCloudflareDomainZone');
+          expect(
+            classes.filter((name) => name !== 'DeclaredCloudflareDomainZone'),
+          ).toHaveLength(result.declared.length - 1);
+        });
+      });
+    },
+  );
 });

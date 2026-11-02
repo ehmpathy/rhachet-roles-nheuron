@@ -111,7 +111,7 @@ exports[`gather.mail given: [case6] positive path constraint: gmail api requires
 
 {
   "status": 401,
-  "body": "{\\n  \\"error\\": {\\n    \\"code\\": 401,\\n    \\"message\\": \\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\\",\\n    \\"errors\\": [\\n      {\\n        \\"message\\": \\"Invalid Credentials\\",\\n        \\"domain\\": \\"global\\",\\n        \\"reason\\": \\"authError\\",\\n        \\"location\\": \\"Authorization\\",\\n        \\"locationType\\": \\"header\\"\\n      }\\n    ],\\n    \\"status\\": \\"UNAUTHENTICATED\\"\\n  }\\n}\\n"
+  "message": "Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project."
 }
 "
 `;

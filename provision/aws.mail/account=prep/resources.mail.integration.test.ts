@@ -1,5 +1,9 @@
-import { given, then, when } from 'test-fns';
+import { given, then, useBeforeAll, when } from 'test-fns';
 
+import {
+  getPlanOfWishLive,
+  isProvisionLiveTargeted,
+} from '../../getPlanOfWishLive';
 import {
   MAIL_BUCKET,
   MAIL_DOMAIN,
@@ -7,7 +11,7 @@ import {
   MAIL_OBJECT_KEY_PREFIX,
   MAIL_REGION,
 } from '../../resources.common.mail';
-import { getResourcesOfMail } from './resources.mail';
+import { getResources, getResourcesOfMail } from './resources.mail';
 
 /**
  * .what = clamps on the declared mail resources — the walls, not the field list
@@ -202,4 +206,36 @@ describe('getResourcesOfMail', () => {
       });
     });
   });
+
+  /**
+   * .what = the real call: plan the wish against the live prep account
+   * .why = the cases above prove the declared shapes in memory. this proves ses, s3, and iam
+   *   accept them: the plan reads each declared resource back from aws. it runs only under
+   *   `TEST_LIVE=ses` with `AWS_PROFILE=nheuron-prep`; targeted with no session, it fails loud
+   */
+  given.runIf(isProvisionLiveTargeted({ mechanism: 'ses' }))(
+    '[case3] the prep account session is live (TEST_LIVE=ses)',
+    () => {
+      when('[t0] the wish is planned against the live account', () => {
+        const result = useBeforeAll(async () => ({
+          plan: getPlanOfWishLive({
+            wish: 'provision/aws.mail/account=prep/resources.mail.ts',
+          }),
+          declared: await getResources(),
+        }));
+
+        then('the plan holds one change per declared resource', () => {
+          expect(result.plan.changes).toHaveLength(result.declared.length);
+        });
+
+        then('the plan names the ses identity and the inbound bucket', () => {
+          const classes = result.plan.changes.map(
+            (change) => change.forResource.class,
+          );
+          expect(classes).toContain('DeclaredAwsSesEmailIdentity');
+          expect(classes).toContain('DeclaredAwsS3Bucket');
+        });
+      });
+    },
+  );
 });

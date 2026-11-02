@@ -5,6 +5,7 @@ import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
 import { getAllInBoundedBatches } from '@src/domain.operations/gather/mail/getAllInBoundedBatches';
 
 import { fetchWithTimeout } from '../fetchWithTimeout';
+import { asGmailApiErrorMessage } from './asGmailApiErrorMessage';
 import { getAllMessagesFromBatchResponse } from './getAllMessagesFromBatchResponse';
 import type { GmailMessage } from './getGatheredMailFromGmail';
 
@@ -68,7 +69,7 @@ const getMessageIds = async (input: {
     const body = await response.text();
     throw new UnexpectedCodePathError('gmail messages.list failed', {
       status: response.status,
-      body,
+      message: asGmailApiErrorMessage({ body }),
     });
   }
 
@@ -143,7 +144,7 @@ const batchGetMessages = async (input: {
     const body = await response.text();
     throw new UnexpectedCodePathError('gmail batch request failed', {
       status: response.status,
-      body,
+      message: asGmailApiErrorMessage({ body }),
     });
   }
 
