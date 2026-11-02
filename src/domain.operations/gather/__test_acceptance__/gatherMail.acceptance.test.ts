@@ -87,6 +87,64 @@ const isLiveTargeted = (input: { mechanism: 'gmail' | 'ses' }): boolean =>
     .includes(input.mechanism);
 
 /**
+ * .what = replace every leaf of a live value with a placeholder that names its type
+ * .why = a live mail's exid, dates, sender, subject, labels all vary run to run. the snapshot
+ *   must pin the STRUCTURE the contract emits (every key, every nest), never the content
+ */
+const asMaskedLeaves = (input: { value: unknown }): unknown => {
+  if (Array.isArray(input.value)) return '<array>';
+  if (input.value === null) return null;
+  if (typeof input.value === 'object')
+    return Object.fromEntries(
+      Object.entries(input.value).map(([key, value]) => [
+        key,
+        asMaskedLeaves({ value }),
+      ]),
+    );
+  return `<${typeof input.value}>`;
+};
+
+/**
+ * .what = mask a live `gather.mail --format json` document for a stable snapshot
+ * .why = keeps the scope (deterministic for a bare run), masks the stats, and reduces the mail
+ *   list to its first mail's masked shape — the mail count varies with the live mailbox
+ */
+const asMaskedGatherMailJson = (input: { stdout: string }): unknown => {
+  const parsed = JSON.parse(input.stdout);
+  return {
+    scope: parsed.scope,
+    stats: asMaskedLeaves({ value: parsed.stats }),
+    mails: parsed.mails
+      .slice(0, 1)
+      .map((mail: unknown) => asMaskedLeaves({ value: mail })),
+  };
+};
+
+/**
+ * .what = mask a live `gather.mail` tree for a stable snapshot
+ * .why = keeps every header branch, masks the counts and the scope, and reduces the mail list
+ *   to its first mail with date, sender, and subject masked
+ */
+const asMaskedGatherMailTree = (input: { stdout: string }): string => {
+  const lines = input.stdout.split('\n');
+  const mailsAt = lines.findIndex((line) => line.includes('└─ mails'));
+  const header = (mailsAt === -1 ? lines : lines.slice(0, mailsAt + 1)).map(
+    (line) =>
+      line
+        .replace(/(listed|synced|cached): \d+/, '$1: <number>')
+        .replace(/scope: .*/, 'scope: <scope>'),
+  );
+  const mailFirst = (
+    mailsAt === -1 ? [] : lines.slice(mailsAt + 1, mailsAt + 3)
+  ).map((line) =>
+    line
+      .replace(/\d{4}-\d{2}-\d{2} \| \S+/, '<date> | <sender>')
+      .replace(/└─ (?!<date>).*$/, '└─ <subject>'),
+  );
+  return [...header, ...mailFirst].join('\n');
+};
+
+/**
  * .what = acceptance tests for gather.mail cli
  * .why = verify cli works via built artifact
  */
@@ -335,8 +393,10 @@ describe('gather.mail', () => {
           );
           expect(result.exitCode).toBe(0);
           expect(result.stdout).toContain('gather.mail');
-          // snapshot the structure (content varies)
-          expect(result.stdout).toMatchSnapshot();
+          // snapshot the structure; the live content is masked, since it varies run to run
+          expect(
+            asMaskedGatherMailTree({ stdout: result.stdout }),
+          ).toMatchSnapshot();
         });
 
         then('returns mail in json format', () => {
@@ -348,7 +408,10 @@ describe('gather.mail', () => {
           // verify valid json output
           const parsed = JSON.parse(result.stdout);
           expect(Array.isArray(parsed.mails)).toBe(true);
-          expect(result.stdout).toMatchSnapshot();
+          // snapshot the structure; the live content is masked, since it varies run to run
+          expect(
+            asMaskedGatherMailJson({ stdout: result.stdout }),
+          ).toMatchSnapshot();
         });
       });
     },
@@ -407,6 +470,24 @@ describe('gather.mail', () => {
               expect(typeof mail.subject).toBe('string');
             },
           );
+          // snapshot the structure; the live content is masked, since it varies run to run
+          expect(
+            asMaskedGatherMailJson({ stdout: result.stdout }),
+          ).toMatchSnapshot();
+        });
+
+        then('returns the same mailbox as a tree', () => {
+          const address = getSesAddressOrThrow();
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from ses --address ${address} --since 2026-01-01`,
+          );
+          expect(result.exitCode).toBe(0);
+          expect(result.stdout).toContain(
+            `gather.mail --from ses --address ${address}`,
+          );
+          expect(
+            asMaskedGatherMailTree({ stdout: result.stdout }),
+          ).toMatchSnapshot();
         });
       });
     },
