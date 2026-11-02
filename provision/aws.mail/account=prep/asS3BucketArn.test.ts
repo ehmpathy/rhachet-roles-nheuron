@@ -1,3 +1,5 @@
+import { given, then, when } from 'test-fns';
+
 import { asIamRootPrincipalArn } from './asIamRootPrincipalArn';
 import { asS3BucketArn } from './asS3BucketArn';
 import { asS3ObjectArn } from './asS3ObjectArn';
@@ -27,9 +29,13 @@ const TEST_CASES = [
 ];
 
 describe('the mail wish arn transformers', () => {
-  TEST_CASES.map((thisCase) =>
-    test(thisCase.description, () => {
-      expect(thisCase.given()).toEqual(thisCase.expect);
+  TEST_CASES.map((thisCase, index) =>
+    given(`[case${index + 1}] ${thisCase.description}`, () => {
+      when('[t0] the arn is formed', () => {
+        then('it equals the literal aws documents', () => {
+          expect(thisCase.given()).toEqual(thisCase.expect);
+        });
+      });
     }),
   );
 });

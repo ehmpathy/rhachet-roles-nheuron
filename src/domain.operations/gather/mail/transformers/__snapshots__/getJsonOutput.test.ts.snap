@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`getJsonOutput emits a stable json document, key for key 1`] = `
+exports[`getJsonOutput given: [case6] a full document when: [t0] the output is formed then: emits a stable json document, key for key 1`] = `
 "{
   "scope": {
     "query": "from:boss@co.com",

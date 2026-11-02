@@ -280,3 +280,49 @@
 {"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
 {"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-zero-test-skips"}
 {"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-zero-test-skips"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-all-tests-passed"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-all-tests-passed"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-preserved-test-intentions"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-preserved-test-intentions"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-snap-changes-rationalized"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-snap-changes-rationalized"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-critical-paths-frictionless"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-critical-paths-frictionless"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-ergonomics-validated"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-ergonomics-validated"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-fixed-all-gaps"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-fixed-all-gaps"}
+{"stone":"5.3.verification","status":"blocked"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"poured","level":1}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (11 > 0)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-contract-snapshots","about":"blocker.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r002._.given.by_peer.ergo-contract-snapshots.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: ergo-contract-snapshots blocker.1"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-contract-snapshots","about":"nitpick.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r002._.given.by_peer.ergo-contract-snapshots.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: ergo-contract-snapshots nitpick.1"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"mech-external-contracts","about":"blocker.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r003._.given.by_peer.mech-external-contracts.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: mech-external-contracts blocker.1"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"mech-external-contracts","about":"blocker.2","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r003._.given.by_peer.mech-external-contracts.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: mech-external-contracts blocker.2"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"mech-external-contracts","about":"blocker.3","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r003._.given.by_peer.mech-external-contracts.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: mech-external-contracts blocker.3"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"mech-external-contracts","about":"nitpick.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r003._.given.by_peer.mech-external-contracts.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: mech-external-contracts nitpick.1"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-acceptance-journey-coverage","about":"blocker.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: ergo-acceptance-journey-coverage blocker.1"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-acceptance-journey-coverage","about":"blocker.2","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: ergo-acceptance-journey-coverage blocker.2"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-acceptance-journey-coverage","about":"nitpick.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: ergo-acceptance-journey-coverage nitpick.1"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-acceptance-journey-coverage","about":"nitpick.2","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","severity":"better","reason":"conceded review.peer: ergo-acceptance-journey-coverage nitpick.2 (better)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-acceptance-journey-coverage","about":"nitpick.3","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: ergo-acceptance-journey-coverage nitpick.3"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-snapshot-visual-blemishes","about":"blocker.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r005._.given.by_peer.ergo-snapshot-visual-blemishes.md","severity":"better","reason":"conceded review.peer: ergo-snapshot-visual-blemishes blocker.1 (better)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"mech-test-intent","about":"blocker.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r007._.given.by_peer.mech-test-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F17-obfuscated-null-body-reads-as-the-obfuscation.md","reason":"disputed review.peer: mech-test-intent blocker.1"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"mech-test-scope-purity","about":"blocker.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r008._.given.by_peer.mech-test-scope-purity.md","severity":"better","reason":"conceded review.peer: mech-test-scope-purity blocker.1 (better)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"mech-test-scope-purity","about":"blocker.2","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r008._.given.by_peer.mech-test-scope-purity.md","severity":"better","reason":"conceded review.peer: mech-test-scope-purity blocker.2 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: repo-rules"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-contract-snapshots"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-external-contracts"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-acceptance-journey-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-snapshot-visual-blemishes"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-test-intent"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-test-scope-purity"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"mech-given-when-then","about":"blocker.1","given":"5.3.verification._.review.i001.5491a3a509da1e7323.r006._.given.by_peer.mech-given-when-then.md","severity":"better","reason":"conceded review.peer: mech-given-when-then blocker.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-given-when-then"}

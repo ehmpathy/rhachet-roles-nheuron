@@ -594,6 +594,8 @@ describe('gather.mail', () => {
         expect(result.stderr).toContain(
           'rhx keyrack unlock --owner ehmpath --env prep',
         );
+        // the exact human surface on the rhx path: identical to [case8], the bare call
+        expect(result.stderr).toMatchSnapshot();
       });
     });
   });

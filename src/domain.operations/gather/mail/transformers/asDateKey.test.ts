@@ -1,3 +1,5 @@
+import { given, then, when } from 'test-fns';
+
 import { asDateKey } from './asDateKey';
 
 const TEST_CASES = [
@@ -22,9 +24,15 @@ const TEST_CASES = [
 ];
 
 describe('asDateKey', () => {
-  TEST_CASES.map((thisCase) =>
-    test(thisCase.description, () => {
-      expect(asDateKey({ date: thisCase.given.date })).toEqual(thisCase.expect);
+  TEST_CASES.map((thisCase, index) =>
+    given(`[case${index + 1}] ${thisCase.description}`, () => {
+      when('[t0] the date key is derived', () => {
+        then('it yields the expected day', () => {
+          expect(asDateKey({ date: thisCase.given.date })).toEqual(
+            thisCase.expect,
+          );
+        });
+      });
     }),
   );
 });

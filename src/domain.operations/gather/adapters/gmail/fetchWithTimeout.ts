@@ -27,14 +27,22 @@ export const fetchWithTimeout = async (
     init: RequestInit;
     what: string;
   },
-  options?: { timeoutMs?: number },
+  options?: {
+    timeoutMs?: number;
+    /** the http transport; the global `fetch` unless a caller injects one (unit tests) */
+    fetch?: typeof fetch;
+  },
 ): Promise<Response> => {
   const timeoutMs = options?.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS;
+  const transport = options?.fetch ?? fetch;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    return await fetch(input.url, { ...input.init, signal: controller.signal });
+    return await transport(input.url, {
+      ...input.init,
+      signal: controller.signal,
+    });
   } catch (error: any) {
     // the abort fires as an `AbortError`; map it to a named, recoverable error. every other
     // fetch failure (dns, tls reset) keeps its own identity and propagates unchanged.

@@ -392,6 +392,8 @@ describe('gather.auth', () => {
           expect(result.stdout).toContain('address: jelly@one.nheuron.com');
           // the shell prompt must start on its own line, never glued to the hint
           expect(result.stdout.endsWith('\n')).toBe(true);
+          // the exact human surface on the rhx path: identical to [case8], the bare call
+          expect(result.stdout).toMatchSnapshot();
         },
       );
     });

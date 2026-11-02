@@ -210,3 +210,13 @@ exports[`gather.mail given: [case15] an unreadable --since when: [t0] gather.mai
 }
 "
 `;
+
+exports[`gather.mail given: [case16] the passthrough flags rhachet appends when: [t0] gather.mail runs as \`rhx gather.mail\` would call it then: reads its own flags and reaches the auth check 1`] = `
+"✋ ConstraintError: not authenticated
+
+{
+  "mechanism": "ses",
+  "hint": "ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep"
+}
+"
+`;

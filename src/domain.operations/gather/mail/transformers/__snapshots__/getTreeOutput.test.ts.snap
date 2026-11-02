@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`getTreeOutput renders a bare and a narrowed run, for a human to vibecheck 1`] = `
+exports[`getTreeOutput given: [case5] a bare run and a narrowed run when: [t0] each tree is formed then: renders a bare and a narrowed run, for a human to vibecheck 1`] = `
 {
   "bare": "🪼 boop!
 

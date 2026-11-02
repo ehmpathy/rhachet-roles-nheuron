@@ -1,3 +1,5 @@
+import { given, then, when } from 'test-fns';
+
 import { GatheredMail } from '@src/domain.objects/GatheredMail';
 import { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 
@@ -28,39 +30,55 @@ describe('getSortedMails', () => {
   const mail2 = createMail('msg_2', new Date('2024-01-02T10:00:00Z'));
   const mail3 = createMail('msg_3', new Date('2024-01-03T10:00:00Z'));
 
-  test('sorts DESC by default (newest first)', () => {
-    const result = getSortedMails({ mails: [mail1, mail3, mail2] });
+  given('[case1] mails out of order', () => {
+    when('[t0] sorted with the default order', () => {
+      then('sorts DESC by default (newest first)', () => {
+        const result = getSortedMails({ mails: [mail1, mail3, mail2] });
 
-    expect(result.map((m) => m.exid)).toEqual(['msg_3', 'msg_2', 'msg_1']);
-  });
-
-  test('sorts ASC when requested (oldest first)', () => {
-    const result = getSortedMails({
-      mails: [mail3, mail1, mail2],
-      order: 'ASC',
+        expect(result.map((m) => m.exid)).toEqual(['msg_3', 'msg_2', 'msg_1']);
+      });
     });
 
-    expect(result.map((m) => m.exid)).toEqual(['msg_1', 'msg_2', 'msg_3']);
+    when('[t1] sorted with order ASC', () => {
+      then('sorts ASC when requested (oldest first)', () => {
+        const result = getSortedMails({
+          mails: [mail3, mail1, mail2],
+          order: 'ASC',
+        });
+
+        expect(result.map((m) => m.exid)).toEqual(['msg_1', 'msg_2', 'msg_3']);
+      });
+    });
+
+    when('[t2] sorted', () => {
+      then('does not mutate original array', () => {
+        const original = [mail1, mail3, mail2];
+        const originalCopy = [...original];
+
+        getSortedMails({ mails: original });
+
+        expect(original).toEqual(originalCopy);
+      });
+    });
   });
 
-  test('handles empty array', () => {
-    const result = getSortedMails({ mails: [] });
+  given('[case2] an empty array', () => {
+    when('[t0] sorted', () => {
+      then('handles empty array', () => {
+        const result = getSortedMails({ mails: [] });
 
-    expect(result).toEqual([]);
+        expect(result).toEqual([]);
+      });
+    });
   });
 
-  test('handles single mail', () => {
-    const result = getSortedMails({ mails: [mail2] });
+  given('[case3] a single mail', () => {
+    when('[t0] sorted', () => {
+      then('handles single mail', () => {
+        const result = getSortedMails({ mails: [mail2] });
 
-    expect(result).toEqual([mail2]);
-  });
-
-  test('does not mutate original array', () => {
-    const original = [mail1, mail3, mail2];
-    const originalCopy = [...original];
-
-    getSortedMails({ mails: original });
-
-    expect(original).toEqual(originalCopy);
+        expect(result).toEqual([mail2]);
+      });
+    });
   });
 });

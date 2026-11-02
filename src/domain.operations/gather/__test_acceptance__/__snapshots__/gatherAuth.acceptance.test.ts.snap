@@ -52,33 +52,31 @@ exports[`gather.auth given: [case3] invalid mechanism when: [t0] unsupported mec
 `;
 
 exports[`gather.auth given: [case4] status check with --address (positive path: anonymous) when: [t0] no token exists for address then: shows anonymous status 1`] = `
-"boop! auth needed
+"🪼 boop! auth needed
 
-gather.auth --from gmail
-   status: anonymous
-   address: test-anonymous@example.com
-
-gmail authenticates via a service account. fill GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT, then run: rhx keyrack unlock --owner ehmpath --env test
+🔑 gather.auth --from gmail
+   ├─ status: anonymous
+   ├─ address: test-anonymous@example.com
+   └─ hint: gmail authenticates via a service account. fill GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT, then run: rhx keyrack unlock --owner ehmpath --env test
 "
 `;
 
 exports[`gather.auth given: [case5] status check with --address (positive path: authenticated) when: [t0] valid token exists for address then: shows authenticated status 1`] = `
-"boop! auth ready
+"🪼 boop! auth ready
 
-gather.auth --from gmail
-   status: authenticated
-   address: test-authenticated@example.com
+🔑 gather.auth --from gmail
+   ├─ status: authenticated
+   └─ address: test-authenticated@example.com
 "
 `;
 
 exports[`gather.auth given: [case6] status check with --address (positive path: expired) when: [t0] expired token exists for address then: shows expired status 1`] = `
-"boop! auth expired
+"🪼 boop! auth expired
 
-gather.auth --from gmail
-   status: expired
-   address: test-expired@example.com
-
-token will refresh on next gather.mail
+🔑 gather.auth --from gmail
+   ├─ status: expired
+   ├─ address: test-expired@example.com
+   └─ hint: token will refresh on next gather.mail
 "
 `;
 
@@ -97,13 +95,12 @@ exports[`gather.auth given: [case7] gmail auth without --address (there is no in
 `;
 
 exports[`gather.auth given: [case8] ses status check with --address (no aws configured) when: [t0] SES_MAIL_BUCKET and SES_REGION are absent then: shows anonymous status and names the keyrack unlock 1`] = `
-"boop! auth needed
+"🪼 boop! auth needed
 
-gather.auth --from ses
-   status: anonymous
-   address: jelly@one.nheuron.com
-
-ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep
+🔑 gather.auth --from ses
+   ├─ status: anonymous
+   ├─ address: jelly@one.nheuron.com
+   └─ hint: ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep
 "
 `;
 
@@ -127,5 +124,15 @@ exports[`gather.auth given: [case10] a typo in a flag name when: [t0] gather.aut
   ],
   "hint": "run with --help for usage; a typo returns no error otherwise"
 }
+"
+`;
+
+exports[`gather.auth given: [case11] the passthrough flags rhachet appends when: [t0] gather.auth runs as \`rhx gather.auth\` would call it then: exits 0, reads its own flags, and ends its output with a newline 1`] = `
+"🪼 boop! auth needed
+
+🔑 gather.auth --from ses
+   ├─ status: anonymous
+   ├─ address: jelly@one.nheuron.com
+   └─ hint: ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep
 "
 `;

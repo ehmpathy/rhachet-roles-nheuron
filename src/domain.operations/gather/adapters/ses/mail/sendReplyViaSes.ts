@@ -70,7 +70,16 @@ export const sendReplyViaSes = async (
      */
     inReplyTo: string | null;
   },
-  context: { log: GatherLogMethods },
+  context: {
+    log: GatherLogMethods;
+    /**
+     * the ses transport; a real `SESClient` in the configured region unless a caller
+     * injects one (unit tests prove the guards and the command shape with no network)
+     */
+    sdkSes?: {
+      send: (command: SendRawEmailCommand) => Promise<{ MessageId?: string }>;
+    };
+  },
 ): Promise<{ messageId: string }> => {
   const { log } = context;
 
@@ -87,7 +96,7 @@ export const sendReplyViaSes = async (
       hint: 'run: rhx keyrack unlock --owner ehmpath --env prep',
     });
 
-  const ses = new SESClient({ region: config.region });
+  const ses = context.sdkSes ?? new SESClient({ region: config.region });
 
   const raw = asRawMimeMessage({
     from: input.from,

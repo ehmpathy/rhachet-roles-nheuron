@@ -92,6 +92,45 @@ describe('getAuthStatusDisplay', () => {
         // the hint must not send them at the command that throws
         expect(result).not.toContain('run gather.auth --from ses');
       });
+
+      then('renders as a treestruct, the hint as the last leaf', () => {
+        const result = getAuthStatusDisplay({
+          status: 'anonymous',
+          mechanism: 'ses',
+          address: 'jelly@one.nheuron.com',
+        });
+        expect(result).toEqual(
+          [
+            '🪼 boop! auth needed',
+            '',
+            '🔑 gather.auth --from ses',
+            '   ├─ status: anonymous',
+            '   ├─ address: jelly@one.nheuron.com',
+            '   └─ hint: ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep',
+          ].join('\n'),
+        );
+      });
+    });
+  });
+
+  given('[case6] authenticated status, no hint', () => {
+    when('[t0] formatted', () => {
+      then('the last fact closes the trunk', () => {
+        const result = getAuthStatusDisplay({
+          status: 'authenticated',
+          mechanism: 'gmail',
+          address: 'test-authenticated@example.com',
+        });
+        expect(result).toEqual(
+          [
+            '🪼 boop! auth ready',
+            '',
+            '🔑 gather.auth --from gmail',
+            '   ├─ status: authenticated',
+            '   └─ address: test-authenticated@example.com',
+          ].join('\n'),
+        );
+      });
     });
   });
 });

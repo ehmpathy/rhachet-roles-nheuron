@@ -1,4 +1,4 @@
-import { getError } from 'test-fns';
+import { getError, given, then, when } from 'test-fns';
 
 import { getAddressScope } from './getAddressScope';
 
@@ -68,26 +68,48 @@ const TEST_CASES = [
 ];
 
 describe('getAddressScope', () => {
-  TEST_CASES.map((thisCase) =>
-    test(thisCase.description, () => {
-      const result = getAddressScope(thisCase.given);
-      expect(result.address).toEqual(thisCase.expect.address);
-      expect(result.scope).toEqual(thisCase.expect.scope);
+  TEST_CASES.map((thisCase, index) =>
+    given(`[case${index + 1}] ${thisCase.description}`, () => {
+      when('[t0] the address scope is read', () => {
+        then('the address and the scope match', () => {
+          const result = getAddressScope(thisCase.given);
+          expect(result.address).toEqual(thisCase.expect.address);
+          expect(result.scope).toEqual(thisCase.expect.scope);
+        });
+      });
     }),
   );
 
-  test('refuses a scope segment that is not a key=value pair', async () => {
-    // ⚠️ the teeth. revert the guard to `if (eqIndex === -1) return acc` and no error is
-    // thrown — `inbox` is dropped and the whole mailbox comes back as if unfiltered
-    const error = await getError(async () =>
-      getAddressScope({ address: 'vlad@gmail.com/inbox' }),
-    );
-    expect(error.message).toContain("segment 'inbox' is not a key=value pair");
-  });
+  given(
+    `[case${TEST_CASES.length + 1}] a scope segment that is not a key=value pair`,
+    () => {
+      when('[t0] the address scope is read', () => {
+        then('it refuses the segment', async () => {
+          // ⚠️ the teeth. revert the guard to `if (eqIndex === -1) return acc` and no error is
+          // thrown — `inbox` is dropped and the whole mailbox comes back as if unfiltered
+          const error = await getError(async () =>
+            getAddressScope({ address: 'vlad@gmail.com/inbox' }),
+          );
+          expect(error.message).toContain(
+            "segment 'inbox' is not a key=value pair",
+          );
+        });
+      });
+    },
+  );
 
-  test('tolerates a stray separator at the end (an empty segment)', () => {
-    // an empty segment names no scope, so it is skipped rather than refused
-    const result = getAddressScope({ address: 'vlad@gmail.com/labels=work&' });
-    expect(result.scope).toEqual({ labels: ['work'] });
-  });
+  given(
+    `[case${TEST_CASES.length + 2}] a stray separator at the end of the scope`,
+    () => {
+      when('[t0] the address scope is read', () => {
+        then('it tolerates the empty segment', () => {
+          // an empty segment names no scope, so it is skipped rather than refused
+          const result = getAddressScope({
+            address: 'vlad@gmail.com/labels=work&',
+          });
+          expect(result.scope).toEqual({ labels: ['work'] });
+        });
+      });
+    },
+  );
 });
