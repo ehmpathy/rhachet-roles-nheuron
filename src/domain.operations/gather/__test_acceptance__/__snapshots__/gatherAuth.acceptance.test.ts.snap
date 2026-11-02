@@ -30,7 +30,7 @@ note:
 `;
 
 exports[`gather.auth given: [case2] absent required args when: [t0] no --from provided then: exits with error code 2 1`] = `
-"✋ ConstraintError: BadRequestError: --from is required
+"✋ ConstraintError: --from is required
 
 {
   "hint": "run with --help for usage"
@@ -39,7 +39,7 @@ exports[`gather.auth given: [case2] absent required args when: [t0] no --from pr
 `;
 
 exports[`gather.auth given: [case3] invalid mechanism when: [t0] unsupported mechanism provided then: exits with error code 2 1`] = `
-"✋ ConstraintError: BadRequestError: invalid mechanism 'slack'
+"✋ ConstraintError: invalid mechanism 'slack'
 
 {
   "validMechanisms": [
@@ -58,7 +58,8 @@ gather.auth --from gmail
    status: anonymous
    address: test-anonymous@example.com
 
-gmail authenticates via a service account. fill GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT, then run: rhx keyrack unlock --owner ehmpath --env test"
+gmail authenticates via a service account. fill GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT, then run: rhx keyrack unlock --owner ehmpath --env test
+"
 `;
 
 exports[`gather.auth given: [case5] status check with --address (positive path: authenticated) when: [t0] valid token exists for address then: shows authenticated status 1`] = `
@@ -66,7 +67,8 @@ exports[`gather.auth given: [case5] status check with --address (positive path: 
 
 gather.auth --from gmail
    status: authenticated
-   address: test-authenticated@example.com"
+   address: test-authenticated@example.com
+"
 `;
 
 exports[`gather.auth given: [case6] status check with --address (positive path: expired) when: [t0] expired token exists for address then: shows expired status 1`] = `
@@ -76,11 +78,12 @@ gather.auth --from gmail
    status: expired
    address: test-expired@example.com
 
-token will refresh on next gather.mail"
+token will refresh on next gather.mail
+"
 `;
 
 exports[`gather.auth given: [case7] gmail auth without --address (there is no interactive flow) when: [t0] --from gmail provided without --address then: exits 2 and names the service-account fix 1`] = `
-"✋ ConstraintError: BadRequestError: gmail has no interactive auth flow
+"✋ ConstraintError: gmail has no interactive auth flow
 
 {
   "why": "gmail authenticates here via a google service account with domain-wide delegation, never a browser grant",
@@ -100,11 +103,12 @@ gather.auth --from ses
    status: anonymous
    address: jelly@one.nheuron.com
 
-ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep"
+ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep
+"
 `;
 
 exports[`gather.auth given: [case9] ses auth flow (there is none) when: [t0] --from ses provided without --address then: exits 2 and points at keyrack rather than an auth flow 1`] = `
-"✋ ConstraintError: BadRequestError: ses needs no auth flow
+"✋ ConstraintError: ses needs no auth flow
 
 {
   "hint": "ses authenticates via AWS_PROFILE from keyrack. run: rhx keyrack unlock --owner ehmpath --env prep"
@@ -113,7 +117,7 @@ exports[`gather.auth given: [case9] ses auth flow (there is none) when: [t0] --f
 `;
 
 exports[`gather.auth given: [case10] a typo in a flag name when: [t0] gather.auth is invoked with --adress then: exits 2, names the unknown flag and the allowed set 1`] = `
-"✋ ConstraintError: BadRequestError: unknown flag '--adress'
+"✋ ConstraintError: unknown flag '--adress'
 
 {
   "allowedFlags": [

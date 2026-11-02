@@ -125,4 +125,49 @@ describe('asCliArgOptions', () => {
       });
     });
   });
+
+  given(
+    '[case7] argv as `rhx <skill>` delivers it, with rhachet passthrough flags',
+    () => {
+      when('[t0] an allowed set is passed', () => {
+        then(
+          'drops --repo, --role, --skill and their values, and keeps the rest',
+          () => {
+            // the red: without the passthrough drop, `--skill` is unknown and this throws,
+            // which refused every `rhx gather.mail` and `rhx gather.auth` call
+            expect(
+              asCliArgOptions({
+                argv: [
+                  'node',
+                  '--skill',
+                  'gather.auth',
+                  '--repo',
+                  'nheuron',
+                  '--role',
+                  'gatherer',
+                  '--from',
+                  'ses',
+                  '--address',
+                  'jelly@one.nheuron.com',
+                ],
+                allowed: ['from', 'address'],
+              }),
+            ).toEqual({ from: 'ses', address: 'jelly@one.nheuron.com' });
+          },
+        );
+      });
+
+      when('[t1] a real unknown flag rides beside the passthrough', () => {
+        then('still refuses the unknown flag', async () => {
+          const error = await getError(async () =>
+            asCliArgOptions({
+              argv: ['node', '--skill', 'gather.mail', '--qurey', 'x'],
+              allowed: ['query'],
+            }),
+          );
+          expect(error.message).toContain("unknown flag '--qurey'");
+        });
+      });
+    },
+  );
 });

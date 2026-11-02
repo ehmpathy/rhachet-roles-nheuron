@@ -55,6 +55,6 @@ export const setGatheredMailOutput = (
           filter: input.filter,
         });
 
-  // emit to stdout
-  context.setStdout(output);
+  // emit to stdout, newline-terminated so the shell prompt starts on its own line
+  context.setStdout(`${output}\n`);
 };

@@ -572,4 +572,29 @@ describe('gather.mail', () => {
       });
     });
   });
+
+  /**
+   * .what = the argv exactly as `rhx gather.mail` delivers it
+   * .why = rhachet appends `--skill`, `--repo`, `--role` to every skill call. the other cases
+   *   call the entrypoint bare, so none saw the strict flag allowlist refuse `--skill` — every
+   *   real `rhx gather.mail` call exited 2 on 'unknown flag' while this suite stayed green
+   */
+  given('[case16] the passthrough flags rhachet appends', () => {
+    when('[t0] gather.mail runs as `rhx gather.mail` would call it', () => {
+      then('reads its own flags and reaches the auth check', () => {
+        const result = execAndCapture(
+          `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --skill gather.mail --repo nheuron --role gatherer --from ses --address jelly@one.nheuron.com`,
+          { env: getEnvWithoutSes() },
+        );
+
+        // ⚠️ the teeth — the passthrough is dropped, so the run gets past the parse
+        expect(result.stderr).not.toContain('unknown flag');
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain('not authenticated');
+        expect(result.stderr).toContain(
+          'rhx keyrack unlock --owner ehmpath --env prep',
+        );
+      });
+    });
+  });
 });

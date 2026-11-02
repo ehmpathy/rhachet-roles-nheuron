@@ -40,9 +40,9 @@ describe('getExitCodeForError', () => {
         );
 
         // .note = the qualified header names who fixes it; `helpful-errors` prefixes the
-        //   thrown kind into `.message`, which stays after the header as the detail
+        //   thrown kind into `.message`; the header cuts it, so one class is named
         expect(sink.state.lines).toEqual([
-          '✋ ConstraintError: BadRequestError: --from is required',
+          '✋ ConstraintError: --from is required',
         ]);
         // ⚠️ a stack trace as a human's only error output is a blocker
         expect(sink.state.lines.join('')).not.toContain('at ');
@@ -61,6 +61,21 @@ describe('getExitCodeForError', () => {
             sink,
           ),
         ).toEqual(1);
+      });
+
+      then('the header names one class, the malfunction', () => {
+        const sink = getRecordedStderr();
+
+        getExitCodeForError(
+          { error: new UnexpectedCodePathError('token absent after auth') },
+          sink,
+        );
+        expect(sink.state.lines[0]).toMatch(
+          /^💥 MalfunctionError: token absent after auth/,
+        );
+        expect(sink.state.lines.join('')).not.toContain(
+          'UnexpectedCodePathError',
+        );
       });
     });
   });

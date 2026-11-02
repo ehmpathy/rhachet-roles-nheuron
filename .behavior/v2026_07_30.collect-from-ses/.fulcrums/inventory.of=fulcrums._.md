@@ -20,6 +20,7 @@ the forks taken mid-drive on best-guess rather than escalated, per
 | [F13](inventory.of=fulcrums.case=F13-upgrade-churn-restored-in-git-only.md) | the upgrade's `.claude` relocation restored in git, not on disk; dispatcher `extends` kept | clean | open | 80% |
 | [F14](inventory.of=fulcrums.case=F14-r10-graded-the-gmail-behavior.md) | peer r10 graded the gmail behavior's wish; its five concerns disputed as scope, caught for the gmail route | clean | open | 85% |
 | [F15](inventory.of=fulcrums.case=F15-provision-wishes-source-at-load.md) | the provision wishes source keyrack, and refuse absent account emails, at module load | clean | open | 72% |
+| [F16](inventory.of=fulcrums.case=F16-error-header-names-two-classes.md) | the error header named two classes (`ConstraintError: BadRequestError:`); cut in 5.3, the `helpful-errors` upgrade caught as a dream | clean | taken: (b), fixed in 5.3 | 90% |
 
 ## ⚠️ a note on when these were recorded
 

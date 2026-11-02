@@ -7,6 +7,7 @@ import {
 import { setGatherAuth } from '@src/domain.operations/gather/auth/setGatherAuth';
 
 import { asCliArgOptions } from './asCliArgOptions';
+import { getCliLogMethods } from './getCliLogMethods';
 import { getExitCodeForError } from './getExitCodeForError';
 import { getIsHelpAsked } from './getIsHelpAsked';
 
@@ -123,7 +124,10 @@ export const gatherAuth = async (): Promise<number> => {
         address: options.address ?? null,
       },
       {
-        log: console,
+        log: getCliLogMethods(
+          { isVerbose: process.env.LOG_LEVEL === 'debug' },
+          { setStderr: (content: string) => process.stderr.write(content) },
+        ),
         setStdout: (content: string) => process.stdout.write(content),
         cwd: process.cwd(),
       },

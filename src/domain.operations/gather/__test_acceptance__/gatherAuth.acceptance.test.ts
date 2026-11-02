@@ -370,4 +370,30 @@ describe('gather.auth', () => {
       });
     });
   });
+
+  /**
+   * .what = the argv exactly as `rhx gather.auth` delivers it
+   * .why = rhachet appends `--skill`, `--repo`, `--role` to every skill call. the other cases
+   *   here call the entrypoint bare, so none of them saw that the strict flag allowlist refused
+   *   `--skill` — every real `rhx gather.auth` call exited 2 while this suite stayed green
+   */
+  given('[case11] the passthrough flags rhachet appends', () => {
+    when('[t0] gather.auth runs as `rhx gather.auth` would call it', () => {
+      then(
+        'exits 0, reads its own flags, and ends its output with a newline',
+        () => {
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherAuth').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --skill gather.auth --repo nheuron --role gatherer --from ses --address jelly@one.nheuron.com`,
+            { env: getEnvWithoutSes() },
+          );
+          expect(result.stderr).not.toContain('unknown flag');
+          expect(result.exitCode).toBe(0);
+          expect(result.stdout).toContain('gather.auth --from ses');
+          expect(result.stdout).toContain('address: jelly@one.nheuron.com');
+          // the shell prompt must start on its own line, never glued to the hint
+          expect(result.stdout.endsWith('\n')).toBe(true);
+        },
+      );
+    });
+  });
 });

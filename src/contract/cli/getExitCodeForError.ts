@@ -1,5 +1,7 @@
 import { BadRequestError } from 'helpful-errors';
 
+import { asErrorHeaderDetail } from './asErrorHeaderDetail';
+
 /**
  * .what = report a caught cli error to the human, and yield the exit code it earns
  * .why = both entrypoints held a byte-identical copy of this map. that is the worst place
@@ -18,20 +20,23 @@ import { BadRequestError } from 'helpful-errors';
  * .note = each report opens with its qualified class behind its glyph — `✋ ConstraintError:`
  *   (the caller fixes, exit 2) or `💥 MalfunctionError:` (the system fixes, exit 1) — so the
  *   human reads who owns the fix before the detail (`rule.require.qualified-error-headers`).
- *   the thrown kind (`BadRequestError: …`) stays after it, as the detail.
+ *   the thrown class that `helpful-errors` writes into `.message` is cut, so the header
+ *   names one class (`asErrorHeaderDetail`).
  */
 export const getExitCodeForError = (
   input: { error: unknown },
   context: { setStderr: (content: string) => void },
 ): number => {
+  // the detail a human reads after the header, with no second class name
+  const detail = asErrorHeaderDetail({ error: input.error });
+
+  // the caller must fix a bad request
   if (input.error instanceof BadRequestError) {
-    context.setStderr(`✋ ConstraintError: ${input.error.message}`);
-    return 2; // caller-must-fix
+    context.setStderr(`✋ ConstraintError: ${detail}`);
+    return 2;
   }
 
   // catch-all: an unexpected error still earns human-readable output
-  const message =
-    input.error instanceof Error ? input.error.message : String(input.error);
-  context.setStderr(`💥 MalfunctionError: ${message}`);
-  return 1; // unexpected
+  context.setStderr(`💥 MalfunctionError: ${detail}`);
+  return 1;
 };

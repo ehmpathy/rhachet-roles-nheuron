@@ -7,6 +7,7 @@ import {
 import { setGatheredMails } from '@src/domain.operations/gather/mail/setGatheredMails';
 
 import { asCliArgOptions } from './asCliArgOptions';
+import { getCliLogMethods } from './getCliLogMethods';
 import { getExitCodeForError } from './getExitCodeForError';
 import { getIsHelpAsked } from './getIsHelpAsked';
 import {
@@ -169,7 +170,10 @@ export const gatherMail = async (): Promise<number> => {
         format,
       },
       {
-        log: console,
+        log: getCliLogMethods(
+          { isVerbose: process.env.LOG_LEVEL === 'debug' },
+          { setStderr: (content: string) => process.stderr.write(content) },
+        ),
         setStdout: (content: string) => process.stdout.write(content),
         cwd: process.cwd(),
       },

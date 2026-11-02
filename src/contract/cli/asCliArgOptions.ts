@@ -15,6 +15,25 @@ const isNodeEvalMode = (argv: string[]): boolean => {
 };
 
 /**
+ * .what = the flags rhachet itself appends when `rhx <skill>` invokes a skill
+ * .why = they route the call to the skill and are no part of any skill's own contract
+ */
+const RHACHET_PASSTHROUGH_FLAGS = new Set(['--repo', '--role', '--skill']);
+
+/**
+ * .what = drop each rhachet passthrough flag, and its value, from the args
+ * .why = `rhx gather.mail --from ses` reaches the skill as `--skill gather.mail --from ses`;
+ *   a strict allowlist that sees `--skill` refuses every rhx call. peer skills drop the same
+ *   three flags in their own parse
+ */
+const getArgsWithoutPassthrough = (input: { args: string[] }): string[] =>
+  input.args.filter((arg, index) => {
+    if (RHACHET_PASSTHROUGH_FLAGS.has(arg)) return false;
+    const argPrior = input.args[index - 1];
+    return !(argPrior && RHACHET_PASSTHROUGH_FLAGS.has(argPrior));
+  });
+
+/**
  * .what = extract key-value pairs from args array
  * .why = immutable transformer for arg parse
  */
@@ -62,7 +81,9 @@ export const asCliArgOptions = (input: {
   allowed?: string[];
 }): Record<string, string> => {
   const skipCount = isNodeEvalMode(input.argv) ? 1 : 2;
-  const args = input.argv.slice(skipCount).filter((arg) => arg !== '--');
+  const args = getArgsWithoutPassthrough({
+    args: input.argv.slice(skipCount).filter((arg) => arg !== '--'),
+  });
 
   // refuse an unknown flag LOUDLY when the caller declares its allowed set.
   // this catches a typo'd flag whether or not it carried a value, so a valueless
