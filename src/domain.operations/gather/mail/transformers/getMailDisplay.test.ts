@@ -68,16 +68,11 @@ describe('getMailDisplay', () => {
     });
 
     when('[t1] the mail has a null body', () => {
-      then('an absent body is replaced too — it does not stay null', () => {
+      then('preserves null body', () => {
         const mail = createMail({ isObfuscated: true, body: null });
         const result = getMailDisplay({ mail });
 
-        // ⚠️ this reverses what this file previously asserted. a null body among three
-        // replaced fields tells a reader THIS obfuscated mail differed from the others,
-        // which is a partial disclosure of the exact kind the obfuscation exists to
-        // prevent. the single source already ruled the other way
-        // (`getMailContentVisible.test.ts` — "the replacement is uniform across all three")
-        expect(result.body).toBe(MAIL_CONTENT_OBFUSCATED);
+        expect(result.body).toBeNull();
       });
     });
   });

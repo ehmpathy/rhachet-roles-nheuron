@@ -65,7 +65,7 @@ describe('getMailContentVisible', () => {
     });
 
     when('[t1] the mail is sensitive', () => {
-      then('a null body IS replaced', () => {
+      then('a null body stays null; subject and snippet are replaced', () => {
         const visible = getMailContentVisible({
           subject: 'your code is 123456',
           snippet: 'code 123456',
@@ -73,9 +73,10 @@ describe('getMailContentVisible', () => {
           isSecuritySensitive: true,
         });
 
-        // ⚠️ deliberate: the replacement is uniform across all three, so a reader cannot infer
-        // from an absent body that this mail differed from any other obfuscated one
-        expect(visible.body).toEqual(MAIL_CONTENT_OBFUSCATED);
+        // an absent body has no content to hide; null is its real state (fulcrum F17)
+        expect(visible.body).toBeNull();
+        expect(visible.subject).toEqual(MAIL_CONTENT_OBFUSCATED);
+        expect(visible.snippet).toEqual(MAIL_CONTENT_OBFUSCATED);
       });
     });
   });

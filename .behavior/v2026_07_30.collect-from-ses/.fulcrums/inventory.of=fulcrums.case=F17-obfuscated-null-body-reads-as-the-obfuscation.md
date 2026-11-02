@@ -1,6 +1,6 @@
 # F17 — an obfuscated mail's absent body reads as the obfuscation literal, not null
 
-rework: clean · status: open, awaits council approval · confidence: 90%
+rework: clean · status: ruled: (a) revert (director) · confidence: 90%
 
 ## .the fork
 
@@ -40,4 +40,11 @@ ground.
 
 ## .verdict
 
-open.
+**ruled by the director (2026-11-02): revert — (a).** an obfuscated mail with no body reads
+`null`; the prior assertion returns. preserve prior behavior unless the wish asked to change it,
+and this wish did not.
+
+applied at both seats of the one fact, since the adapters obfuscate at ingest through the single
+source: `getMailContentVisible` keeps a `null` body as `null` (subject and snippet still
+replaced), and `getMailDisplay.test.ts` asserts `preserves null body` again.
+`getMailContentVisible.test.ts` [case3][t1] now asserts the same.

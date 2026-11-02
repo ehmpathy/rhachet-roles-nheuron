@@ -344,3 +344,20 @@
 {"stone":"5.3.verification","status":"disputed","reviewer":"mech-external-contracts","about":"nitpick.1","given":"5.3.verification._.review.i003.292e36101fc34e7c14.r003._.given.by_peer.mech-external-contracts.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: mech-external-contracts nitpick.1"}
 {"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-acceptance-journey-coverage"}
 {"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-external-contracts"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"poured","level":3}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (2 > 0), after 1 blocker shed (0 disputed + 1 conceded better), 2 nitpicks shed (1 disputed + 1 conceded better)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"enroll-verif-snapshot-coverage","about":"blocker.1","given":"5.3.verification._.review.i004.45cf7fd64924c52877.r009._.given.by_peer.enroll-verif-snapshot-coverage.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: enroll-verif-snapshot-coverage blocker.1"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"enroll-verif-snapshot-coverage","about":"nitpick.1","given":"5.3.verification._.review.i004.45cf7fd64924c52877.r009._.given.by_peer.enroll-verif-snapshot-coverage.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md","reason":"disputed review.peer: enroll-verif-snapshot-coverage nitpick.1"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"enroll-verif-test-intent","about":"blocker.1","given":"5.3.verification._.review.i004.45cf7fd64924c52877.r011._.given.by_peer.enroll-verif-test-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F17-obfuscated-null-body-reads-as-the-obfuscation.md","reason":"disputed review.peer: enroll-verif-test-intent blocker.1"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"enroll-verif-test-intent","about":"nitpick.1","given":"5.3.verification._.review.i004.45cf7fd64924c52877.r011._.given.by_peer.enroll-verif-test-intent.md","severity":"better","reason":"conceded review.peer: enroll-verif-test-intent nitpick.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-snapshot-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-test-intent"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0), after 1 blocker shed (0 disputed + 1 conceded better), 2 nitpicks shed (1 disputed + 1 conceded better)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"enroll-verif-test-intent","about":"blocker.1","given":"5.3.verification._.review.i005.1936c7c8546cb8c772.r011._.given.by_peer.enroll-verif-test-intent.md","fulcrum":".behavior/v2026_07_30.collect-from-ses/.fulcrums/inventory.of=fulcrums.case=F17-obfuscated-null-body-reads-as-the-obfuscation.md","reason":"disputed review.peer: enroll-verif-test-intent blocker.1"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"enroll-verif-test-intent","about":"nitpick.1","given":"5.3.verification._.review.i005.1936c7c8546cb8c772.r011._.given.by_peer.enroll-verif-test-intent.md","severity":"better","reason":"conceded review.peer: enroll-verif-test-intent nitpick.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-test-intent"}
+{"stone":"5.3.verification","status":"blocked"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"passed"}

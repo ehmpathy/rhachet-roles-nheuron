@@ -14,6 +14,9 @@
  * .note = the three fields are obfuscated TOGETHER or not at all. sensitivity is a property
  *   of the mail, never of one field — a clean subject beside a body that still carries a
  *   token is the exact partial disclosure this exists to prevent.
+ *
+ * .note = an absent body stays `null`, sensitive or not: there is no content to hide, and
+ *   `null` is the real state of the record (fulcrum F17, ruled by the director).
  */
 export const MAIL_CONTENT_OBFUSCATED =
   '[security-sensitive content obfuscated]';
@@ -28,7 +31,7 @@ export const getMailContentVisible = (input: {
     ? {
         subject: MAIL_CONTENT_OBFUSCATED,
         snippet: MAIL_CONTENT_OBFUSCATED,
-        body: MAIL_CONTENT_OBFUSCATED,
+        body: input.body === null ? null : MAIL_CONTENT_OBFUSCATED,
       }
     : {
         subject: input.subject,
