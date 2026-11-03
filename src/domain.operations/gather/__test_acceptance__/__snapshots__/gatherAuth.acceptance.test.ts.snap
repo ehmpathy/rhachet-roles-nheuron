@@ -1,0 +1,138 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`gather.auth given: [case1] help flag when: [t0] --help is passed then: displays help message 1`] = `
+"gather.auth - report auth status for mail collection
+
+usage:
+  gather.auth.sh --from <mechanism> [--address <email>]
+
+options:
+  --from <mechanism>   mail source: gmail, ses (required)
+  --address <email>    email address to check status for (optional)
+  -h, --help           show this help message
+
+examples:
+  gather.auth.sh --from gmail --address user@gmail.com  # check auth status
+  gather.auth.sh --from ses --address you@your.domain   # check the AWS_PROFILE identity
+
+how each mechanism authenticates:
+  gmail  a service account from keyrack (GMAIL_SERVICE_ACCOUNT_JSON + _SUBJECT), or a
+         cached oauth token. either way, credentials come from keyrack:
+           rhx keyrack unlock --owner ehmpath --env test
+  ses    plain iam — the AWS_PROFILE keyrack places in the env. no token, no expiry:
+           rhx keyrack unlock --owner ehmpath --env prep
+
+note:
+  NEITHER mechanism has an interactive auth flow today. \`--from ses\` has none by design
+  (iam needs no grant); \`--from gmail\` without --address refuses with exit 2 and names
+  the service account keys to fill. unlock the credentials above, then use --address to confirm.
+"
+`;
+
+exports[`gather.auth given: [case2] absent required args when: [t0] no --from provided then: exits with error code 2 1`] = `
+"✋ ConstraintError: --from is required
+
+{
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.auth given: [case3] invalid mechanism when: [t0] unsupported mechanism provided then: exits with error code 2 1`] = `
+"✋ ConstraintError: invalid mechanism 'slack'
+
+{
+  "validMechanisms": [
+    "gmail",
+    "ses"
+  ],
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.auth given: [case4] status check with --address (positive path: anonymous) when: [t0] no token exists for address then: shows anonymous status 1`] = `
+"🪼 boop! auth needed
+
+🔑 gather.auth --from gmail
+   ├─ status: anonymous
+   ├─ address: test-anonymous@example.com
+   └─ hint: gmail authenticates via a service account. fill GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT, then run: rhx keyrack unlock --owner ehmpath --env test
+"
+`;
+
+exports[`gather.auth given: [case5] status check with --address (positive path: authenticated) when: [t0] valid token exists for address then: shows authenticated status 1`] = `
+"🪼 boop! auth ready
+
+🔑 gather.auth --from gmail
+   ├─ status: authenticated
+   └─ address: test-authenticated@example.com
+"
+`;
+
+exports[`gather.auth given: [case6] status check with --address (positive path: expired) when: [t0] expired token exists for address then: shows expired status 1`] = `
+"🪼 boop! auth expired
+
+🔑 gather.auth --from gmail
+   ├─ status: expired
+   ├─ address: test-expired@example.com
+   └─ hint: token will refresh on next gather.mail
+"
+`;
+
+exports[`gather.auth given: [case7] gmail auth without --address (there is no interactive flow) when: [t0] --from gmail provided without --address then: exits 2 and names the service-account fix 1`] = `
+"✋ ConstraintError: gmail has no interactive auth flow
+
+{
+  "why": "gmail authenticates here via a google service account with domain-wide delegation, never a browser grant",
+  "expected": [
+    "GMAIL_SERVICE_ACCOUNT_JSON",
+    "GMAIL_SERVICE_ACCOUNT_SUBJECT"
+  ],
+  "hint": "fill both, then unlock: rhx keyrack fill --owner ehmpath --env test && rhx keyrack unlock --owner ehmpath --env test (setup guide: howto.create-gmail-service-account)"
+}
+"
+`;
+
+exports[`gather.auth given: [case8] ses status check with --address (no aws configured) when: [t0] SES_MAIL_BUCKET and SES_REGION are absent then: shows anonymous status and names the keyrack unlock 1`] = `
+"🪼 boop! auth needed
+
+🔑 gather.auth --from ses
+   ├─ status: anonymous
+   ├─ address: jelly@one.nheuron.com
+   └─ hint: ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep
+"
+`;
+
+exports[`gather.auth given: [case9] ses auth flow (there is none) when: [t0] --from ses provided without --address then: exits 2 and points at keyrack rather than an auth flow 1`] = `
+"✋ ConstraintError: ses needs no auth flow
+
+{
+  "hint": "ses authenticates via AWS_PROFILE from keyrack. run: rhx keyrack unlock --owner ehmpath --env prep"
+}
+"
+`;
+
+exports[`gather.auth given: [case10] a typo in a flag name when: [t0] gather.auth is invoked with --adress then: exits 2, names the unknown flag and the allowed set 1`] = `
+"✋ ConstraintError: unknown flag '--adress'
+
+{
+  "allowedFlags": [
+    "--from",
+    "--address",
+    "--help"
+  ],
+  "hint": "run with --help for usage; a typo returns no error otherwise"
+}
+"
+`;
+
+exports[`gather.auth given: [case11] the passthrough flags rhachet appends when: [t0] gather.auth runs as \`rhx gather.auth\` would call it then: exits 0, reads its own flags, and ends its output with a newline 1`] = `
+"🪼 boop! auth needed
+
+🔑 gather.auth --from ses
+   ├─ status: anonymous
+   ├─ address: jelly@one.nheuron.com
+   └─ hint: ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep
+"
+`;

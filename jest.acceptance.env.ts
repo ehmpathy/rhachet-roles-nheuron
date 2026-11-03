@@ -37,10 +37,23 @@ if (
 
 /**
  * .what = source credentials from keyrack for test env
- * .why =
- *   - auto-inject keys into process.env
- *   - fail fast with helpful error if keyrack locked or keys absent
+ * .why = auto-inject the declared keys into process.env, so every credential this suite
+ *   reads has one source (`rule.require.credentials-from-keyrack`).
+ *
+ * .note = `mode: 'lenient'` is deliberate, and it is NOT a licence to skip. the suite spans
+ *   two mechanisms — gmail and ses — whose keys are disjoint, so strict mode would fail the
+ *   whole run over a key only one of them needs. leniency here moves the demand from the
+ *   SOURCE boundary to the USE boundary, where the value is actually needed and where the
+ *   error can name which one is absent. this mirrors the provision wishes, which source
+ *   lenient and then fail loud in `getProviders` / `getSesConfig` with the exact fix.
+ *
+ * ⚠️ .note = leniency is sound ONLY where every use boundary fails LOUD, so that is the
+ *   invariant this mode depends on: a suite that reads a lenient-sourced key must throw a
+ *   `ConstraintError` that names the fix, never skip. `gatherMail.acceptance.test.ts`
+ *   [case7] once broke it with a `when.runIf(hasCredentials)` skip — the suite went green
+ *   while its only positive path had never run — and now throws. add no new skip here; a
+ *   skip converts this leniency into the silent pass `rule.forbid.failhide` grades a blocker.
  */
 const keyrackYmlPath = join(process.cwd(), '.agent/keyrack.yml');
 if (existsSync(keyrackYmlPath))
-  keyrack.source({ env: 'test', owner: 'ehmpath', mode: 'strict' });
+  keyrack.source({ env: 'test', owner: 'ehmpath', mode: 'lenient' });
