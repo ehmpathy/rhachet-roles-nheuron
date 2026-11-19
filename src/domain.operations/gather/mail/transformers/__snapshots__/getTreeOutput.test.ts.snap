@@ -1,28 +1,15 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`getTreeOutput given: [case5] a bare run and a narrowed run when: [t0] each tree is formed then: renders a bare and a narrowed run, for a human to vibecheck 1`] = `
-{
-  "bare": "🪼 boop!
+exports[`getTreeOutput given: [case4] a run that lists less than the cache holds when: [t0] the tree is formed then: renders the header and list, for a human to vibecheck 1`] = `
+"🪼 boop!
 
-🫙 gather.mail --from gmail --address vlad@gmail.com
-   ├─ scope: whole mailbox
+🫙 gather.mail --from ses --address jelly@example.com
    ├─ listed: 2
    ├─ synced: 2
    ├─ cached: 250
    └─ mails
-      ├─ 2024-01-15 | sender@gmail.com
+      ├─ 2024-01-15 | sender@example.com
       │  └─ Test Subject
-      └─ 2024-01-15 | sender@gmail.com
-         └─ Second",
-  "narrowed": "🪼 boop!
-
-🫙 gather.mail --from gmail --address vlad@gmail.com
-   ├─ scope: labels=work query="from:boss@co.com"
-   ├─ listed: 1
-   ├─ synced: 1
-   ├─ cached: 250
-   └─ mails
-      └─ 2024-01-15 | sender@gmail.com
-         └─ Test Subject",
-}
+      └─ 2024-01-15 | sender@example.com
+         └─ Second"
 `;

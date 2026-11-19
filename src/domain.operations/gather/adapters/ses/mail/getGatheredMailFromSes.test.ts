@@ -172,10 +172,6 @@ describe('getGatheredMailFromSes', () => {
         );
       });
 
-      then('carries no labels, since rfc822 has no such concept', () => {
-        expect(scene.mail.labels).toEqual([]);
-      });
-
       then('is not obfuscated', () => {
         expect(scene.mail.isObfuscated).toBe(false);
       });

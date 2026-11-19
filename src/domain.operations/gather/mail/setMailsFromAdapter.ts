@@ -4,10 +4,7 @@ import type { GatheredMail } from '@src/domain.objects/GatheredMail';
 import type { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 import type { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
 import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
-import type {
-  GatherMailAdapter,
-  GatherMailFilter,
-} from '@src/domain.objects/GatherMailAdapter';
+import type { GatherMailAdapter } from '@src/domain.objects/GatherMailAdapter';
 
 import { getAllCachedMailExids } from './cache/getAllCachedMailExids';
 import { getAllCachedMails } from './cache/getAllCachedMails';
@@ -16,11 +13,9 @@ import { getCachedMailQuant } from './cache/getCachedMailQuant';
 import { getOneSyncStats } from './cache/getOneSyncStats';
 import { upsertCachedMails } from './cache/upsertCachedMails';
 import { upsertSyncStats } from './cache/upsertSyncStats';
-import { getIsScopeWholeMailbox } from './transformers/getIsScopeWholeMailbox';
 import { getMailsWithinRange } from './transformers/getMailsWithinRange';
 import { getMergedSyncStats } from './transformers/getMergedSyncStats';
 import { getPaginationInput } from './transformers/getPaginationInput';
-import { getSyncStatsWithoutCursor } from './transformers/getSyncStatsWithoutCursor';
 
 /**
  * .what = sync mails from adapter into local cache
@@ -36,7 +31,6 @@ export const setMailsFromAdapter = async (
   input: {
     in: {
       repo: GatheredMailRepo;
-      filter: GatherMailFilter;
     };
     /**
      * the caller's `--since`, if they gave one — NOT a built page.
@@ -60,34 +54,22 @@ export const setMailsFromAdapter = async (
   stats: GatheredMailSyncStats;
   page: PaginationInput<{ deliveredAt: Date }> | null;
 }> => {
-  const { repo, filter } = input.in;
+  const { repo } = input.in;
   const { mailAdapter, log, accessToken, cwd } = context;
-
-  // does this run ask for the whole mailbox, or a slice of it?
-  //
-  // .why = the cache and the cursor are keyed on `mechanism` + `address` with NO filter
-  //   component, so each answers "what does this address hold, in full?" — a question a
-  //   filtered run cannot answer. every use of either is gated on this one predicate
-  //   rather than four scattered checks
-  const scopeIsWholeMailbox = getIsScopeWholeMailbox({ filter });
 
   // load sync stats from cache
   const statsPrior = await getOneSyncStats({ repo, cwd });
   log.debug('setMailsFromAdapter: loaded stats', {
-    scopeIsWholeMailbox,
     mailFoundUptil: statsPrior.mailFoundUptil,
     mailFoundQuant: statsPrior.mailFoundQuant,
   });
 
   // build the range HERE, where the prior cursor is in hand. an absent `--since` falls back
   // to `mailFoundUptil`, which is what makes a bare re-run incremental rather than a full
-  // re-scan — the behavior both the field's doc-comment and the role readme already claimed.
-  //
-  // ⚠️ a filtered run declines the cursor. the cursor is a whole-mailbox high-water mark, so
-  //   to bound a `labels=work` fetch by it would silently drop unlabeled mail
+  // re-scan
   const page = getPaginationInput({
     since: input.since,
-    cursorPrior: scopeIsWholeMailbox ? statsPrior.mailFoundUptil : null,
+    cursorPrior: statsPrior.mailFoundUptil,
     limit: input.limit,
   });
   log.debug('setMailsFromAdapter: range', {
@@ -96,20 +78,17 @@ export const setMailsFromAdapter = async (
   });
 
   // name what the cache already holds, so a per-mail mechanism can skip re-fetch of it.
-  // read from FILENAMES, so this costs one directory read rather than a parse of every mail.
-  //
-  // ⚠️ a filtered run holds none, because a skip is only safe when the skipped mail is
-  //   recovered from the cache below — and a filtered run does not read the cache back
-  const exidsKnown = scopeIsWholeMailbox
-    ? await getAllCachedMailExids({ cacheDir: getCacheDir({ repo, cwd }) })
-    : [];
+  // read from FILENAMES, so this costs one directory read rather than a parse of every mail
+  const exidsKnown = await getAllCachedMailExids({
+    cacheDir: getCacheDir({ repo, cwd }),
+  });
   log.debug('setMailsFromAdapter: cached exids', {
     exidKnownQuant: exidsKnown.length,
   });
 
   // fetch mails from adapter
   const result = await mailAdapter.getAllMail(
-    { in: { repo, filter }, page, exidsKnown },
+    { in: { repo }, page, exidsKnown },
     { log, accessToken },
   );
 
@@ -122,24 +101,16 @@ export const setMailsFromAdapter = async (
   // report the WHOLE range, from the cache, rather than only what this run fetched.
   //
   // .why = `exidsKnown` narrows what an adapter FETCHES; it must never narrow what the
-  //   caller SEES. ses now skips the body read for a mail it already holds, so that mail is
+  //   caller SEES. ses skips the body read for a mail it already holds, so that mail is
   //   absent from `result.mails` — and were the output taken from there, a second run over
   //   the same range would report fewer mails than the first while the mailbox was
   //   unchanged (`rule.forbid.surprises`). the cache holds the union — it was just written
   //   above — so the range is read back from the one place that has all of it.
-  //
-  // ⚠️ a filtered run reports what IT fetched. the cache holds every filter ever run against
-  //   this address, so to read it back under a filter would blend in mails the filter
-  //   excludes — the same lie in the other direction, and the reason no skip was requested
-  //   above (`getIsScopeWholeMailbox`)
-  const mails = scopeIsWholeMailbox
-    ? getMailsWithinRange({
-        mails: await getAllCachedMails({ repo, cwd }),
-        page,
-      })
-    : result.mails;
+  const mails = getMailsWithinRange({
+    mails: await getAllCachedMails({ repo, cwd }),
+    page,
+  });
   log.debug('setMailsFromAdapter: reported range', {
-    scopeIsWholeMailbox,
     mailFetchQuant: result.mails.length,
     mailRangeQuant: mails.length,
   });
@@ -148,16 +119,10 @@ export const setMailsFromAdapter = async (
   // so a re-run over the same range converges instead of double-counts
   const mailCachedQuant = await getCachedMailQuant({ repo, cwd });
 
-  // compute updated stats.
-  //
-  // ⚠️ a filtered run withholds its cursor. it saw every mail up to T *that matched*, which
-  //   is not the mailbox's high-water mark — advance the shared cursor from it and a later
-  //   bare run skips every unmatched mail before T, forever, at exit 0 with no signal
+  // compute updated stats
   const statsAfter = getMergedSyncStats({
     statsPrior,
-    statsDelta: scopeIsWholeMailbox
-      ? result.stats
-      : getSyncStatsWithoutCursor({ stats: result.stats }),
+    statsDelta: result.stats,
     mailCachedQuant,
   });
 

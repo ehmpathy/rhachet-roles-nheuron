@@ -3,7 +3,6 @@ import { BadRequestError } from 'helpful-errors';
 import type { GatherAuthAdapter } from '@src/domain.objects/GatherAuthAdapter';
 import type { GatheredMailMechanism } from '@src/domain.objects/GatheredMailMechanism';
 
-import { getGmailAuthAdapter } from './gmail/auth/getGmailAuthAdapter';
 import { getSesAuthAdapter } from './ses/auth/getSesAuthAdapter';
 
 /**
@@ -12,14 +11,9 @@ import { getSesAuthAdapter } from './ses/auth/getSesAuthAdapter';
  */
 export const getAuthAdapterForMechanism = (input: {
   mechanism: GatheredMailMechanism;
-  cwd: string | null;
 }): GatherAuthAdapter => {
   switch (input.mechanism) {
-    case 'gmail':
-      return getGmailAuthAdapter({ cwd: input.cwd });
-
     case 'ses':
-      // no cwd: ses caches no token, so it anchors no path to one
       return getSesAuthAdapter();
 
     // the `never` annotation makes this dispatcher exhaustive — see its peer,
@@ -29,7 +23,7 @@ export const getAuthAdapterForMechanism = (input: {
       const mechanismUnhandled: never = input.mechanism;
       return BadRequestError.throw('mechanism not supported', {
         mechanism: mechanismUnhandled,
-        hint: 'use --from gmail or --from ses',
+        hint: 'use --from ses',
       });
     }
   }

@@ -6,10 +6,8 @@
  *   the vault does not surface the crown jewels.
  *
  *   every mechanism must obfuscate identically, so the rule lives here rather than once per
- *   adapter. it was previously hand-rolled byte-for-byte in gmail's and ses's readers, with
- *   the replacement literal repeated six times across the two — so a change to the message
- *   meant six correct edits, and a divergence between two adapters would be a defect no test
- *   would catch (`rule.forbid.magic-values`).
+ *   adapter. one source means one edit to change the message, and no two adapters can
+ *   diverge on it (`rule.forbid.magic-values`).
  *
  * .note = the three fields are obfuscated TOGETHER or not at all. sensitivity is a property
  *   of the mail, never of one field — a clean subject beside a body that still carries a

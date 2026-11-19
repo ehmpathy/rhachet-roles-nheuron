@@ -6,20 +6,17 @@
 #        via location-independent package import
 #
 # usage:
-#   ./gather.auth.sh --from gmail --address user@gmail.com   # check auth status
 #   ./gather.auth.sh --from ses --address you@your.domain    # reports the AWS_PROFILE identity
 #
 # options:
-#   --from     mail source: gmail, ses (required)
+#   --from     mail source: ses (required)
 #   --address  email address to check status for (optional)
 #   -h, --help show help message
 #
 # note:
-#   NEITHER mechanism has an interactive auth flow today. ses has none by design
-#   (iam needs no grant); `--from gmail` without --address refuses with exit 2 and
-#   names the service account keys to fill. credentials come from keyrack either way:
-#     rhx keyrack unlock --owner ehmpath --env test   # gmail
-#     rhx keyrack unlock --owner ehmpath --env prep   # ses
+#   ses has no interactive auth flow, by design: iam needs no grant. the
+#   credentials come from keyrack:
+#     rhx keyrack unlock --owner ehmpath --env prep
 ######################################################################
 set -euo pipefail
 

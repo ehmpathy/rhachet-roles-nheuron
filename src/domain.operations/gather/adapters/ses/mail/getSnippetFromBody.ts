@@ -1,7 +1,7 @@
 /**
  * .what = max chars of body text used as the preview snippet
- * .why = rfc822 has no snippet concept (gmail supplies one); we derive it, and
- *        200 chars matches the gmail snippet length closely enough to read alike
+ * .why = rfc822 has no snippet concept, so we derive one; 200 chars reads as a
+ *        one-line preview in the tree output
  */
 const SNIPPET_MAX_CHARS = 200;
 

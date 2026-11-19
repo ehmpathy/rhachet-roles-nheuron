@@ -14,7 +14,7 @@ export interface SesCallerIdentity {
 
 /**
  * .what = read the caller identity of the current aws credentials
- * .why = the ses auth-status check — the iam counterpart of gmail's token probe.
+ * .why = the ses auth-status check — proof that the iam credentials load.
  *        returns null when credentials are absent or rejected, so the caller can
  *        report 'anonymous' rather than crash.
  *

@@ -5,10 +5,7 @@ import type { GatheredMail } from '@src/domain.objects/GatheredMail';
 import type { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 import type { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
 import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
-import type {
-  GatherMailAdapter,
-  GatherMailFilter,
-} from '@src/domain.objects/GatherMailAdapter';
+import type { GatherMailAdapter } from '@src/domain.objects/GatherMailAdapter';
 import { getMailsWithinRange } from '@src/domain.operations/gather/mail/transformers/getMailsWithinRange';
 import { getSyncStatsFromMails } from '@src/domain.operations/gather/mail/transformers/getSyncStatsFromMails';
 
@@ -20,45 +17,20 @@ import { getAllMailFromSes } from './getAllMailFromSes';
  * .what = ses adapter for the GatherMailAdapter interface
  * .why = enables gather.mail --from ses via the adapter pattern
  *
- * .note = auth is plain iam. the adapter takes no accessToken — the aws sdk reads
- *         the AWS_PROFILE credentials keyrack placed in the env. the interface's
- *         accessToken is therefore unused here, unlike gmail's oauth token.
+ * .note = auth is plain iam. the aws sdk reads the AWS_PROFILE credentials keyrack
+ *         placed in the env, so the interface's accessToken is unused here.
  *
- * .note = takes no cwd either. the bucket + region arrive from the keyrack env via
- *         getSesConfig, so no path here is anchored to a cwd.
+ * .note = the bucket + region arrive from the keyrack env via getSesConfig, so no
+ *         path here is anchored to a cwd.
  */
 export const getSesMailAdapter = (): GatherMailAdapter => {
   return {
     mechanism: 'ses',
 
-    // ⚠️ SES CANNOT HONOR EITHER FILTER, so it REFUSES them rather than ignores them.
-    // the inbound side is an s3 prefix of raw rfc822 — there is no search index to push a
-    // query into, and rfc822 has no label concept for a `/labels=` scope to select on.
-    // to accept and drop them would hand back the whole mailbox with exit 0, which reads
-    // as "your filter matched it all" (rule.forbid.surprises, rule.forbid.failhide)
-    getFilterRefusal: (input) => {
-      if (input.filter.query !== null)
-        return {
-          what: 'ses cannot honor --query',
-          why: 'ses mail is read from an s3 prefix of raw rfc822; there is no search index to query',
-          hint: 'narrow with --since instead, or use --from gmail for a search expression',
-        };
-
-      if (input.filter.labels.length > 0)
-        return {
-          what: 'ses cannot honor a /labels= scope',
-          why: 'labels are a gmail concept; rfc822 mail in s3 carries none',
-          hint: 'drop the /labels= suffix from --address',
-        };
-
-      return null;
-    },
-
     getAllMail: async (
       input: {
         in: {
           repo: GatheredMailRepo;
-          filter: GatherMailFilter;
         };
         page: PaginationInput<{ deliveredAt: Date }>;
         exidsKnown: string[];

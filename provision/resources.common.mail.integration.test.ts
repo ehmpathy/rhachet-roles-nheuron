@@ -17,7 +17,7 @@ import {
  * .note = a local copy of the live suites' own check; the contract they all follow lives in
  *   `.agent/repo=.this/role=any/briefs/howto.run-live-mail-tests.md`.
  */
-const isLiveTargeted = (input: { mechanism: 'gmail' | 'ses' }): boolean =>
+const isLiveTargeted = (input: { mechanism: 'ses' }): boolean =>
   (process.env.TEST_LIVE ?? '')
     .split(',')
     .map((part) => part.trim())

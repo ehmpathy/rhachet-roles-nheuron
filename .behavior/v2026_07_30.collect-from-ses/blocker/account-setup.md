@@ -1,7 +1,9 @@
-# risk ask: account setup for the collect-from-ses live run
+# the live path: tracks B–E stand up the nheuron mailbox
 
-> a risk ask for the live run only — never a merge gate. ci stays green without it: the live
-> cases sit behind `TEST_LIVE` and skip when no flag names them.
+> the nheuron mailbox does not exist until you run tracks B–E, in order. they are the live path,
+> not an extra for the live tests: without them no nheuron address sends or receives mail.
+> nheuron mail is ses only (`../decision.of=nheuron-mail-mechanism.md`). no gmail track exists here.
+> ci stays green without these tracks; the pr merge does not wait on them.
 > run top to bottom. each step = one command or one console path, then what it unblocks.
 > 🧑 = human by hand · 🤖 = command · ⛳ = check before you go on.
 
@@ -9,13 +11,12 @@
 
 | track | steps | closes |
 |---|---|---|
-| A — gmail credentials | A1–A3 | live `[case7]` via `TEST_LIVE=gmail` (r008 blocker.1, gmail half) |
 | B — aws accounts | B1–B6 | the `nheuron-prod` + `nheuron-prep` accounts the mailbox lives in |
 | C — ses mailbox | C1–C3 | `jelly@one.nheuron.com` identity, inbound bucket, dkim tokens |
 | D — dns | D1–D4 | mx, spf, dkim, dmarc on `one.nheuron.com` |
-| E — live loop | E1–E3 | r008 blocker.1 (ses live read) + blocker.2 (real send) |
+| E — live loop | E1–E3 | the mailbox proven live: mail read via ses (r008 blocker.1), a real send (blocker.2) |
 
-track A is independent of B–E. B → C → D → E has a hard order.
+B → C → D → E has a hard order. the mailbox exists once D4 reads verified; E proves it.
 
 ## prereqs
 
@@ -24,36 +25,8 @@ track A is independent of B–E. B → C → D → E has a hard order.
 - 3 email addresses that no aws account uses yet: `nheuron-root` sign-up, `nheuron-prod`, `nheuron-prep`. all three distinct (aws compares them without regard to case)
 - 1 address of your own for the test mail in E1
 - a card + phone (aws sign-up verifies both)
-- google workspace admin on the domain the gmail service account impersonates
 - edit access to the `nheuron.com` zone in cloudflare
 - this branch checked out, `npm ci` run
-
----
-
-## track A — gmail credentials
-
-**A1** 🧑 create the service account, its json key, gmail api, and domain-wide delegation (scope `https://www.googleapis.com/auth/gmail.readonly`).
-console path: `.agent/repo=.this/role=any/briefs/howto.create-gmail-service-account.md` steps 1–5.
-unblocks: the key json and the subject address that A2 needs.
-
-**A2** 🤖 fill the four test keys into keyrack:
-```sh
-rhx keyrack fill --owner ehmpath --env test
-#   GMAIL_SERVICE_ACCOUNT_JSON      the key json, one line
-#   GMAIL_SERVICE_ACCOUNT_SUBJECT   the workspace address it impersonates
-#   GATHER_GMAIL_CLIENT_ID          oauth client id (the interactive gather.auth path)
-#   GATHER_GMAIL_CLIENT_SECRET      oauth client secret
-```
-unblocks: A3.
-
-**A3** 🤖 read mail by hand, then run the live gmail case:
-```sh
-rhx keyrack unlock --owner ehmpath --env test
-rhx gather.mail --from gmail --address robot@yourdomain.com
-TEST_LIVE=gmail npm run test:acceptance -- gatherMail
-```
-⛳ mail listed, no `token exchange failed`; `[case7]` passes.
-unblocks: r008 blocker.1 (gmail half). ci never runs this case; no ci secret is owed.
 
 ---
 

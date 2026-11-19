@@ -219,8 +219,8 @@ describe('getAllMailFromSes', () => {
 
   /**
    * .what = clamps that the page walk REFUSES past its cap rather than truncates
-   * .why = ⚠️ s3 has no server-side date filter, so `--since` cannot narrow this walk the
-   *   way gmail's `after:` narrows its own. an uncapped walk lists, reads, and parses every
+   * .why = ⚠️ s3 has no server-side date filter, so `--since` cannot narrow this walk.
+   *   an uncapped walk lists, reads, and parses every
    *   object under the prefix — and the prefix accumulates forever, so the cost is
    *   unbounded in time, memory, and s3 spend on a mailbox nobody prunes.
    *

@@ -13,11 +13,10 @@ import { setGatherAuthOutput } from './setGatherAuthOutput';
  * narrative steps:
  *   1. getAuthAdapterForMechanism → select adapter for mechanism
  *   2. adapter.getAuthStatus → check current auth state
- *   3. genAuthIfAnonymous → if anonymous and no address: run auth flow
+ *   3. genAuthIfAnonymous → if anonymous and no address: ask the mechanism for auth
  *   4. setGatherAuthOutput → show status
  *
- * note: when address is provided, only checks status (no oauth trigger).
- *       this enables status checks without browser interaction.
+ * note: when address is provided, only checks status (no auth flow asked).
  */
 export const setGatherAuth = async (
   input: {
@@ -27,13 +26,11 @@ export const setGatherAuth = async (
   context: {
     log: GatherLogMethods;
     setStdout: (content: string) => void;
-    cwd: string | null;
   },
 ): Promise<void> => {
   // select adapter for mechanism
   const authAdapter = getAuthAdapterForMechanism({
     mechanism: input.mechanism,
-    cwd: context.cwd,
   });
 
   // build repo if address provided
@@ -47,7 +44,7 @@ export const setGatherAuth = async (
     { log: context.log },
   );
 
-  // when address is provided, only check status (no oauth trigger)
+  // when address is provided, only check status (no auth flow asked)
   if (input.address) {
     setGatherAuthOutput(
       {

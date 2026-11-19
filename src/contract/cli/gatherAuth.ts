@@ -15,11 +15,9 @@ import { getIsHelpAsked } from './getIsHelpAsked';
  * .what = prints help message for gather.auth
  * .why = enables users to discover available options
  *
- * ⚠️ .note = the help must advertise ONLY paths that work. it once led with
- *   `--from gmail   # start oauth flow`, and that command throws 'oauth flow not yet
- *   implemented' — so the first example in the help was a hard stop. help that sends a
- *   human at a broken path is worse than help that omits the path
- *   (`rule.require.errors-name-the-fix`, `rule.forbid.surprises`).
+ * .note = the help advertises ONLY paths that work. help that sends a human at a broken
+ *   path is worse than help that omits the path (`rule.require.errors-name-the-fix`,
+ *   `rule.forbid.surprises`).
  */
 const printHelp = (): void => {
   console.log(
@@ -30,25 +28,20 @@ usage:
   gather.auth.sh --from <mechanism> [--address <email>]
 
 options:
-  --from <mechanism>   mail source: gmail, ses (required)
+  --from <mechanism>   mail source: ses (required)
   --address <email>    email address to check status for (optional)
   -h, --help           show this help message
 
 examples:
-  gather.auth.sh --from gmail --address user@gmail.com  # check auth status
   gather.auth.sh --from ses --address you@your.domain   # check the AWS_PROFILE identity
 
-how each mechanism authenticates:
-  gmail  a service account from keyrack (GMAIL_SERVICE_ACCOUNT_JSON + _SUBJECT), or a
-         cached oauth token. either way, credentials come from keyrack:
-           rhx keyrack unlock --owner ehmpath --env test
-  ses    plain iam — the AWS_PROFILE keyrack places in the env. no token, no expiry:
-           rhx keyrack unlock --owner ehmpath --env prep
+how ses authenticates:
+  plain iam — the AWS_PROFILE keyrack places in the env. no token, no expiry:
+    rhx keyrack unlock --owner ehmpath --env prep
 
 note:
-  NEITHER mechanism has an interactive auth flow today. \`--from ses\` has none by design
-  (iam needs no grant); \`--from gmail\` without --address refuses with exit 2 and names
-  the service account keys to fill. unlock the credentials above, then use --address to confirm.
+  ses has no interactive auth flow, by design: iam needs no grant. unlock the
+  credentials above, then use --address to confirm.
 `.trim(),
   );
 };
@@ -129,7 +122,6 @@ export const gatherAuth = async (): Promise<number> => {
           { setStderr: (content: string) => process.stderr.write(content) },
         ),
         setStdout: (content: string) => process.stdout.write(content),
-        cwd: process.cwd(),
       },
     );
     return 0;

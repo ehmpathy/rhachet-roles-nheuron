@@ -9,18 +9,17 @@ const createMail = (exid: string, deliveredAt: Date): GatheredMail =>
   new GatheredMail({
     exid,
     ceiver: new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'test@gmail.com',
+      mechanism: 'ses',
+      address: 'test@example.com',
     }),
     sender: new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'sender@gmail.com',
+      mechanism: 'ses',
+      address: 'sender@example.com',
     }),
     subject: 'Test',
     snippet: 'Test snippet',
     body: null,
     deliveredAt,
-    labels: [],
     attachments: [],
     isObfuscated: false,
   });

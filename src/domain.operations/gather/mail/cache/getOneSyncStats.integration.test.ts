@@ -22,8 +22,8 @@ describe('getOneSyncStats', () => {
 
   given('[case1] no sync stats exist', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'nosync@gmail.com',
+      mechanism: 'ses',
+      address: 'nosync@example.com',
     });
 
     when('[t0] getOneSyncStats is called', () => {
@@ -39,8 +39,8 @@ describe('getOneSyncStats', () => {
 
   given('[case2] sync stats are cached', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'synced@gmail.com',
+      mechanism: 'ses',
+      address: 'synced@example.com',
     });
 
     beforeAll(async () => {

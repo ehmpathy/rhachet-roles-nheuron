@@ -9,7 +9,7 @@ import { GatheredMailRepo } from './GatheredMailRepo';
  */
 export interface GatheredMail {
   /**
-   * external identifier — the immutable message id from source (e.g., gmail message id).
+   * external identifier — the immutable message id from source (e.g., the ses s3 key).
    *
    * .note = it identifies a mail WITHIN its mailbox, never across mailboxes — it is issued
    *   by the source, so two mechanisms (or two mailboxes on one mechanism) may hand out the
@@ -46,11 +46,6 @@ export interface GatheredMail {
    * timestamp mail was delivered
    */
   deliveredAt: Date;
-
-  /**
-   * mechanism-specific labels (e.g., gmail labels)
-   */
-  labels: string[];
 
   /**
    * attachment file names

@@ -119,4 +119,5 @@ information at the cost of one read.
 
 ## the verdict
 
-_open — awaits the council._
+moot — F18 cut the gmail mechanism, and F19 cut `--query` and the `/labels=` scope with it. no
+filtered run exists, so every run is a bare run and takes the cursor.

@@ -17,10 +17,8 @@ import { getAuthenticatedOrThrow } from './transformers/getAuthenticatedOrThrow'
  *   4. authAdapter.getAccessToken → return token for downstream
  *
  * .note = it names NO mechanism. each adapter owns its own auth strategy behind the
- *   `GatherAuthAdapter` seam — gmail picks between a service account and oauth inside
- *   `getGmailAuthAdapter`; ses reads AWS_PROFILE inside `getSesAuthAdapter`. so a new
- *   mechanism reuses this orchestrator untouched, and a reader need not know any
- *   mechanism's internals to follow it.
+ *   `GatherAuthAdapter` seam — ses reads AWS_PROFILE inside `getSesAuthAdapter`. so a
+ *   reader need not know any mechanism's internals to follow it.
  */
 export const genAuthReady = async (
   input: {

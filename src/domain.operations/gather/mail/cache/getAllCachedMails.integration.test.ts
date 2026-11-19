@@ -23,8 +23,8 @@ describe('getAllCachedMails', () => {
 
   given('[case1] no cache exists', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'empty@gmail.com',
+      mechanism: 'ses',
+      address: 'empty@example.com',
     });
 
     when('[t0] getAllCachedMails is called', () => {
@@ -37,8 +37,8 @@ describe('getAllCachedMails', () => {
 
   given('[case2] mails are cached', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'cached@gmail.com',
+      mechanism: 'ses',
+      address: 'cached@example.com',
     });
 
     beforeAll(async () => {
@@ -46,14 +46,13 @@ describe('getAllCachedMails', () => {
         exid: 'msg_1',
         ceiver: repo,
         sender: new GatheredMailRepo({
-          mechanism: 'gmail',
-          address: 'a@gmail.com',
+          mechanism: 'ses',
+          address: 'a@example.com',
         }),
         subject: 'First',
         snippet: 'First snippet',
         body: null,
         deliveredAt: new Date('2024-01-01T10:00:00Z'),
-        labels: [],
         attachments: [],
         isObfuscated: false,
       });
@@ -61,14 +60,13 @@ describe('getAllCachedMails', () => {
         exid: 'msg_2',
         ceiver: repo,
         sender: new GatheredMailRepo({
-          mechanism: 'gmail',
-          address: 'b@gmail.com',
+          mechanism: 'ses',
+          address: 'b@example.com',
         }),
         subject: 'Second',
         snippet: 'Second snippet',
         body: 'Body content',
         deliveredAt: new Date('2024-01-02T10:00:00Z'),
-        labels: ['INBOX'],
         attachments: ['file.pdf'],
         isObfuscated: true,
       });
@@ -91,7 +89,6 @@ describe('getAllCachedMails', () => {
 
         expect(mail2.subject).toBe('Second');
         expect(mail2.body).toBe('Body content');
-        expect(mail2.labels).toEqual(['INBOX']);
         expect(mail2.attachments).toEqual(['file.pdf']);
         expect(mail2.isObfuscated).toBe(true);
         expect(mail2.deliveredAt).toEqual(new Date('2024-01-02T10:00:00Z'));
@@ -108,9 +105,9 @@ describe('getAllCachedMails', () => {
    *   vanishes from every range query with no error to point at
    *   (`rule.forbid.failhide`).
    *
-   *   the same value is guarded at both of its producers (`getGatheredMailFromGmail`'s
-   *   `internalDate` check, `getGatheredMailFromSes`'s `parsed.date ?? receivedAt`). the
-   *   cache is the third boundary it crosses, and the one read on EVERY bare run.
+   *   the same value is guarded at its producer (`getGatheredMailFromSes`'s
+   *   `parsed.date ?? receivedAt`). the cache is the second boundary it crosses, and the
+   *   one read on EVERY bare run.
    *
    * .note = a file this cannot read reaches disk by schema drift, never by a torn write —
    *   a truncated write yields invalid json, which `JSON.parse` already throws on. so the
@@ -119,8 +116,8 @@ describe('getAllCachedMails', () => {
    */
   given('[case3] a cached file whose deliveredAt is absent', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'corrupt@gmail.com',
+      mechanism: 'ses',
+      address: 'corrupt@example.com',
     });
 
     beforeAll(async () => {
@@ -130,13 +127,12 @@ describe('getAllCachedMails', () => {
         path.join(mailsDir, 'mail.exid=msg_drift.json'),
         JSON.stringify({
           exid: 'msg_drift',
-          ceiver: { mechanism: 'gmail', address: repo.address },
-          sender: { mechanism: 'gmail', address: 'a@gmail.com' },
+          ceiver: { mechanism: 'ses', address: repo.address },
+          sender: { mechanism: 'ses', address: 'a@example.com' },
           subject: 'from a prior format',
           snippet: 'n',
           body: null,
           // deliveredAt absent — the drift this guards
-          labels: [],
           attachments: [],
           isObfuscated: false,
         }),
@@ -184,8 +180,7 @@ describe('getAllCachedMails', () => {
    * .why = ⚠️ the `mechanism` decides which adapter handles a mail. a cache file from an older
    *   or renamed format can carry a mechanism this build no longer knows — a bare cast would
    *   push that non-domain term into a GatheredMail, where no adapter routes it and no error
-   *   points at the file. the peer token reader (`getOneGatherAccessToken`) guards its own
-   *   `mechanism` for exactly this reason (`rule.require.failloud`).
+   *   points at the file (`rule.require.failloud`).
    *
    * .note = like [case3], this writes VALID json whose shape drifted — an unknown mechanism
    *   is a schema fault, not a torn write. so `JSON.parse` succeeds and the mechanism guard,
@@ -193,8 +188,8 @@ describe('getAllCachedMails', () => {
    */
   given('[case5] a cached file with an unknown mechanism', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'drifted-mechanism@gmail.com',
+      mechanism: 'ses',
+      address: 'drifted-mechanism@example.com',
     });
 
     beforeAll(async () => {
@@ -204,14 +199,13 @@ describe('getAllCachedMails', () => {
         path.join(mailsDir, 'mail.exid=msg_badmech.json'),
         JSON.stringify({
           exid: 'msg_badmech',
-          ceiver: { mechanism: 'gmail', address: repo.address },
+          ceiver: { mechanism: 'ses', address: repo.address },
           // sender carries a mechanism no adapter knows — the drift this guards
           sender: { mechanism: 'telepathy', address: 'a@nowhere.com' },
           subject: 'from a renamed mechanism',
           snippet: 'n',
           body: null,
           deliveredAt: '2024-01-01T10:00:00.000Z',
-          labels: [],
           attachments: [],
           isObfuscated: false,
         }),
@@ -240,8 +234,8 @@ describe('getAllCachedMails', () => {
 
   given('[case4] a cached file truncated by a crash mid-write', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'gmail',
-      address: 'torn@gmail.com',
+      mechanism: 'ses',
+      address: 'torn@example.com',
     });
 
     beforeAll(async () => {
