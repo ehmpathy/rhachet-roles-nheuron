@@ -1,0 +1,132 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`gather.mail given: [case1] help flag when: [t0] --help is passed then: displays help message 1`] = `
+"gather.mail - collect mail from authenticated source
+
+usage:
+  gather.mail.sh [options]
+
+options:
+  --from <mechanism>   mail source: ses (required)
+  --address <email>    email address to collect from (required)
+  --since <date>       only list mail since this date (ISO format)
+                       default: the prior run's cursor — so a bare re-run
+                       collects, and lists, only what arrived since it.
+                       pass --since explicitly to re-scan a wider window.
+  --format <format>    output format: tree, json (default: tree)
+  -h, --help           show this help message
+
+  what --since costs:
+    it narrows what you SEE, never what is read. s3 filters on key prefix
+    only, so there is no date bound to push down: every object under the
+    inbound prefix is listed, then each one not yet cached is read and
+    parsed. the walk is capped — past 200 pages it REFUSES rather than
+    return a partial mailbox as a whole one.
+
+examples:
+  gather.mail.sh --from ses --address jelly@one.nheuron.com
+  gather.mail.sh --from ses --address jelly@one.nheuron.com --since 2026-08-01
+  gather.mail.sh --from ses --address jelly@one.nheuron.com --format json
+"
+`;
+
+exports[`gather.mail given: [case2] absent required args when: [t0] no --from provided then: exits with error code 2 1`] = `
+"✋ ConstraintError: --from is required
+
+{
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case2] absent required args when: [t1] --from provided but no --address then: exits with error code 2 1`] = `
+"✋ ConstraintError: --address is required
+
+{
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case3] invalid mechanism when: [t0] unsupported mechanism provided then: exits with error code 2 1`] = `
+"✋ ConstraintError: invalid mechanism 'slack'
+
+{
+  "validMechanisms": [
+    "ses"
+  ],
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case4] invalid format when: [t0] unsupported format provided then: exits with error code 2 1`] = `
+"✋ ConstraintError: invalid format 'xml'
+
+{
+  "validFormats": [
+    "tree",
+    "json"
+  ],
+  "hint": "run with --help for usage"
+}
+"
+`;
+
+exports[`gather.mail given: [case5] ses collection with no aws configured when: [t0] SES_MAIL_BUCKET and SES_REGION are absent then: exits 2 and names the keyrack unlock, never gather.auth 1`] = `
+"✋ ConstraintError: not authenticated
+
+{
+  "mechanism": "ses",
+  "hint": "ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep"
+}
+"
+`;
+
+exports[`gather.mail given: [case7] a typo in a flag name when: [t0] gather.mail is invoked with --sicne then: exits 2, names the unknown flag and the allowed set 1`] = `
+"✋ ConstraintError: unknown flag '--sicne'
+
+{
+  "allowedFlags": [
+    "--from",
+    "--address",
+    "--since",
+    "--format",
+    "--help"
+  ],
+  "hint": "run with --help for usage; a typo returns no error otherwise"
+}
+"
+`;
+
+exports[`gather.mail given: [case8] an address with a path suffix when: [t0] gather.mail is invoked with --address jelly@one.nheuron.com/inbox then: exits 2 and names the one-address shape 1`] = `
+"✋ ConstraintError: address 'jelly@one.nheuron.com/inbox' is not a mailbox address
+
+{
+  "address": "jelly@one.nheuron.com/inbox",
+  "why": "the address names the mailbox and its cache dir, so it must be one plain email address",
+  "hint": "pass one address, e.g. --address jelly@one.nheuron.com"
+}
+"
+`;
+
+exports[`gather.mail given: [case9] an unreadable --since when: [t0] gather.mail is invoked with --since yesterday then: exits 2 and names an iso date, before any auth check 1`] = `
+"✋ ConstraintError: --since is not a date we can read
+
+{
+  "since": "yesterday",
+  "why": "an unreadable date would silently become no bound at all, and return the whole mailbox",
+  "hint": "use an ISO date, e.g. --since 2026-08-01"
+}
+"
+`;
+
+exports[`gather.mail given: [case10] the passthrough flags rhachet appends when: [t0] gather.mail runs as \`rhx gather.mail\` would call it then: reads its own flags and reaches the auth check 1`] = `
+"✋ ConstraintError: not authenticated
+
+{
+  "mechanism": "ses",
+  "hint": "ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep"
+}
+"
+`;
