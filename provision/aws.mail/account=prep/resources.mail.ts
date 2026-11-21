@@ -103,8 +103,12 @@ export const getResourcesOfMail = (input: {
   //    `gather.mail --since <a year ago>` would fail on the archived mail. a clone must be able
   //    to read its own memory at any age. the vision judged storage cost a non-issue at a
   //    clone's volume, so no cost cut here is worth that price.
+  //    `access.public: 'blocked'` = all four public-access controls on: the bucket holds private
+  //    mail, and ses writes via the bucket policy's service principal, which a public block
+  //    never touches
   const store = DeclaredAwsS3Bucket.as({
     name: MAIL_BUCKET,
+    access: { public: 'blocked' },
     lifecycle: null,
     tags: { managedBy: 'declastruct', purpose: 'mail' },
   });
