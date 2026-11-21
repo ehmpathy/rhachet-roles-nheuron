@@ -51,7 +51,9 @@ const ADMIN_USERNAME = 'vlad';
  *     org-rewrite power all day
  *   - everyday-power (PowerUserAccess, PT12H) — daily work in prep + prod; no iam writes
  */
-export const getResourcesOfAdminSso = async (): Promise<DomainEntity<any>[]> => {
+export const getResourcesOfAdminSso = async (): Promise<
+  DomainEntity<any>[]
+> => {
   const provider = await getDeclastructAwsProvider({}, { log });
 
   // the identity center instance is enabled by hand (aws exposes no create api)

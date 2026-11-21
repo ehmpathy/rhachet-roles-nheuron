@@ -81,7 +81,8 @@ export const getResourcesOfSpendLockdown = (input: {
   // so a human can still sign in, see the bill, and lift the freeze
   const scpSpendFreeze = DeclaredAwsOrganizationServiceControlPolicy.as({
     name: 'nheuron-scp-spend-freeze',
-    description: 'circuit breaker: deny all new activity once org spend hits the ceiling',
+    description:
+      'circuit breaker: deny all new activity once org spend hits the ceiling',
     content: new DeclaredAwsIamPolicyDocument({
       statements: [
         {
@@ -113,7 +114,8 @@ export const getResourcesOfSpendLockdown = (input: {
   const breakerRole = DeclaredAwsIamRole.as({
     name: 'nheuron-budgets-breaker-role',
     path: '/',
-    description: 'role aws budgets assumes to attach + detach the spend-freeze scp',
+    description:
+      'role aws budgets assumes to attach + detach the spend-freeze scp',
     policies: [
       {
         effect: 'Allow',
