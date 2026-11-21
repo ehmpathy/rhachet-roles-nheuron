@@ -27,11 +27,6 @@ env.prep:
   # until the aws mail wish applies, so they arrive by fill rather than by literal. this is
   # what keeps the dns wish applyable as committed, with no code edit between the two applies
   - SES_DKIM_TOKENS
-
-  # the root email of each declared aws account — its natural key at create time, which aws
-  # forbids reuse of, so it never lands in git. only the account wish reads these.
-  - NHEURON_PROD_ACCOUNT_EMAIL
-  - NHEURON_PREP_ACCOUNT_EMAIL
 env.test:
   # the gmail service account (ci/automation path) — takes precedence over oauth
   - GMAIL_SERVICE_ACCOUNT_JSON

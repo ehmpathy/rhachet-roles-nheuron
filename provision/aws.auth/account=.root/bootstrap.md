@@ -39,7 +39,24 @@ a dedicated organization means nheuron's infra shares no blast radius with any o
 2. go to **AWS Organizations** → **Create an organization**
 3. choose **All features** (not consolidated-bill-only) — SCPs and account create both need it
 
-that is the whole manual surface. `resources.accounts.ts` takes it from here.
+### 2b. bootstrap the first sso login
+
+⚠️ **region = `us-east-1`, always.** identity center binds to the region it is enabled in; a
+move means delete and re-create. use only region-pinned links:
+https://us-east-1.console.aws.amazon.com/singlesignon/home?region=us-east-1#/enable-iam-identity-center
+
+by hand, once: enable identity center, then one user (`vlad`), one permission set
+(`emergency-admin`, predefined AdministratorAccess, 1h), one assignment (that user + that set →
+`nheuron-root`), then the keyrack profile. the exact clicks live in
+`provision/runbook.bootstrap-nheuron-mailbox.md` phase 3.
+
+no wish can run before a login exists, so these three are the floor. from here
+`resources.admin.sso.ts` adopts them by name and declares all other sso state — permission sets,
+users, assignments to prep and prod — the same shape as ahbode/infrastructure. never add sso
+state by hand past this step.
+
+that is the whole manual surface. `resources.accounts.ts` and `resources.admin.sso.ts` take it
+from here.
 
 ### 3. fill the account emails into keyrack
 

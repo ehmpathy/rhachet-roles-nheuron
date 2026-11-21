@@ -1,0 +1,19 @@
+{
+  "key": "6f83c0b8ec70ecd6",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ghlitch"
+  },
+  "exid": null,
+  "title": "deployer: provision.declastruct --env sudo + aws.caller.get management guard",
+  "description": "## .what\n\nlet `provision.declastruct` run root (management-account) wishes, and promote two skills proven\nin rhachet-roles-nheuron.\n\n## .why\n\n`--env` admits test, prep, prod, camp only. org, sso, scp, and budget wishes must run as the org\nmanager, whose profile lives in keyrack env `sudo`. a consumer today must hand-roll a wrapper —\nnheuron did: `.agent/repo=.this/role=any/skills/provision.root.sh`.\n\n## .the shape of the fix\n\n1. **`provision.declastruct --env sudo`.** sudo keys sit in no keyrack.yml, so\n   `keyrack unlock --env sudo` refuses without `--key`, and a wish-side\n   `keyrack.source({ env: 'sudo' })` sees no keys. the skill must take `--key <name>`\n   (repeatable; `AWS_PROFILE` always), unlock each, and export each into the declastruct process.\n2. **promote `aws.caller.get --env <env> [--expect management]`** (nheuron\n   `.agent/repo=.this/role=any/skills/aws.caller.get.sh`, already in deployer shape): the paved\n   caller-identity check. `--expect management` refuses unless the account manages its org.\n   it replaces every adhoc `aws sts get-caller-identity`.\n3. **guard every root run.** call that check before any declastruct call. a wrong profile\n   silently declares the org, sso, or budgets under the wrong account, and the wish cannot catch\n   it — it learns the account FROM the credentials.\n\n## .evidence\n\nnheuron applied its accounts, sso, and spend-lockdown wishes through these on 2026-11-20. every\nre-plan reads KEEP, budget actions aside (see the declastruct-aws dispatch).",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": "findsert",
+  "heldSeq": 1,
+  "recordStatus": "QUEUED",
+  "reason": "radio.uses:blocked — global",
+  "deliveredExid": null
+}

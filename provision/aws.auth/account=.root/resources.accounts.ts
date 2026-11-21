@@ -14,11 +14,13 @@ import {
   NHEURON_PROD_ACCOUNT_EMAIL,
 } from '../resources.common.accounts';
 
-// source aws credentials from keyrack — this wish applies AS THE ROOT account.
+// source aws credentials from keyrack env sudo — this wish applies AS THE ROOT account,
+// and sudo is the env that holds the management account's profile. never `prep`: prep holds
+// the prep account's profile, which would silently swap the identity mid-apply.
 // ⚠️ this covers the AWS credentials only. the account ROOT EMAILS are sourced inside
 // `resources.common.accounts`, above their own reads — a source here cannot reach them,
 // because commonjs hoists that import above this line (see the note in that file)
-keyrack.source({ env: 'prep', owner: 'ehmpath', mode: 'lenient' });
+keyrack.source({ env: 'sudo', owner: 'ehmpath', mode: 'lenient' });
 
 const log = genLogMethods();
 

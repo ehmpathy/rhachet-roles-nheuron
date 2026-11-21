@@ -9,7 +9,9 @@ import { getDistinctAccountEmailsOrThrow } from './getDistinctAccountEmailsOrThr
 // wish's own `keyrack.source(...)` line ever ran. the wish then depended on a human who had
 // already unlocked in their shell, and its in-file source was dead code for these constants.
 // co-located, the source provably precedes the reads (rule.require.credentials-from-keyrack)
-keyrack.source({ env: 'prep', owner: 'ehmpath', mode: 'lenient' });
+// env sudo: the account emails are root-only facts, so they live beside the management
+// account's profile. one env holds all a root wish reads, and sudo never lands in keyrack.yml
+keyrack.source({ env: 'sudo', owner: 'ehmpath', mode: 'lenient' });
 
 /**
  * .what = the root email of each declared nheuron aws account, sourced from the keyrack env
@@ -28,8 +30,8 @@ keyrack.source({ env: 'prep', owner: 'ehmpath', mode: 'lenient' });
  *
  * .note = the source above is `lenient` ON PURPOSE, and it is NOT a silent skip — the throws
  *   below ARE the strictness. strict mode would fail the whole load over any absent key in
- *   `env.prep`, such as the ses + cloudflare keys this wish never reads; the two throws demand
- *   exactly the two values it does read, and each names its own fix.
+ *   `env.sudo` this wish never reads; the two throws demand exactly the two values it does
+ *   read, and each names its own fix.
  *
  * .note = kept APART from any policy module. co-location would make every policy bundle
  *   unimportable without the account env, which breaks a unit test that touches policy shape
@@ -40,7 +42,7 @@ export const NHEURON_PROD_ACCOUNT_EMAIL =
   BadRequestError.throw(
     'NHEURON_PROD_ACCOUNT_EMAIL absent — the nheuron-prod account root email is not sourced',
     {
-      hint: 'rhx keyrack unlock --owner ehmpath --env prep (fill it first via `rhx keyrack fill`)',
+      hint: 'rhx keyrack unlock --owner ehmpath --env sudo (set it first via `rhx keyrack set --env sudo`)',
     },
   );
 
@@ -49,7 +51,7 @@ export const NHEURON_PREP_ACCOUNT_EMAIL =
   BadRequestError.throw(
     'NHEURON_PREP_ACCOUNT_EMAIL absent — the nheuron-prep account root email is not sourced',
     {
-      hint: 'rhx keyrack unlock --owner ehmpath --env prep (fill it first via `rhx keyrack fill`)',
+      hint: 'rhx keyrack unlock --owner ehmpath --env sudo (set it first via `rhx keyrack set --env sudo`)',
     },
   );
 

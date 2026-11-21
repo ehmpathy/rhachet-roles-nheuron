@@ -61,86 +61,100 @@ features** on.
 
 ---
 
-## phase 3 — set up a CLI profile for the root account 🧑
+## the settled rules (do not relitigate)
 
-you need `AWS_PROFILE=nheuron-root` on your machine to run the account apply as the org manager.
-use IAM Identity Center (the current path; long-lived access keys are the old, riskier way).
+- **region = `us-east-1`, always.** the console opens in the last region you used, and
+  Identity Center binds to the region it is enabled in — a move means delete and re-create.
+  every nheuron resource lives in `us-east-1` (`MAIL_REGION` in
+  `provision/resources.common.mail.ts`). every region-scoped link here embeds `region=us-east-1`;
+  never use a bare console link for identity center, ses, or s3.
+- **declastruct owns all sso state.** permission sets, users, and account assignments are
+  declared in `provision/aws.auth/account=.root/resources.admin.sso.ts`, the same shape as
+  ahbode/infrastructure. the only sso clicks a human makes are the phase 3 bootstrap — one user,
+  one `emergency-admin` permission set, one assignment to root — because no wish can run before a
+  login exists. the wish adopts those three by name and owns them from then on.
+- **credentials come from keyrack.** no `aws configure sso` by hand; the root profile is
+  `AWS_PROFILE` in keyrack env `sudo` (vault `aws.config`).
+- **personal emails never land in git.** account root emails and the sso user email live in
+  keyrack only.
 
-1. open https://console.aws.amazon.com/singlesignon/ and **enable** IAM Identity Center.
-2. create a **permission set** named `AdministratorAccess` (use the aws-managed
-   `AdministratorAccess` policy).
-3. assign your human user to `nheuron-root` with that permission set.
-4. copy the **AWS access portal URL** shown in Identity Center settings.
-5. in your terminal, configure the profile:
+---
+
+## phase 3 — bootstrap the first sso login 🧑
+
+the one sso step a human owns. all later sso state is declared.
+
+1. ⚠️ confirm the console region reads **N. Virginia (us-east-1)**, then enable Identity Center:
+   https://us-east-1.console.aws.amazon.com/singlesignon/home?region=us-east-1#/enable-iam-identity-center
+   - identity source = **AWS Organizations**
+2. **Users → Add user**
+   - username: `vlad`
+   - email: the address you want for sso
+   - first and last name
+   - skip groups, then **Add user**
+3. **Permission sets → Create permission set**
+   - **Predefined → AdministratorAccess**
+   - name: **`emergency-admin`**, exactly that — the wish finds it by this name
+   - session duration **1 hour**, then **Create**
+4. **AWS accounts → select `nheuron-root` → Assign users or groups**
+   - pick `vlad`, pick `emergency-admin`, then **Submit**
+5. accept the invitation email: set a password, set up mfa for the sso user.
+6. register the root profile in keyrack. it asks for the access portal url (identity center
+   settings → **AWS access portal URL**, `https://d-….awsapps.com/start`) and walks the login:
    ```sh
-   aws configure sso --profile nheuron-root
+   rhx keyrack set --key AWS_PROFILE --owner ehmpath --env sudo --vault aws.config
    ```
-   - SSO start URL = the access portal url from step 4
-   - SSO region = your Identity Center region (e.g. `us-east-1`)
-   - account = `nheuron-root`, role = `AdministratorAccess`
-6. log in:
-   ```sh
-   aws sso login --profile nheuron-root
-   ```
+   - sso region = `us-east-1` · client region = `us-east-1` (no other value)
+   - account = `nheuron-root`, role = `emergency-admin`
 
-⛳ run this and confirm the account is `nheuron-root`:
+⛳ the identity center instance lives in `us-east-1` and the profile lands in root:
 ```sh
-AWS_PROFILE=nheuron-root aws sts get-caller-identity
+rhx keyrack unlock --owner ehmpath --env sudo --key AWS_PROFILE
+aws sts get-caller-identity                       # Account = nheuron-root's id
+aws sso-admin list-instances --region us-east-1   # lists exactly one instance
 ```
 
 ---
 
-## phase 4 — fill the member emails, then apply the account wish 🤖
+## phase 4 — apply the root wishes: accounts, then sso 🤖
 
-1. fill the two member emails into keyrack (env `prep`):
+1. the member emails (`NHEURON_PROD_ACCOUNT_EMAIL`, `NHEURON_PREP_ACCOUNT_EMAIL`) and the sso
+   user email live in keyrack env `prep`. fill any absent one:
    ```sh
    rhx keyrack fill --owner ehmpath --env prep
    ```
-   fill `NHEURON_PROD_ACCOUNT_EMAIL` = email #2, `NHEURON_PREP_ACCOUNT_EMAIL` = email #3.
-   > these throw at module load if absent — the wish will refuse to plan without them.
+   > these throw at module load if absent — the wish refuses to plan without them.
 
-2. unlock the env for the apply:
+2. ⚠️ **guard: confirm you are the root before you apply.** `aws sts get-caller-identity` must
+   read nheuron-root's id. the wish learns the management-account id FROM these credentials, so
+   a wrong profile silently builds the org under the wrong account.
+
+3. plan, read the diff, then apply — accounts first (the sso assignments target them):
    ```sh
-   rhx keyrack unlock --owner ehmpath --env prep
+   npx declastruct plan  --wish 'provision/aws.auth/account=.root/resources.accounts.ts'
+   npx declastruct apply --wish 'provision/aws.auth/account=.root/resources.accounts.ts'
+   npx declastruct plan  --wish 'provision/aws.auth/account=.root/resources.admin.sso.ts'
+   npx declastruct apply --wish 'provision/aws.auth/account=.root/resources.admin.sso.ts'
    ```
+   - an account made by hand from the organizations console is found by its email and left
+     as is; the plan may show a tag diff only.
 
-3. ⚠️ **guard: confirm you are the root before you apply.**
-   ```sh
-   AWS_PROFILE=nheuron-root aws sts get-caller-identity
-   ```
-   the account id must be `nheuron-root`. the wish learns the management-account id FROM these
-   credentials, so a wrong profile here silently builds the org under the wrong account. no code
-   guard exists — your eyes are the guard.
-
-4. plan, read the diff, then apply (as root):
-   ```sh
-   AWS_PROFILE=nheuron-root npx declastruct plan  --wish 'provision/aws.auth/account=.root/resources.accounts.ts'
-   AWS_PROFILE=nheuron-root npx declastruct apply --wish 'provision/aws.auth/account=.root/resources.accounts.ts'
-   ```
-
-⛳ the organizations console now shows three accounts: `nheuron-root`, `nheuron-prod`,
-`nheuron-prep`. note the **`nheuron-prep` account id** — you need it next.
+⛳ the organizations console shows `nheuron-root`, `nheuron-prod`, `nheuron-prep` · identity
+center shows `vlad` assigned to all three.
 
 ---
 
-## phase 5 — set up a CLI profile for `nheuron-prep` 🧑
+## phase 5 — register the `nheuron-prep` profile 🤖
 
-the mail wish applies INTO `nheuron-prep`, so you need a profile scoped to that account.
-
-1. back in IAM Identity Center, assign your user to the **`nheuron-prep`** account with the
-   `AdministratorAccess` permission set.
-2. configure + log in:
-   ```sh
-   aws configure sso --profile nheuron-prep
-   aws sso login --profile nheuron-prep
-   ```
-   account = `nheuron-prep`, role = `AdministratorAccess`.
-
-⛳ confirm the profile lands in prep:
+the mail wish applies INTO `nheuron-prep`. its assignment came from phase 4; only the keyrack
+profile is left:
 ```sh
-AWS_PROFILE=nheuron-prep aws sts get-caller-identity
+rhx keyrack set --key AWS_PROFILE --owner ehmpath --env prep --vault aws.config
 ```
-the account id must equal the `nheuron-prep` id from phase 4.
+- sso region = `us-east-1` · client region = `us-east-1`
+- account = `nheuron-prep`
+
+⛳ `aws sts get-caller-identity` under the prep profile reads the `nheuron-prep` id.
 
 ---
 
@@ -166,7 +180,8 @@ bucket name is global, so the only fix is a full teardown. **check the caller fi
 3. ⛳ **grab the 3 DKIM tokens** from the apply log. the `setSesEmailIdentity` step prints three
    cname tokens (each a long hex string). copy all three — phase 7 needs them.
 
-⛳ the ses console shows identity `one.nheuron.com` with `verificationStatus: unresolved` (it
+⛳ the ses console (https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/identities)
+shows identity `one.nheuron.com` with `verificationStatus: unresolved` (it
 stays unresolved until the dns lands) · the s3 bucket `nheuron-mail-inbound-one` exists · you
 have 3 dkim tokens saved.
 
@@ -204,7 +219,8 @@ have 3 dkim tokens saved.
 ## phase 8 — verify + run the live loop 🤖
 
 1. **await dns propagation.** ses moves the identity from `unresolved` to verified once the dkim
-   cnames propagate — minutes to a few hours. re-check in the ses console until it reads
+   cnames propagate — minutes to a few hours. re-check in the ses console
+   (https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/identities) until it reads
    verified.
 
 2. auth-check the mailbox identity:
