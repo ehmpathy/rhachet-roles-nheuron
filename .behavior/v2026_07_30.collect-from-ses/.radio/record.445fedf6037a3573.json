@@ -1,0 +1,19 @@
+{
+  "key": "445fedf6037a3573",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet"
+  },
+  "exid": null,
+  "title": "keyrack del strips every comment from keyrack.yml",
+  "description": "## .what\n\n`rhx keyrack del --env prep --key <name>` rewrites `.agent/keyrack.yml` and drops every comment\nin the file, not just the deleted key's lines.\n\n## .why it matters\n\nkeyrack.yml comments are the only docs for why each key exists (which wish reads it, which\ntoken kind, what scope). one del erased all of them across every env; the human only learns of\nit from a diff.\n\n## .repro\n\n1. keyrack.yml with commented keys under `env.prep` and `env.test`\n2. `rhx keyrack del --owner ehmpath --env prep --key SOME_KEY`\n3. `git diff .agent/keyrack.yml` — every comment is gone\n\n## .the shape of the fix\n\nedit the yaml via a parser that keeps comments (e.g. the `yaml` Document api), and remove only\nthe target key's line (plus a comment block directly above it, if any). clamp: a del leaves\nevery other line byte-identical.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": "findsert",
+  "heldSeq": 4,
+  "recordStatus": "QUEUED",
+  "reason": "radio.uses:blocked — global",
+  "deliveredExid": null
+}
