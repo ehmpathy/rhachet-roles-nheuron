@@ -22,8 +22,8 @@ describe('upsertSyncStats', () => {
 
   given('[case1] sync stats to write', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'ses',
-      address: 'write@example.com',
+      mechanism: 'gmail',
+      address: 'write@gmail.com',
     });
 
     const stats = new GatheredMailSyncStats({

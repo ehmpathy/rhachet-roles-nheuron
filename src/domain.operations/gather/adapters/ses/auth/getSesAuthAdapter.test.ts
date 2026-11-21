@@ -59,9 +59,12 @@ describe('getSesAuthAdapter', () => {
         expect(result.status).toBe('anonymous');
       });
 
-      then('the token reads null, never a throw', () => {
-        expect(result.accessToken).toBeNull();
-      });
+      then(
+        'the token reads null, the same answer gmail gives, never a throw',
+        () => {
+          expect(result.accessToken).toBeNull();
+        },
+      );
     });
   });
 });

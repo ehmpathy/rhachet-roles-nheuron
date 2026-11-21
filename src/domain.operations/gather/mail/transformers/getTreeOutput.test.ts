@@ -3,34 +3,39 @@ import { given, then, when } from 'test-fns';
 import { GatheredMail } from '@src/domain.objects/GatheredMail';
 import { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 import { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
+import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 
 import { MAIL_CONTENT_OBFUSCATED } from './getMailContentVisible';
 import { getTreeOutput } from './getTreeOutput';
+
+/** the bare run — no query, no labels */
+const FILTER_WHOLE: GatherMailFilter = { query: null, labels: [] };
 
 const createMail = (overrides: Partial<GatheredMail> = {}): GatheredMail =>
   new GatheredMail({
     exid: 'msg_123',
     ceiver: new GatheredMailRepo({
-      mechanism: 'ses',
-      address: 'test@example.com',
+      mechanism: 'gmail',
+      address: 'test@gmail.com',
     }),
     sender: new GatheredMailRepo({
-      mechanism: 'ses',
-      address: 'sender@example.com',
+      mechanism: 'gmail',
+      address: 'sender@gmail.com',
     }),
     subject: 'Test Subject',
     snippet: 'Test snippet preview',
     body: 'Full body content',
     deliveredAt: new Date('2024-01-15T12:00:00Z'),
+    labels: ['INBOX'],
     attachments: [],
     isObfuscated: false,
     ...overrides,
   });
 
 describe('getTreeOutput', () => {
-  given('[case1] a run with no mails', () => {
+  given('[case1] a bare run with no mails', () => {
     when('[t0] the tree is formed', () => {
-      then('formats header with the three counts', () => {
+      then('formats header with the scope and the three counts', () => {
         const stats = new GatheredMailSyncStats({
           mailFoundUptil: null,
           mailFoundQuant: 42,
@@ -40,15 +45,17 @@ describe('getTreeOutput', () => {
         const result = getTreeOutput({
           mails: [],
           stats,
-          address: 'jelly@example.com',
-          mechanism: 'ses',
+          address: 'vlad@gmail.com',
+          mechanism: 'gmail',
+          filter: FILTER_WHOLE,
         });
 
         expect(result).toContain('boop!');
         // the header is a command a human can rerun: --from is required, so it is echoed
         expect(result).toContain(
-          'gather.mail --from ses --address jelly@example.com',
+          'gather.mail --from gmail --address vlad@gmail.com',
         );
+        expect(result).toContain('scope: whole mailbox');
         expect(result).toContain('synced: 10');
         expect(result).toContain('cached: 42');
 
@@ -67,8 +74,9 @@ describe('getTreeOutput', () => {
         const result = getTreeOutput({
           mails: [],
           stats,
-          address: 'test@example.com',
-          mechanism: 'ses',
+          address: 'test@gmail.com',
+          mechanism: 'gmail',
+          filter: FILTER_WHOLE,
         });
 
         expect(result).toContain('no mails to display');
@@ -76,7 +84,34 @@ describe('getTreeOutput', () => {
     });
   });
 
-  given('[case2] an ordinary mail', () => {
+  given('[case2] a run narrowed by a filter', () => {
+    when('[t0] the tree is formed', () => {
+      then('a filtered run states its scope, and counts what it lists', () => {
+        const stats = new GatheredMailSyncStats({
+          mailFoundUptil: null,
+          // the cache holds 42 for this address — from every scope ever gathered against it
+          mailFoundQuant: 42,
+          mailSyncedQuant: 1,
+        });
+
+        const result = getTreeOutput({
+          mails: [createMail()],
+          stats,
+          address: 'vlad@gmail.com',
+          mechanism: 'gmail',
+          filter: { query: 'from:boss@co.com', labels: ['work'] },
+        });
+
+        // ⚠️ the teeth. drop the scope line and a human reads `cached: 42` above ONE mail with
+        // no way to tell the list was narrowed — the exact misread this line exists to stop
+        expect(result).toContain('scope: labels=work query="from:boss@co.com"');
+        expect(result).toContain('listed: 1');
+        expect(result).toContain('cached: 42');
+      });
+    });
+  });
+
+  given('[case3] an ordinary mail', () => {
     when('[t0] the tree is formed', () => {
       then('formats mail items', () => {
         const mail = createMail();
@@ -89,18 +124,19 @@ describe('getTreeOutput', () => {
         const result = getTreeOutput({
           mails: [mail],
           stats,
-          address: 'test@example.com',
-          mechanism: 'ses',
+          address: 'test@gmail.com',
+          mechanism: 'gmail',
+          filter: FILTER_WHOLE,
         });
 
         expect(result).toContain('2024-01-15');
-        expect(result).toContain('sender@example.com');
+        expect(result).toContain('sender@gmail.com');
         expect(result).toContain('Test Subject');
       });
     });
   });
 
-  given('[case3] an obfuscated mail', () => {
+  given('[case4] an obfuscated mail', () => {
     when('[t0] the tree is formed', () => {
       then('obfuscates sensitive content', () => {
         const mail = createMail({ isObfuscated: true });
@@ -113,8 +149,9 @@ describe('getTreeOutput', () => {
         const result = getTreeOutput({
           mails: [mail],
           stats,
-          address: 'test@example.com',
-          mechanism: 'ses',
+          address: 'test@gmail.com',
+          mechanism: 'gmail',
+          filter: FILTER_WHOLE,
         });
 
         // ⚠️ pinned to the exported constant, not to a fragment of it. `toContain('OBFUSCATED')`
@@ -128,40 +165,69 @@ describe('getTreeOutput', () => {
 
   /**
    * .what = snapshots the RENDERED shape, so a human can vibecheck it in a pr
-   * .why = every test above asserts on a text fragment, which proves a field is present and
-   *   says naught about how the block reads. `listed`/`synced`/`cached` are three counts
-   *   that a single `found:` once conflated; whether they read clearly together is a
-   *   judgment only a human makes, from the whole block.
+   * .why = every test above asserts on a substring, which proves a field is present and
+   *   says naught about how the block reads. the header carries four lines whose whole
+   *   job is to be read together — `scope` tells you which slice you got, and
+   *   `listed`/`synced`/`cached` are three counts that a single `found:` once conflated.
+   *   whether that reads clearly is a judgment only a human makes, from the whole block.
    *
    * .note = paired with the assertions above, never instead of them
    *   (`rule.require.snapshots.[lesson]`) — the assertions verify function, the snapshot
-   *   carries the aesthetic to the reviewer.
+   *   carries the aesthetic to the reviewer. it is a unit snapshot rather than an
+   *   acceptance one on purpose: the only success-path acceptance case is the gmail
+   *   service-account pair, which cannot run without credentials a human must fill
+   *   (fulcrum F8), so an acceptance snapshot of this shape would never be produced.
    */
-  given('[case4] a run that lists less than the cache holds', () => {
-    when('[t0] the tree is formed', () => {
-      then('renders the header and list, for a human to vibecheck', () => {
-        const tree = getTreeOutput({
-          mails: [
-            createMail(),
-            createMail({ exid: 'msg_456', subject: 'Second' }),
-          ],
-          stats: new GatheredMailSyncStats({
-            mailFoundUptil: new Date('2024-01-15T12:00:00Z'),
-            mailFoundQuant: 250,
-            mailSyncedQuant: 2,
-          }),
-          address: 'jelly@example.com',
-          mechanism: 'ses',
-        });
+  given('[case5] a bare run and a narrowed run', () => {
+    when('[t0] each tree is formed', () => {
+      then(
+        'renders a bare and a narrowed run, for a human to vibecheck',
+        () => {
+          const asStats = (input: {
+            cached: number;
+            synced: number;
+          }): GatheredMailSyncStats =>
+            new GatheredMailSyncStats({
+              mailFoundUptil: new Date('2024-01-15T12:00:00Z'),
+              mailFoundQuant: input.cached,
+              mailSyncedQuant: input.synced,
+            });
 
-        // function: the three counts, each its own line
-        expect(tree).toContain('├─ listed: 2');
-        expect(tree).toContain('├─ synced: 2');
-        expect(tree).toContain('cached: 250');
+          const bare = getTreeOutput({
+            mails: [
+              createMail(),
+              createMail({ exid: 'msg_456', subject: 'Second' }),
+            ],
+            stats: asStats({ cached: 250, synced: 2 }),
+            address: 'vlad@gmail.com',
+            mechanism: 'gmail',
+            filter: FILTER_WHOLE,
+          });
 
-        // aesthetic: the whole block, for the reviewer
-        expect(tree).toMatchSnapshot();
-      });
+          // the narrowed run is the one the labels exist for: ONE mail listed, beneath a cache
+          // that holds 250. a human must be able to tell "narrow scope" from "empty mailbox"
+          const narrowed = getTreeOutput({
+            mails: [createMail()],
+            stats: asStats({ cached: 250, synced: 1 }),
+            address: 'vlad@gmail.com',
+            mechanism: 'gmail',
+            filter: { query: 'from:boss@co.com', labels: ['work'] },
+          });
+
+          // function: each run names its own slice and its own three counts
+          expect(bare).toContain('├─ scope: whole mailbox');
+          expect(bare).toContain('├─ listed: 2');
+          expect(bare).toContain('├─ cached: 250');
+          expect(narrowed).toContain(
+            '├─ scope: labels=work query="from:boss@co.com"',
+          );
+          expect(narrowed).toContain('├─ listed: 1');
+          expect(narrowed).toContain('├─ cached: 250');
+
+          // aesthetic: the whole block, for the reviewer
+          expect({ bare, narrowed }).toMatchSnapshot();
+        },
+      );
     });
   });
 });

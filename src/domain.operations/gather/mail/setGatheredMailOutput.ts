@@ -1,6 +1,7 @@
 import type { GatheredMail } from '@src/domain.objects/GatheredMail';
 import type { GatheredMailMechanism } from '@src/domain.objects/GatheredMailMechanism';
 import type { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
+import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 
 import { getJsonOutput } from './transformers/getJsonOutput';
 import { getSortedMails } from './transformers/getSortedMails';
@@ -21,6 +22,14 @@ export const setGatheredMailOutput = (
     stats: GatheredMailSyncStats;
     mechanism: GatheredMailMechanism;
     address: string;
+    /**
+     * the slice of the mailbox this run asked for.
+     *
+     * .why = the output must SAY it. a filtered run lists only what it fetched while an
+     *   unfiltered one lists the cached range, and the two are indistinguishable from the
+     *   list alone (`rule.forbid.ambiguous-labels`).
+     */
+    filter: GatherMailFilter;
     format: 'tree' | 'json';
   },
   context: {
@@ -36,12 +45,14 @@ export const setGatheredMailOutput = (
       ? getJsonOutput({
           mails: mailsSorted,
           stats: input.stats,
+          filter: input.filter,
         })
       : getTreeOutput({
           mails: mailsSorted,
           stats: input.stats,
           mechanism: input.mechanism,
           address: input.address,
+          filter: input.filter,
         });
 
   // emit to stdout, newline-terminated so the shell prompt starts on its own line

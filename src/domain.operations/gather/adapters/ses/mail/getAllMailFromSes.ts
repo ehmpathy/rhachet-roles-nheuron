@@ -21,12 +21,14 @@ const SES_MAIL_READ_CONCURRENCY = 16;
 
 /**
  * .what = how many s3 list pages one walk may take before it refuses
- * .why = ⚠️ s3 offers NO server-side date filter, so `--since` cannot narrow this walk.
- *   a cold sync of a large mailbox would otherwise list, read, and parse every object
- *   under the prefix with no upper bound on time, memory, or s3 request spend.
+ * .why = ⚠️ s3 offers NO server-side date filter, so `--since` cannot narrow this walk
+ *   the way gmail's `after:` narrows its own (`asGmailQuery`). a cold sync of a large
+ *   mailbox would otherwise list, read, and parse every object under the prefix with no
+ *   ceiling on time, memory, or s3 request spend.
  *
  *   200 pages × 1000 keys = 200k mails, which is far past any clone's mailbox and still
- *   a bound.
+ *   a bound. its gmail peer `GMAIL_MAX_PAGE_QUANT` holds the same number for the same
+ *   reason, so the two mechanisms fail at the same scale rather than at two surprises.
  *
  * .note = the cap REFUSES rather than truncates. a silent partial result would report an
  *   incomplete mailbox as a complete one — the failure class this adapter exists to

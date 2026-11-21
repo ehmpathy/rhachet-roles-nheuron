@@ -10,7 +10,7 @@ import type { ParsedMail } from 'mailparser';
  *         `?? receivedAt` alone would NOT catch it. its `getTime()` is NaN, every
  *         `--since` comparison against NaN is false, so the mail would vanish from
  *         every range query with no log and no count (rule.forbid.failhide). guard
- *         the NaN case explicitly.
+ *         the NaN case explicitly, exactly as the gmail adapter guards internalDate.
  *
  * .note = the epoch is deliberately NOT the fallback. a mail dated 1970 sorts below
  *         every `--since` bound, so it would vanish the same silent way.

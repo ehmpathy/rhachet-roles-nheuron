@@ -15,6 +15,9 @@ import { getSnippetFromBody } from './getSnippetFromBody';
 /**
  * .what = convert a parsed rfc822 mail into a GatheredMail domain object
  * .why = decouple the domain from the rfc822 shape; apply security obfuscation
+ *
+ * .note = rfc822 has no native concept of labels, so `labels` is always empty for
+ *         ses. gmail's labels are a gmail feature, not a mail feature.
  */
 export const getGatheredMailFromSes = (input: {
   parsed: ParsedMail;
@@ -59,6 +62,8 @@ export const getGatheredMailFromSes = (input: {
     snippet: visible.snippet,
     body: visible.body,
     deliveredAt: getDeliveredAtFromParsed({ parsed, receivedAt }),
+    // rfc822 has no labels — a gmail-only concept
+    labels: [],
     attachments: getAttachmentNamesFromParsed({ parsed }),
     isObfuscated: isSecuritySensitive,
   });

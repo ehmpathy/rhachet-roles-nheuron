@@ -26,9 +26,13 @@ export const SES_ACCESS_TOKEN_IAM = 'iam://aws-profile';
  * .what = ses auth adapter for the GatherAuthAdapter interface
  * .why = enables gather.auth --from ses via polymorphic dispatch
  *
- * .note = ses auth has no grant flow, no token cache, and no expiry. the identity
+ * .note = ses auth has no oauth flow, no token cache, and no expiry. the identity
  *         is the AWS_PROFILE keyrack placed in the env, and its validity is proven
  *         by an sts:GetCallerIdentity call rather than a stored token.
+ *
+ * .note = takes no cwd, unlike its gmail peer. gmail's auth adapter needs one to
+ *         locate its oauth token cache dir; ses caches no token, so there is no
+ *         path for a cwd to anchor.
  */
 export const getSesAuthAdapter = (): GatherAuthAdapter => {
   /**
@@ -97,7 +101,7 @@ export const getSesAuthAdapter = (): GatherAuthAdapter => {
 
     /**
      * .what = there is no token to refresh for ses
-     * .why = iam credentials from keyrack carry no refresh token; a stale
+     * .why = iam credentials do not expire the way an oauth token does; a stale
      *        profile is re-unlocked via keyrack, never refreshed here
      */
     genAuthRefresh: async (
@@ -113,14 +117,15 @@ export const getSesAuthAdapter = (): GatherAuthAdapter => {
      * .what = hand the mail adapter its (unused) access token
      * .why = the contract demands one; ses reads AWS_PROFILE from the env instead,
      *        so this returns a sentinel when the profile authenticates and null
-     *        when it does not, so the caller reads one authenticated-or-not answer
+     *        when it does not — which keeps the caller's authenticated-or-not
+     *        branch identical to gmail's
      */
     getAccessToken: async (
       _input: { repo: GatheredMailRepo },
       adapterContext: { log: GatherLogMethods },
     ): Promise<string | null> => {
-      // an absent config yields null, never a throw, so a caller that skips the status
-      // check still meets the contract's null-when-unauthenticated answer
+      // an absent config yields null, the same answer gmail gives — never a throw, so a
+      // caller that skips the status check sees one contract on both mechanisms
       const config = getSesConfigOrNull();
       if (!config) return null;
 
@@ -128,8 +133,8 @@ export const getSesAuthAdapter = (): GatherAuthAdapter => {
       // the memo makes the ask free within one invocation, but the call stays because the
       // `GatherAuthAdapter` contract does not promise an order — to drop it would make
       // this method correct only when a caller happens to check status first
-      // (`rule.forbid.order-dependence`). both reads consult the same source, and they
-      // must stay in step.
+      // (`rule.forbid.order-dependence`). gmail's adapter carries the same note: both
+      // reads consult the same source, and they must stay in step.
       const identity = await getOneIdentityOnce({
         region: config.region,
         adapterContext,

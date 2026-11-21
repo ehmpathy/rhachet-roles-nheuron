@@ -3,6 +3,7 @@ import { BadRequestError } from 'helpful-errors';
 import type { GatheredMailMechanism } from '@src/domain.objects/GatheredMailMechanism';
 import type { GatherMailAdapter } from '@src/domain.objects/GatherMailAdapter';
 
+import { getGmailMailAdapter } from './gmail/mail/getGmailMailAdapter';
 import { getSesMailAdapter } from './ses/mail/getSesMailAdapter';
 
 /**
@@ -11,10 +12,14 @@ import { getSesMailAdapter } from './ses/mail/getSesMailAdapter';
  */
 export const getMailAdapterForMechanism = (input: {
   mechanism: GatheredMailMechanism;
+  cwd: string | null;
 }): GatherMailAdapter => {
   switch (input.mechanism) {
+    case 'gmail':
+      return getGmailMailAdapter({ cwd: input.cwd });
+
     case 'ses':
-      // ses reads its bucket + region from the keyrack env
+      // no cwd: ses reads its bucket + region from the keyrack env
       return getSesMailAdapter();
 
     // ⚠️ the annotation is the point. `GatheredMailMechanism` holds only what is
@@ -26,7 +31,7 @@ export const getMailAdapterForMechanism = (input: {
       const mechanismUnhandled: never = input.mechanism;
       return BadRequestError.throw('mechanism not supported', {
         mechanism: mechanismUnhandled,
-        hint: 'use --from ses',
+        hint: 'use --from gmail or --from ses',
       });
     }
   }

@@ -14,16 +14,14 @@ the forks taken mid-drive on best-guess rather than escalated, per
 | [F7](inventory.of=fulcrums.case=F7-deleted-another-behaviors-orphans.md) | six of the gmail behavior's orphaned operations deleted from this stone | clean | open | 78% |
 | [F8](inventory.of=fulcrums.case=F8-acceptance-gate-turned-red.md) | the gmail behavior's acceptance gate turned RED, green only by a human's hand | clean | ruled: D, a `TEST_LIVE` flag gate (commander) | 88% |
 | [F9](inventory.of=fulcrums.case=F9-fetch-range-is-also-the-view-range.md) | the fetch range doubles as the view range, so a bare re-run shows a delta | clean | open | 61% |
-| [F10](inventory.of=fulcrums.case=F10-filtered-runs-are-non-incremental.md) | a filtered run is non-incremental, rather than separately cached | clean | moot: no filtered run since F18 + F19 | 81% |
-| [F11](inventory.of=fulcrums.case=F11-since-does-not-bound-the-ses-walk.md) | `--since` does not bound the ses walk; capped, not pushed down | clean | open | 76% |
-| [F12](inventory.of=fulcrums.case=F12-sync-scope-strategy-declined.md) | the `GatheredMailSyncScope` extraction, declined four times — **conditional on F9 + F10** | clean | moot: the scope branches left with F18 + F19 | 79% |
+| [F10](inventory.of=fulcrums.case=F10-filtered-runs-are-non-incremental.md) | a filtered run is non-incremental, rather than separately cached | clean | open | 81% |
+| [F11](inventory.of=fulcrums.case=F11-since-does-not-bound-the-ses-walk.md) | `--since` bounds the gmail fetch but not the ses one; capped, not pushed down | clean | open | 76% |
+| [F12](inventory.of=fulcrums.case=F12-sync-scope-strategy-declined.md) | the `GatheredMailSyncScope` extraction, declined four times — **conditional on F9 + F10** | clean | best-guessed: (b) upheld | 79% |
 | [F13](inventory.of=fulcrums.case=F13-upgrade-churn-restored-in-git-only.md) | the upgrade's `.claude` relocation restored in git, not on disk; dispatcher `extends` kept | clean | open | 80% |
 | [F14](inventory.of=fulcrums.case=F14-r10-graded-the-gmail-behavior.md) | peer r10 graded the gmail behavior's wish; its five concerns disputed as scope, caught for the gmail route | clean | open | 85% |
 | [F15](inventory.of=fulcrums.case=F15-provision-wishes-source-at-load.md) | the provision wishes source keyrack, and refuse absent account emails, at module load | clean | open | 72% |
 | [F16](inventory.of=fulcrums.case=F16-error-header-names-two-classes.md) | the error header named two classes (`ConstraintError: BadRequestError:`); cut in 5.3, the `helpful-errors` upgrade caught as a dream | clean | taken: (b), fixed in 5.3 | 90% |
 | [F17](inventory.of=fulcrums.case=F17-obfuscated-null-body-reads-as-the-obfuscation.md) | an obfuscated mail's absent body reads as the obfuscation literal, not `null` — a reversed assertion, approval owed | clean | ruled: (a) revert (director) | 90% |
-| [F18](inventory.of=fulcrums.case=F18-gmail-code-keep-or-cut.md) | nheuron mail is ses only (commander, 2026-11-17); the gmail code this branch ships: keep or cut | clean | ruled: (b) cut (commander) | n/a |
-| [F19](inventory.of=fulcrums.case=F19-gmail-cut-reaches-query-and-labels.md) | the gmail cut reaches `--query`, the `/labels=` scope, and `GatheredMail.labels` | clean | taken: (b) cut | 90% |
 
 ## ⚠️ a note on when these were recorded
 

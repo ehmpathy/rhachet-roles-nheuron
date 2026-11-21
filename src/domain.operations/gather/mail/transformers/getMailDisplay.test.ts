@@ -10,17 +10,18 @@ const createMail = (overrides: Partial<GatheredMail> = {}): GatheredMail =>
   new GatheredMail({
     exid: 'msg_123',
     ceiver: new GatheredMailRepo({
-      mechanism: 'ses',
-      address: 'test@example.com',
+      mechanism: 'gmail',
+      address: 'test@gmail.com',
     }),
     sender: new GatheredMailRepo({
-      mechanism: 'ses',
-      address: 'sender@example.com',
+      mechanism: 'gmail',
+      address: 'sender@gmail.com',
     }),
     subject: 'Test Subject',
     snippet: 'Test snippet preview',
     body: 'Full body content here',
     deliveredAt: new Date('2024-01-15T12:00:00Z'),
+    labels: [],
     attachments: [],
     isObfuscated: false,
     ...overrides,

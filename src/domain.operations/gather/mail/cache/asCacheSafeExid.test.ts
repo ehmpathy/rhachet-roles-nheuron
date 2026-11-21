@@ -3,11 +3,11 @@ import { given, then, when } from 'test-fns';
 import { asCacheSafeExid } from './asCacheSafeExid';
 
 describe('asCacheSafeExid', () => {
-  given('[case1] an exid which carries no separator', () => {
+  given('[case1] a gmail exid, which carries no separator', () => {
     when('[t0] it is encoded', () => {
       then('it passes through unchanged', () => {
-        // a filename-safe exid must encode as a no-op — otherwise every prior cache
-        // file under that exid would be orphaned by a rename
+        // gmail exids are already filename-safe, so the encode must be a no-op for
+        // them — otherwise every prior gmail cache file would be orphaned by a rename
         expect(asCacheSafeExid({ exid: '18c4f2a9b3d1e7f0' })).toBe(
           '18c4f2a9b3d1e7f0',
         );
@@ -60,7 +60,7 @@ describe('asCacheSafeExid', () => {
 
       then('`*` survives, and that is harmless here', () => {
         // no mechanism produces it — a ses exid is an s3 key over an alphanumeric
-        // message id — and the reader matches filenames with
+        // message id, a gmail exid is hex — and the reader matches filenames with
         // `startsWith`/`endsWith` on a flat `readdir`, never with a glob. so `*` is
         // out of reach of both the producer and the consumer.
         expect(encoded).toContain('*');

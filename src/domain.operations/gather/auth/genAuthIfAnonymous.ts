@@ -29,8 +29,10 @@ export const genAuthIfAnonymous = async (
     return { address: null, status: input.status };
   }
 
-  // ask the mechanism for auth. ses has no interactive flow, so its genAuth throws with
-  // the keyrack fix; this line stays mechanism-neutral rather than promise a grant flow.
+  // ask the mechanism for auth. NEITHER mechanism has an interactive flow today:
+  // gmail authenticates via a keyrack service account (its genAuth refuses a browser
+  // grant), and ses has no flow at all — both throw with their keyrack fix. so this
+  // line must stay mechanism-neutral rather than name an oauth dance that cannot run.
   context.log.info('auth needed, ask the mechanism for it', {
     mechanism: input.authAdapter.mechanism,
   });

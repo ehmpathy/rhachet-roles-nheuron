@@ -46,6 +46,7 @@ export const upsertCachedMail = async (input: {
       snippet: input.mail.snippet,
       body: input.mail.body,
       deliveredAt: input.mail.deliveredAt.toJSON(),
+      labels: input.mail.labels,
       attachments: input.mail.attachments,
       isObfuscated: input.mail.isObfuscated,
     },

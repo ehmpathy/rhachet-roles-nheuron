@@ -2,7 +2,7 @@ import { Role } from 'rhachet';
 
 /**
  * .what = gatherer role definition
- * .why = enables mail collection from a mailbox nheuron owns, via ses
+ * .why = enables mail collection from gmail and other async comms sources
  */
 export const ROLE_GATHERER: Role = Role.build({
   slug: 'gatherer',

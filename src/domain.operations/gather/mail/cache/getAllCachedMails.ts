@@ -71,14 +71,16 @@ const getOneCachedMail = async (input: {
   // ⚠️ the parse is a real boundary, not a formality. `upsertCachedMail` writes with a bare
   // `fs.writeFile`, so a crash mid-write leaves a TRUNCATED file — and a bare `JSON.parse`
   // then throws a raw `SyntaxError: Unexpected end of JSON input` that names neither the
-  // corrupt file nor the fix, so a human must hunt it among thousands by hand. this is the
-  // one cache every bare run reads (`rule.require.errors-name-the-fix`).
+  // corrupt file nor the fix, so a human must hunt it among thousands by hand. the peer
+  // token reader (`getOneGatherAccessToken`) already guards exactly this, in a comment that
+  // says a raw SyntaxError names no fix; the same class sat unguarded here, in the one cache
+  // every bare run reads (`rule.require.errors-name-the-fix`).
   //
   // .note = the as-cast below stays for the plain-scalar fields. the SHAPE is still trusted —
   //   this codebase wrote it — but the fields whose corruption is silent rather than loud are
   //   checked by name: `deliveredAt` (an invalid date drops the mail), and the `mechanism` of
-  //   each repo (a drifted mechanism routes to no adapter). what is not trusted is that the
-  //   bytes parse at all.
+  //   each repo (a drifted mechanism routes to no adapter), as the token reader guards its own
+  //   `mechanism`. what is no longer trusted is that the bytes parse at all.
   const data = (() => {
     try {
       return JSON.parse(content) as Record<string, unknown>;
@@ -99,8 +101,9 @@ const getOneCachedMail = async (input: {
   // unpredictably and compares false against every `--since` bound, so the mail vanishes
   // from every range query with no error to point at.
   //
-  // its producer carries the same guard — `getGatheredMailFromSes`'s
-  // `parsed.date ?? receivedAt` fallback. the cache is the second boundary the same value
+  // this is the same guard its two producers already carry —
+  // `getGatheredMailFromGmail`'s `internalDate` check and `getGatheredMailFromSes`'s
+  // `parsed.date ?? receivedAt` fallback. the cache is the third boundary the same value
   // crosses, and it feeds `getMailsWithinRange` on EVERY bare run
   // (`rule.forbid.behavior-hazards`).
   //
@@ -119,9 +122,10 @@ const getOneCachedMail = async (input: {
 
   // ⚠️ the mechanism is checked, never cast. a bare `as GatheredMailMechanism` on a drifted
   // cache file would carry a non-domain term (say a renamed or removed mechanism) into a
-  // GatheredMail, where no adapter routes it and no error points at the file. a value read
-  // from a file decides which adapter handles it, so an unknown one must refuse LOUDLY and
-  // name the file to re-gather (`rule.require.failloud`).
+  // GatheredMail, where no adapter routes it and no error points at the file. the peer token
+  // reader (`getOneGatherAccessToken`) guards its own `mechanism` for the same reason — a
+  // value read from a file decides which adapter handles it, so an unknown one must refuse
+  // LOUDLY and name the file to re-gather (`rule.require.failloud`).
   const getCachedMechanism = (repo: {
     raw: unknown;
     field: 'ceiver' | 'sender';
@@ -156,6 +160,7 @@ const getOneCachedMail = async (input: {
     snippet: data.snippet as string,
     body: data.body as string | null,
     deliveredAt,
+    labels: data.labels as string[],
     attachments: data.attachments as string[],
     isObfuscated: data.isObfuscated as boolean,
   });

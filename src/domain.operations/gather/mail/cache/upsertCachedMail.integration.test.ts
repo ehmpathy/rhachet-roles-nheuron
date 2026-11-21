@@ -22,21 +22,22 @@ describe('upsertCachedMail', () => {
 
   given('[case1] a mail to cache', () => {
     const repo = new GatheredMailRepo({
-      mechanism: 'ses',
-      address: 'test@example.com',
+      mechanism: 'gmail',
+      address: 'test@gmail.com',
     });
 
     const mail = new GatheredMail({
       exid: 'msg_12345',
       ceiver: repo,
       sender: new GatheredMailRepo({
-        mechanism: 'ses',
-        address: 'sender@example.com',
+        mechanism: 'gmail',
+        address: 'sender@gmail.com',
       }),
       subject: 'Test Subject',
       snippet: 'Test snippet',
       body: 'Full body',
       deliveredAt: new Date('2024-01-15T12:00:00Z'),
+      labels: ['INBOX'],
       attachments: [],
       isObfuscated: false,
     });
@@ -57,7 +58,7 @@ describe('upsertCachedMail', () => {
     // `<prefix>/<messageId>` — so every ses exid holds a `/`. an exid pasted straight
     // into a filename makes `path.join` build a NESTED path, whose parent the writer
     // never creates (ENOENT) and whose file a flat `readdir` never finds.
-    // case1's exid holds no separator, so it stays green either way.
+    // gmail exids hold no separator, so case1 above stays green either way.
     const repo = new GatheredMailRepo({
       mechanism: 'ses',
       address: 'jelly@one.nheuron.com',
@@ -74,6 +75,7 @@ describe('upsertCachedMail', () => {
       snippet: 'Test snippet',
       body: 'Full body',
       deliveredAt: new Date('2026-09-01T12:00:00Z'),
+      labels: [],
       attachments: [],
       isObfuscated: false,
     });

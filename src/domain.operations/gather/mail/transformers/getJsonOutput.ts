@@ -1,11 +1,17 @@
 import type { GatheredMail } from '@src/domain.objects/GatheredMail';
 import type { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
+import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 
 import { getMailDisplay } from './getMailDisplay';
 
 /**
  * .what = format mails as JSON for structured output
  * .why = machine-readable output for pipes and automation
+ *
+ * ⚠️ .note = `scope` and `stats` describe DIFFERENT sets, and the scope is what tells them
+ *   apart. `mails` is the scope's result; `stats` is the local cache for the address, which
+ *   holds every scope ever gathered against it. without the scope stated, a consumer cannot
+ *   tell whether the cache count counts the list it was handed.
  *
  * ⚠️ .note = the stat keys are `listed` / `synced` / `cached`, the SAME three words the tree
  *   output uses — never the domain field names `mailFoundQuant` / `mailSyncedQuant`. one
@@ -18,8 +24,13 @@ import { getMailDisplay } from './getMailDisplay';
 export const getJsonOutput = (input: {
   mails: GatheredMail[];
   stats: GatheredMailSyncStats;
+  filter: GatherMailFilter;
 }): string => {
   const output = {
+    scope: {
+      query: input.filter.query,
+      labels: input.filter.labels,
+    },
     stats: {
       foundUptil: input.stats.mailFoundUptil?.toISOString() ?? null,
       listed: input.mails.length,
@@ -41,6 +52,7 @@ export const getJsonOutput = (input: {
         },
         subject: display.subject,
         snippet: display.snippet,
+        labels: mail.labels,
         attachments: mail.attachments,
         isObfuscated: mail.isObfuscated,
       };

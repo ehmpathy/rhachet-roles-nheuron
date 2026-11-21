@@ -12,14 +12,14 @@ import { asCliArgOptions } from './asCliArgOptions';
  */
 describe('asCliArgOptions', () => {
   given(
-    '[case1] argv from a shell wrapper (`node -e "…" -- --from ses`)',
+    '[case1] argv from a shell wrapper (`node -e "…" -- --from gmail`)',
     () => {
       when('[t0] parsed', () => {
         then('the `--` separator is dropped and both flags are read', () => {
           const options = asCliArgOptions({
-            argv: ['node', '--from', 'ses', '--address', 'a@b.com'],
+            argv: ['node', '--from', 'gmail', '--address', 'a@b.com'],
           });
-          expect(options).toEqual({ from: 'ses', address: 'a@b.com' });
+          expect(options).toEqual({ from: 'gmail', address: 'a@b.com' });
         });
       });
     },
@@ -45,10 +45,10 @@ describe('asCliArgOptions', () => {
         'the valueless flag is dropped, never given the next flag as its value',
         () => {
           const options = asCliArgOptions({
-            argv: ['node', '--verbose', '--from', 'ses'],
+            argv: ['node', '--verbose', '--from', 'gmail'],
           });
           // `--verbose` takes no value, so it must NOT swallow `--from`
-          expect(options).toEqual({ from: 'ses' });
+          expect(options).toEqual({ from: 'gmail' });
         },
       );
     });
@@ -77,10 +77,10 @@ describe('asCliArgOptions', () => {
     when('[t0] every flag is in the set', () => {
       then('parses as usual', () => {
         const options = asCliArgOptions({
-          argv: ['node', '--from', 'ses', '--since', '2026-01-01'],
+          argv: ['node', '--from', 'gmail', '--since', '2026-01-01'],
           allowed: ['from', 'since'],
         });
-        expect(options).toEqual({ from: 'ses', since: '2026-01-01' });
+        expect(options).toEqual({ from: 'gmail', since: '2026-01-01' });
       });
     });
 
@@ -88,15 +88,15 @@ describe('asCliArgOptions', () => {
       then(
         'refuses loudly, states the unknown flag and the allowed set',
         async () => {
-          // the real-world harm: `--sicne x` would otherwise parse into the record,
-          // go unread, and the run would list the WHOLE mailbox at exit 0
+          // the real-world harm: `--qurey x` would otherwise parse into the record,
+          // go unread, and the run would collect the WHOLE mailbox at exit 0
           const error = await getError(async () =>
             asCliArgOptions({
-              argv: ['node', '--sicne', '2026-01-01'],
-              allowed: ['from', 'since'],
+              argv: ['node', '--qurey', 'from:boss@co.com'],
+              allowed: ['from', 'query'],
             }),
           );
-          expect(error.message).toContain("unknown flag '--sicne'");
+          expect(error.message).toContain("unknown flag '--qurey'");
         },
       );
     });
@@ -108,7 +108,7 @@ describe('asCliArgOptions', () => {
         // case goes green (the record parse never sees the orphan) — that is the red.
         const error = await getError(async () =>
           asCliArgOptions({
-            argv: ['node', '--from', 'ses', '--verbsoe'],
+            argv: ['node', '--from', 'gmail', '--verbsoe'],
             allowed: ['from'],
           }),
         );
@@ -161,11 +161,11 @@ describe('asCliArgOptions', () => {
         then('still refuses the unknown flag', async () => {
           const error = await getError(async () =>
             asCliArgOptions({
-              argv: ['node', '--skill', 'gather.mail', '--sicne', 'x'],
-              allowed: ['since'],
+              argv: ['node', '--skill', 'gather.mail', '--qurey', 'x'],
+              allowed: ['query'],
             }),
           );
-          expect(error.message).toContain("unknown flag '--sicne'");
+          expect(error.message).toContain("unknown flag '--qurey'");
         });
       });
     },

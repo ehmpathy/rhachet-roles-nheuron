@@ -6,7 +6,9 @@ import type { GatheredMailMechanism } from './GatheredMailMechanism';
  * .what = reference to a contact (sender or ceiver) in a gather mechanism
  * .why = distinct from GatheredMailRepo which represents the mailbox we gather from
  *
- * for ses: both sender and ceiver are email addresses
+ * for gmail: both sender and ceiver are email addresses
+ * for slack: sender = user id, ceiver = channel id
+ * for phone: sender/ceiver = phone numbers
  */
 export interface GatherContactRef {
   /**

@@ -1,7 +1,13 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`getJsonOutput given: [case5] a full document when: [t0] the output is formed then: emits a stable json document, key for key 1`] = `
+exports[`getJsonOutput given: [case6] a full document when: [t0] the output is formed then: emits a stable json document, key for key 1`] = `
 "{
+  "scope": {
+    "query": "from:boss@co.com",
+    "labels": [
+      "work"
+    ]
+  },
   "stats": {
     "foundUptil": "2024-01-15T12:00:00.000Z",
     "listed": 1,
@@ -13,15 +19,19 @@ exports[`getJsonOutput given: [case5] a full document when: [t0] the output is f
       "exid": "msg_123",
       "deliveredAt": "2024-01-15T12:00:00.000Z",
       "sender": {
-        "mechanism": "ses",
-        "address": "sender@example.com"
+        "mechanism": "gmail",
+        "address": "sender@gmail.com"
       },
       "ceiver": {
-        "mechanism": "ses",
-        "address": "test@example.com"
+        "mechanism": "gmail",
+        "address": "test@gmail.com"
       },
       "subject": "Test Subject",
       "snippet": "Test snippet preview",
+      "labels": [
+        "INBOX",
+        "UNREAD"
+      ],
       "attachments": [
         "doc.pdf"
       ],

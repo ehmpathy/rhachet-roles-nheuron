@@ -28,26 +28,48 @@ usage:
   gather.mail.sh [options]
 
 options:
-  --from <mechanism>   mail source: ses (required)
+  --from <mechanism>   mail source: gmail, ses (required)
   --address <email>    email address to collect from (required)
   --since <date>       only list mail since this date (ISO format)
                        default: the prior run's cursor — so a bare re-run
                        collects, and lists, only what arrived since it.
                        pass --since explicitly to re-scan a wider window.
+                       it narrows what you SEE on both mechanisms, but only
+                       narrows what GMAIL fetches — see below.
+  --query <query>      search query to filter mail (gmail only — ses refuses it)
   --format <format>    output format: tree, json (default: tree)
   -h, --help           show this help message
 
-  what --since costs:
-    it narrows what you SEE, never what is read. s3 filters on key prefix
-    only, so there is no date bound to push down: every object under the
-    inbound prefix is listed, then each one not yet cached is read and
-    parsed. the walk is capped — past 200 pages it REFUSES rather than
-    return a partial mailbox as a whole one.
+  what each mechanism can filter on:
+    gmail   --since, --query (gmail search syntax), and an --address
+            scoped as user@gmail.com/labels=work,urgent
+    ses     --since only. ses mail is read from an s3 prefix of raw rfc822,
+            which has no search index and no labels, so it REFUSES a --query
+            or a /labels= scope rather than ignore one.
+
+  what a scoped run costs:
+    a --query or /labels= run is never served FROM the cache and never
+    incremental — it re-fetches its whole range on every call, and lists
+    only what it matched. what it fetched is still kept in the cache, so
+    the "cached:" count may grow. a bare run is served from the cache and
+    incremental. the output names which one you got, on its "scope:" line.
+
+  what --since costs, per mechanism:
+    gmail   pushed into the api query as an "after:" term, so the remote
+            never sends the older mail — you pay for the window alone.
+    ses     applied locally, AFTER the walk. s3 filters on key prefix only,
+            so there is no date bound to push down: every object under the
+            inbound prefix is listed, read, and parsed first. the walk is
+            capped instead — past 200 pages it REFUSES rather than return
+            a partial mailbox as a whole one.
 
 examples:
-  gather.mail.sh --from ses --address jelly@one.nheuron.com
+  gather.mail.sh --from gmail --address user@gmail.com
+  gather.mail.sh --from gmail --address user@gmail.com --since 2024-01-01
+  gather.mail.sh --from gmail --address user@gmail.com --query "from:boss@company.com"
+  gather.mail.sh --from gmail --address user@gmail.com/labels=work,urgent
+  gather.mail.sh --from gmail --address user@gmail.com --format json
   gather.mail.sh --from ses --address jelly@one.nheuron.com --since 2026-08-01
-  gather.mail.sh --from ses --address jelly@one.nheuron.com --format json
 `.trim(),
   );
 };
@@ -63,6 +85,7 @@ const parseArgs = (
   from: string | undefined;
   address: string | undefined;
   since: string | undefined;
+  query: string | undefined;
   format: string | undefined;
 } => {
   const options = asCliArgOptions({
@@ -71,13 +94,14 @@ const parseArgs = (
     // asCliArgOptions refuses it loudly rather than let the run collect the whole
     // mailbox unfiltered at exit 0. `help` is here for defense; getIsHelpAsked
     // intercepts it before parseArgs, so it never reaches this validation.
-    allowed: ['from', 'address', 'since', 'format', 'help'],
+    allowed: ['from', 'address', 'since', 'query', 'format', 'help'],
   });
 
   return {
     from: options.from,
     address: options.address,
     since: options.since,
+    query: options.query,
     format: options.format,
   };
 };
@@ -142,6 +166,7 @@ export const gatherMail = async (): Promise<number> => {
         mechanism: options.from,
         address: options.address,
         since: options.since ?? null,
+        query: options.query ?? null,
         format,
       },
       {

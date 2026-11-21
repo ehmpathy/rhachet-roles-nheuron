@@ -9,9 +9,9 @@ const PAGE_UNBOUND = { range: {}, limit: 500 } as PaginationInput<{
 
 /**
  * .what = clamps the date filter applied to mail after it is read
- * .why = s3 has no date index, so a ListObjectsV2 cannot bound by delivery time. ses must
- *   apply the bound after the read, which makes it real logic rather than a delegation,
- *   and therefore worth its own clamp.
+ * .why = s3 has no date index, so a ListObjectsV2 cannot bound by delivery time. gmail pushes
+ *   the same bound into its `q`; ses must apply it after the read, which makes it real logic
+ *   rather than a delegation, and therefore worth its own clamp.
  *
  * .note = it now has a SECOND caller — the orchestrator applies the same bound to the mails
  *   it reads back out of the cache, so a fetched mail and a cached mail are judged in-range

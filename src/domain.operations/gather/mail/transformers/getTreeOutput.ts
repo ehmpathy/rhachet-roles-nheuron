@@ -1,9 +1,11 @@
 import type { GatheredMail } from '@src/domain.objects/GatheredMail';
 import type { GatheredMailMechanism } from '@src/domain.objects/GatheredMailMechanism';
 import type { GatheredMailSyncStats } from '@src/domain.objects/GatheredMailSyncStats';
+import type { GatherMailFilter } from '@src/domain.objects/GatherMailAdapter';
 
 import { asDateKey } from './asDateKey';
 import { getMailDisplay } from './getMailDisplay';
+import { getScopeDisplay } from './getScopeDisplay';
 
 /**
  * .what = format mails as treestruct for cli output
@@ -33,17 +35,21 @@ export const getTreeOutput = (input: {
   stats: GatheredMailSyncStats;
   mechanism: GatheredMailMechanism;
   address: string;
+  filter: GatherMailFilter;
 }): string => {
-  // header, then the three counts.
+  // header with the scope, then the three counts.
   //
-  // ⚠️ each count says WHICH set it counts, because they are three different sets.
-  //   `listed` matches the mails below it, `synced` is what this run fetched, and `cached`
-  //   is the whole local store for the address (`rule.forbid.ambiguous-labels`)
+  // ⚠️ each count says WHICH set it counts, because they are three different sets and the
+  //   one label `found` once served all three. `listed` matches the mails below it,
+  //   `synced` is what this run fetched, and `cached` is the whole local store for the
+  //   address — which under a filter counts mails this run neither fetched nor lists
+  //   (`rule.forbid.ambiguous-labels`)
   const headerLines = [
     `\u{1fABC} boop!`, // jellyfish emoji
     '',
     // a rerunnable command: --from is required, so the header names it too
     `\u{1FAD9} gather.mail --from ${input.mechanism} --address ${input.address}`,
+    `   \u251C\u2500 scope: ${getScopeDisplay({ filter: input.filter })}`,
     `   \u251C\u2500 listed: ${input.mails.length}`,
     `   \u251C\u2500 synced: ${input.stats.mailSyncedQuant}`,
     `   \u251C\u2500 cached: ${input.stats.mailFoundQuant}`,

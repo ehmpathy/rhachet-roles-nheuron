@@ -9,12 +9,12 @@ describe('getAuthStatusDisplay', () => {
       then('shows ready message', () => {
         const result = getAuthStatusDisplay({
           status: 'authenticated',
-          mechanism: 'ses',
-          address: 'test@example.com',
+          mechanism: 'gmail',
+          address: 'test@gmail.com',
         });
         expect(result).toContain('boop! auth ready');
         expect(result).toContain('status: authenticated');
-        expect(result).toContain('address: test@example.com');
+        expect(result).toContain('address: test@gmail.com');
       });
     });
   });
@@ -24,8 +24,8 @@ describe('getAuthStatusDisplay', () => {
       then('shows expired message with hint', () => {
         const result = getAuthStatusDisplay({
           status: 'expired',
-          mechanism: 'ses',
-          address: 'test@example.com',
+          mechanism: 'gmail',
+          address: 'test@gmail.com',
         });
         expect(result).toContain('boop! auth expired');
         expect(result).toContain('status: expired');
@@ -39,31 +39,33 @@ describe('getAuthStatusDisplay', () => {
       then('shows needed message with hint', () => {
         const result = getAuthStatusDisplay({
           status: 'anonymous',
-          mechanism: 'ses',
+          mechanism: 'gmail',
           address: null,
         });
         expect(result).toContain('boop! auth needed');
         expect(result).toContain('status: anonymous');
-        // ⚠️ asserted against the shared source, never a re-typed copy. a line that holds
-        // its own text drifts from the copy the thrown refusal uses — one human, one tool,
-        // one question, two answers. the import is what makes a drift impossible
+        // ⚠️ asserted against the shared source, never a re-typed copy. this line once
+        // held its own text, and it had drifted from the copy the thrown refusal used —
+        // the display said `run gather.auth --from gmail to authenticate`, the refusal
+        // said `run 'gather.auth --from gmail' to authenticate`. one human, one tool, one
+        // question, two answers. the import is what makes a future drift impossible
         expect(result).toContain(
-          getAuthFixHintForMechanism({ mechanism: 'ses' }),
+          getAuthFixHintForMechanism({ mechanism: 'gmail' }),
         );
         expect(result).not.toContain('address:');
       });
     });
   });
 
-  given('[case4] the ses mechanism', () => {
+  given('[case4] gmail mechanism', () => {
     when('[t0] formatted', () => {
       then('shows mechanism in skill header', () => {
         const result = getAuthStatusDisplay({
           status: 'authenticated',
-          mechanism: 'ses',
-          address: 'test@example.com',
+          mechanism: 'gmail',
+          address: 'test@gmail.com',
         });
-        expect(result).toContain('gather.auth --from ses');
+        expect(result).toContain('gather.auth --from gmail');
       });
     });
   });
@@ -116,14 +118,14 @@ describe('getAuthStatusDisplay', () => {
       then('the last fact closes the trunk', () => {
         const result = getAuthStatusDisplay({
           status: 'authenticated',
-          mechanism: 'ses',
+          mechanism: 'gmail',
           address: 'test-authenticated@example.com',
         });
         expect(result).toEqual(
           [
             '🪼 boop! auth ready',
             '',
-            '🔑 gather.auth --from ses',
+            '🔑 gather.auth --from gmail',
             '   ├─ status: authenticated',
             '   └─ address: test-authenticated@example.com',
           ].join('\n'),

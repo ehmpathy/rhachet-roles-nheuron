@@ -1,7 +1,9 @@
 /**
  * .what = read every queued item through `read`, at most `bound` in flight at once
- * .why = two walks need this same discipline: the ses body read (`getAllMailFromSes`) and the
- *   cache body read (`getAllCachedMails`). the hazard both guard is identical in shape — a bare `Promise.all` over a set that GROWS FOREVER, which
+ * .why = three walks need this same discipline: the ses body read (`getAllMailFromSes`), the
+ *   cache body read (`getAllCachedMails`), and the gmail batch walk (`getAllMailFromGmail`,
+ *   bound 1 for its rate limit). the hazard the first two
+ *   guard is identical in shape — a bare `Promise.all` over a set that GROWS FOREVER, which
  *   opens one connection or one file descriptor per item and fails only once a mailbox is
  *   busy, the worst moment to find it (`rule.forbid.behavior-hazards`).
  *

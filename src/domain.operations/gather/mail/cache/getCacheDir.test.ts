@@ -12,11 +12,30 @@ const ROOT = `${CWD}/.agent/.cache/repo=nheuron/role=gatherer/skill=gather.mail`
  * .why = the dir is the cache's real natural key — `GatheredMail.unique` is
  *   `['ceiver', 'exid']`, and the ceiver is exactly this (mechanism, address) pair. two
  *   mailboxes that shared a dir would overwrite each other's mail by exid, silently.
+ *
+ * .note = [case2] once used `'slack'`, a mechanism with no adapter, which the narrowed
+ *   `GatheredMailMechanism` no longer admits. `ses` serves the same intent and is real —
+ *   a placeholder case proved the segment varies for a value no human can pass.
  */
 describe('getCacheDir', () => {
-  given('[case1] a ses mailbox', () => {
+  given('[case1] a gmail mailbox', () => {
     when('[t0] the cache dir is read', () => {
       then('it is keyed by mechanism and address', () => {
+        const repo = new GatheredMailRepo({
+          mechanism: 'gmail',
+          address: 'vlad@gmail.com',
+        });
+
+        expect(getCacheDir({ repo, cwd: CWD })).toBe(
+          `${ROOT}/mechanism=gmail/address=vlad@gmail.com`,
+        );
+      });
+    });
+  });
+
+  given('[case2] a ses mailbox', () => {
+    when('[t0] the cache dir is read', () => {
+      then('the mechanism segment changes with it', () => {
         const repo = new GatheredMailRepo({
           mechanism: 'ses',
           address: 'jelly@one.nheuron.com',
@@ -29,7 +48,7 @@ describe('getCacheDir', () => {
     });
   });
 
-  given('[case2] two mailboxes that differ ONLY by address', () => {
+  given('[case3] two mailboxes that differ ONLY by address', () => {
     when('[t0] both cache dirs are read', () => {
       then('they never collide', () => {
         const dirOne = getCacheDir({

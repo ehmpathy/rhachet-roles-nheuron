@@ -113,7 +113,3 @@ first is to settle it on stale cardinality.
   4 gates, one caller, one screen
 - the four ternaries stay; no `GatheredMailSyncScope` extraction
 - the trigger still holds: an overturn of F9 or F10 reopens this entry
-
-**moot since F18 + F19.** the cut removed the filtered run, so the four scope ternaries in
-`setMailsFromAdapter` are gone: it now takes the cursor, the cache read-back, and the merged
-stats on one path. no scope branch is left to extract.

@@ -26,6 +26,7 @@ const asMailAt = (input: { at: string }): GatheredMail =>
     snippet: 'test',
     body: 'test',
     deliveredAt: new Date(input.at),
+    labels: [],
     attachments: [],
     isObfuscated: false,
   });

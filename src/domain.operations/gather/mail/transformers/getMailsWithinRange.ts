@@ -6,7 +6,8 @@ import type { GatheredMail } from '@src/domain.objects/GatheredMail';
  * .what = keep only the mails whose delivery time falls inside the page range
  * .why = a mechanism that cannot push a date bound into its own fetch must apply it here
  *   instead. ses is one: mail lives under an s3 prefix, and ListObjectsV2 has no date
- *   index, so every object is read and then narrowed.
+ *   index, so every object is read and then narrowed. gmail pushes the same bound into
+ *   its api query and never needs this.
  *
  * .note = it lives with the SHARED mail transformers rather than inside the ses adapter,
  *   because the orchestrator applies the same bound to the mails it reads back out of the

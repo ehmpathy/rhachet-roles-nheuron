@@ -22,7 +22,7 @@ const log: GatherLogMethods = {
  *   wet-over-dry threshold). the contract both follow lives in
  *   `.agent/repo=.this/role=any/briefs/howto.run-live-mail-tests.md`.
  */
-const isLiveTargeted = (input: { mechanism: 'ses' | 'ses' }): boolean =>
+const isLiveTargeted = (input: { mechanism: 'gmail' | 'ses' }): boolean =>
   (process.env.TEST_LIVE ?? '')
     .split(',')
     .map((part) => part.trim())
