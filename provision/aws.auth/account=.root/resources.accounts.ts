@@ -58,23 +58,19 @@ export const getResourcesOfAccounts = async (): Promise<
     featureSet: 'ALL',
   });
 
-  // where real traffic lands. no mail applies here yet — it is reserved, not idle filler
+  // where real traffic lands — the prod mailbox (jelly@one.prod.nheuron.com + jelly@one.nheuron.com)
   const accountProd = new DeclaredAwsOrganizationAccount({
     organization,
     name: 'nheuron-prod',
     email: NHEURON_PROD_ACCOUNT_EMAIL,
-    iamUserAccessToBilling: 'ALLOW',
-    roleName: 'OrganizationAccountAccessRole',
     tags: { managedBy: 'declastruct', purpose: 'prod' },
   });
 
-  // where the jelly@one.nheuron.com mailbox lands (the mail wish applies HERE, not prod)
+  // where the prep mailbox lands (jelly@one.prep.nheuron.com) — the one the live suites run against
   const accountPrep = new DeclaredAwsOrganizationAccount({
     organization,
     name: 'nheuron-prep',
     email: NHEURON_PREP_ACCOUNT_EMAIL,
-    iamUserAccessToBilling: 'ALLOW',
-    roleName: 'OrganizationAccountAccessRole',
     tags: { managedBy: 'declastruct', purpose: 'prep' },
   });
 

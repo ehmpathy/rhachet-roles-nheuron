@@ -30,20 +30,23 @@ usage:
   gather.auth.sh --from <mechanism> [--address <email>]
 
 options:
+  --org, --env         the keyrack slot to source first (ses: AWS_PROFILE).
+                       omit both to use the env as it stands
   --from <mechanism>   mail source: gmail, ses (required)
   --address <email>    email address to check status for (optional)
   -h, --help           show this help message
 
 examples:
   gather.auth.sh --from gmail --address user@gmail.com  # check auth status
-  gather.auth.sh --from ses --address you@your.domain   # check the AWS_PROFILE identity
+  gather.auth.sh --from ses --address jelly@one.nheuron.com --org nheuron --env prod
 
 how each mechanism authenticates:
   gmail  a service account from keyrack (GMAIL_SERVICE_ACCOUNT_JSON + _SUBJECT), or a
          cached oauth token. either way, credentials come from keyrack:
            rhx keyrack unlock --owner ehmpath --env test
-  ses    plain iam — the AWS_PROFILE keyrack places in the env. no token, no expiry:
-           rhx keyrack unlock --owner ehmpath --env prep
+  ses    plain iam — the AWS_PROFILE of a keyrack slot. no token, no expiry. unlock
+         the slot, then pass --org nheuron --env prod so this skill sources it:
+           rhx keyrack unlock --owner ehmpath --org nheuron --env prod
 
 note:
   NEITHER mechanism has an interactive auth flow today. \`--from ses\` has none by design

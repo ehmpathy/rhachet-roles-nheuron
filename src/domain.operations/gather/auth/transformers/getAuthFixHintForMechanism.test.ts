@@ -11,7 +11,7 @@ describe('getAuthFixHintForMechanism', () => {
     when('[t0] a human reads anonymous', () => {
       then('the hint names the keyrack unlock', () => {
         expect(getAuthFixHintForMechanism({ mechanism: 'ses' })).toContain(
-          'rhx keyrack unlock --owner ehmpath --env prep',
+          'rhx keyrack unlock --owner ehmpath --org nheuron --env prod',
         );
       });
 
@@ -22,6 +22,23 @@ describe('getAuthFixHintForMechanism', () => {
           'gather.auth',
         );
       });
+
+      then('it names the flags that source the slot', () => {
+        // an unlock alone places no env; the skill sources the slot only when told which
+        expect(getAuthFixHintForMechanism({ mechanism: 'ses' })).toContain(
+          'pass the same --org nheuron --env prod to this skill',
+        );
+      });
+
+      then(
+        'it names how to see a locked key, which a lenient source skips',
+        () => {
+          // a human who did both moves and still reads anonymous needs the cause, not a repeat
+          expect(getAuthFixHintForMechanism({ mechanism: 'ses' })).toContain(
+            'rhx keyrack get --owner ehmpath --org nheuron --env prod --key AWS_PROFILE',
+          );
+        },
+      );
     });
   });
 

@@ -1,0 +1,19 @@
+{
+  "key": "ec96d63bbbd53a8c",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet"
+  },
+  "exid": null,
+  "title": "fix(keyrack): sdk source takes org; repo-sweep tips name --org",
+  "description": "## .what\n\ntwo gaps in the keyrack org allowlist (`org: [a, b]`), found by a repo whose aws accounts live in a\nsecond org. held downstream as a pnpm patch: ehmpathy/rhachet-roles-nheuron `patches/rhachet.patch`.\n\n## 1. `keyrack.source` (sdk) has no `org` input\n\nthe cli reaches a member org via `--org <member>` on unlock / get / set, and `get --for repo\n--org <member>` re-slugs the declared keys under it. but `keyrack.source` →\n`sourceAllKeysIntoEnv` spawns `keyrack get` with no `--org`, so an sdk caller (a declastruct wish,\na jest env file) can only ever read the default org's slots.\n\nthe failure it forces: the only way for a wish to read `nheuron.prep.AWS_PROFILE` is to overwrite\n`ehmpathy.prep.AWS_PROFILE`, which every other ehmpathy repo on the host reads — a cross-repo\ncredential swap.\n\n**fix** (the downstream patch, 4 lines): add `org?: string` to `sourceAllKeysIntoEnv`'s input and\nappend `['--org', input.org]` to both spawned arg lists when set. the cli already owns the\nallowlist check and the re-slug, so naught else changes.\n\n```ts\nkeyrack.source({ env: 'prep', owner: 'ehmpath', org: 'nheuron', mode: 'lenient' });\n```\n\n## 2. the repo-sweep tips omit `--org`\n\n`rhx keyrack get --for repo --env prep --owner ehmpath --org nheuron` lists each absent key with a\ntip like `rhx keyrack set --owner ehmpath --key SES_REGION --env prep --vault <vault>` — no\n`--org nheuron`. a human who copies it fills the DEFAULT org's slot, the very slot `--org` exists to\nkeep apart. the single-key `get --key X --org nheuron` tip does carry `--org`; the sweep does not.\n\n**fix**: the sweep's per-key tip names `--org <member>` whenever the asked org is not `orgs[0]`.\n\n## .also (pnpm patch ergonomics, not a rhachet defect)\n\nrhachet@1.53.0 installs under two peer variants here, so `pnpm patch rhachet@1.53.0` prompts\ntwice; with no tty it exits 0 and opens naught. noted for any caller that patches rhachet.\n\n## .ask\n\nship both, with a clamp each (an sdk source under a member org; a sweep tip under a member org).",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 6,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "813"
+}

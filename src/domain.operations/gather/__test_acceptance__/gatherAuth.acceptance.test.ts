@@ -64,7 +64,9 @@ const execAndCapture = (
     const stdout = execSync(cmd, {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      ...(options?.env ? { env: options.env } : {}),
+      // the sandbox's env, never the worker's: under jest a bare spawn inherits the real
+      // process env, which still holds whatever AWS_PROFILE the runner exported
+      env: options?.env ?? process.env,
     });
     return { exitCode: 0, stdout, stderr: '' };
   } catch (error) {
@@ -350,6 +352,10 @@ describe('gather.auth', () => {
         expect(result.exitCode).toBe(2);
         expect(result.stderr).toContain('ses needs no auth flow');
         expect(result.stderr).toContain('rhx keyrack unlock');
+        // ⚠️ an unlock alone places no env; the hint must name the flags that source it
+        expect(result.stderr).toContain(
+          'pass the same --org nheuron --env prod to this skill',
+        );
         expect(result.stderr).toMatchSnapshot();
       });
     });
@@ -396,6 +402,43 @@ describe('gather.auth', () => {
           expect(result.stdout).toMatchSnapshot();
         },
       );
+    });
+  });
+
+  /**
+   * .what = the keyrack slot flags the shell entrypoint consumes before node runs
+   * .why = `gather.auth.sh` shares `gather._.keyrack.sh` with `gather.mail.sh`: it reads
+   *   `--org` / `--env` itself, sources that slot, and hands the rest to the cli. every other
+   *   case here calls the cli bare, so none sees the shell layer
+   */
+  given('[case12] the keyrack slot flags on the shell entrypoint', () => {
+    when('[t0] --org is passed with no --env', () => {
+      then('exits 2 and names both flags, before any keyrack call', () => {
+        const result = execAndCapture(
+          `bash src/domain.roles/gatherer/skills/gather.auth.sh --org nheuron --from ses --address jelly@one.nheuron.com`,
+          { env: getEnvWithoutSes() },
+        );
+
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain('ConstraintError: --org needs --env');
+        expect(result.stderr).toContain('--org nheuron --env prod');
+        expect(result.stderr).toMatchSnapshot();
+      });
+    });
+
+    when('[t1] neither --org nor --env is passed', () => {
+      then('passes every arg to the cli, which reports the status', () => {
+        const result = execAndCapture(
+          `bash src/domain.roles/gatherer/skills/gather.auth.sh --from ses --address jelly@one.nheuron.com`,
+          { env: getEnvWithoutSes() },
+        );
+
+        // ⚠️ the teeth — the args survived the shell layer intact
+        expect(result.exitCode).toBe(0);
+        expect(result.stdout).toContain('gather.auth --from ses');
+        expect(result.stdout).toContain('address: jelly@one.nheuron.com');
+        expect(result.stdout).toMatchSnapshot();
+      });
     });
   });
 });

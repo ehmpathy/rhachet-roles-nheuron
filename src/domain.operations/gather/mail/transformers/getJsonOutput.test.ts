@@ -102,6 +102,8 @@ describe('getJsonOutput', () => {
 
         expect(parsed.mails).toEqual([]);
         expect(parsed.stats.cached).toBe(0);
+        // the empty document is its own shape: every key present, mails empty
+        expect(parsed).toMatchSnapshot();
       });
     });
   });

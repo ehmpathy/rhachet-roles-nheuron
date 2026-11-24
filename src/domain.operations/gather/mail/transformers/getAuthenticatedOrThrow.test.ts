@@ -73,7 +73,7 @@ describe('getAuthenticatedOrThrow', () => {
         expect(error.message).toContain('not authenticated');
         expect(error.message).toContain('AWS_PROFILE');
         expect(error.message).toContain(
-          'rhx keyrack unlock --owner ehmpath --env prep',
+          'rhx keyrack unlock --owner ehmpath --org nheuron --env prod',
         );
         // the gmail fix must not leak into the ses error
         expect(error.message).not.toContain(

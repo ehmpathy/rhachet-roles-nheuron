@@ -42,7 +42,7 @@ export const getOneSesCallerIdentity = async (
 
       context.log.debug('ses.getCallerIdentity: not authenticated', {
         error: error?.name,
-        hint: 'run: rhx keyrack unlock --owner ehmpath --env prep',
+        hint: 'run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod',
       });
       return null;
     }

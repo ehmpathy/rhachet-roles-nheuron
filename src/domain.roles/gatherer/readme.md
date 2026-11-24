@@ -24,7 +24,7 @@ collect mail and async comms from external sources with security-first design.
 ⚠️ **"can send" is a capability, not a skill.** the send path is the `sendReplyViaSes`
 operation; no `gather.*` skill exposes it yet. the two skills above both read.
 
-the `ses` mechanism needs the mail infra applied (see `provision/aws.mail/account=prep/`),
+the `ses` mechanism needs the mail infra applied (see `provision/aws.mail/account=prod/`),
 plus these keyrack keys — and **which keys depends on the direction**:
 
 | key | needed for |

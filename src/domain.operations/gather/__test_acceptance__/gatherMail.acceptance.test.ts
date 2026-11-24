@@ -65,7 +65,9 @@ const execAndCapture = (
     const stdout = execSync(cmd, {
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      ...(options?.env ? { env: options.env } : {}),
+      // the sandbox's env, never the worker's: under jest a bare spawn inherits the real
+      // process env, which still holds whatever AWS_PROFILE the runner exported
+      env: options?.env ?? process.env,
     });
     return { exitCode: 0, stdout, stderr: '' };
   } catch (error) {
@@ -418,13 +420,13 @@ describe('gather.mail', () => {
   );
 
   /**
-   * .what = positive path against the real ses mailbox `jelly@one.nheuron.com`
+   * .what = positive path against the real prep ses mailbox `jelly@one.prep.nheuron.com`
    * .why = proves the ses read works end-to-end on the applied mailbox (r008 blocker.1, ses half)
    *
    * run it:
-   * 1. apply the mailbox: `.behavior/v2026_07_30.collect-from-ses/blocker/account-setup.md` tracks B–D
-   * 2. rhx keyrack unlock --owner ehmpath --env prep
-   * 3. AWS_PROFILE=nheuron-prep TEST_LIVE=ses npm run test:acceptance
+   * 1. apply the prep mailbox: `provision/runbook.bootstrap-nheuron-mailbox.md`
+   * 2. rhx keyrack unlock --owner ehmpath --org nheuron --env prep
+   * 3. TEST_LIVE=ses npm run test:acceptance (the env file sources the nheuron prep slot)
    *
    * .note = same gate as [case7]: the named flag, never the presence of a credential
    */
@@ -446,11 +448,11 @@ describe('gather.mail', () => {
                 SES_REGION: !!process.env.SES_REGION,
                 AWS_PROFILE: !!process.env.AWS_PROFILE,
               },
-              hint: 'rhx keyrack unlock --owner ehmpath --env prep, with AWS_PROFILE=nheuron-prep, or drop ses from TEST_LIVE',
+              hint: 'rhx keyrack unlock --owner ehmpath --org nheuron --env prep, or drop ses from TEST_LIVE',
             },
           );
 
-        return 'jelly@one.nheuron.com';
+        return 'jelly@one.prep.nheuron.com';
       };
 
       // the live run sends a test mail first (account-setup step E1), so an empty read is a
@@ -485,6 +487,35 @@ describe('gather.mail', () => {
           expect(result.stdout).toContain(
             `gather.mail --from ses --address ${address}`,
           );
+          expect(
+            asMaskedGatherMailTree({ stdout: result.stdout }),
+          ).toMatchSnapshot();
+        });
+      });
+
+      // a range past every mail lists none: the empty list is its own render, and the one a
+      // freshly applied mailbox, or a re-run with naught new, puts in front of a human
+      when('[t1] gather.mail reads a range that holds no mail', () => {
+        then('the json lists no mail, with every key still present', () => {
+          const address = getSesAddressOrThrow();
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from ses --address ${address} --since 2099-01-01 --format json`,
+          );
+          expect(result.exitCode).toBe(0);
+          const parsed = JSON.parse(result.stdout);
+          expect(parsed.mails).toEqual([]);
+          expect(
+            asMaskedGatherMailJson({ stdout: result.stdout }),
+          ).toMatchSnapshot();
+        });
+
+        then('the tree says so, under its full header', () => {
+          const address = getSesAddressOrThrow();
+          const result = execAndCapture(
+            `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --from ses --address ${address} --since 2099-01-01`,
+          );
+          expect(result.exitCode).toBe(0);
+          expect(result.stdout).toContain('no mails to display');
           expect(
             asMaskedGatherMailTree({ stdout: result.stdout }),
           ).toMatchSnapshot();
@@ -673,9 +704,47 @@ describe('gather.mail', () => {
         expect(result.exitCode).toBe(2);
         expect(result.stderr).toContain('not authenticated');
         expect(result.stderr).toContain(
-          'rhx keyrack unlock --owner ehmpath --env prep',
+          'rhx keyrack unlock --owner ehmpath --org nheuron --env prod',
         );
         // the exact human surface on the rhx path: identical to [case8], the bare call
+        expect(result.stderr).toMatchSnapshot();
+      });
+    });
+  });
+
+  /**
+   * .what = the keyrack slot flags the shell entrypoint consumes before node runs
+   * .why = `gather.mail.sh` reads `--org` / `--env` itself, sources that slot, and hands the
+   *   rest to the cli. the other cases call the cli bare, so none saw the shell layer: a
+   *   slot named with no env must refuse, and a run with no slot must pass its args through
+   */
+  given('[case17] the keyrack slot flags on the shell entrypoint', () => {
+    when('[t0] --org is passed with no --env', () => {
+      then('exits 2 and names both flags, before any keyrack call', () => {
+        const result = execAndCapture(
+          `bash src/domain.roles/gatherer/skills/gather.mail.sh --org nheuron --from ses --address jelly@one.nheuron.com`,
+          { env: getEnvWithoutSes() },
+        );
+
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain('ConstraintError: --org needs --env');
+        expect(result.stderr).toContain('--org nheuron --env prod');
+        expect(result.stderr).toMatchSnapshot();
+      });
+    });
+
+    when('[t1] neither --org nor --env is passed', () => {
+      then('passes every arg to the cli, which reaches the auth check', () => {
+        const result = execAndCapture(
+          `bash src/domain.roles/gatherer/skills/gather.mail.sh --from ses --address jelly@one.nheuron.com`,
+          { env: getEnvWithoutSes() },
+        );
+
+        // ⚠️ the teeth — the args survived the shell layer intact
+        expect(result.stderr).not.toContain('unknown flag');
+        expect(result.stderr).not.toContain('--org needs --env');
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain('not authenticated');
         expect(result.stderr).toMatchSnapshot();
       });
     });

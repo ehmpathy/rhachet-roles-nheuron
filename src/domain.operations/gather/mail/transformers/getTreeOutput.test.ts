@@ -80,6 +80,8 @@ describe('getTreeOutput', () => {
         });
 
         expect(result).toContain('no mails to display');
+        // the empty mailbox is its own render: header, stats, and the empty leaf
+        expect(result).toMatchSnapshot();
       });
     });
   });

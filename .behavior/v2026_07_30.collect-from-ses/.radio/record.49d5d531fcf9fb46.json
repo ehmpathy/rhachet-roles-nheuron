@@ -1,0 +1,19 @@
+{
+  "key": "49d5d531fcf9fb46",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet"
+  },
+  "exid": null,
+  "title": "fix(keyrack): source injects another org AWS_PROFILE via env passthrough and sandboxed spawn",
+  "description": "## .what\n\n`keyrack.source({ env, org })` can inject ANOTHER org's AWS_PROFILE. two defects compound; both seen live, the second patched in a consumer (`patches/rhachet.patch`).\n\n1. **env-var passthrough ignores the org.** `keyrack get --org nheuron --env prep --key AWS_PROFILE`, with the slot LOCKED but `AWS_PROFILE=ehmpathy.demo.ehmpath` in the env, returns that value as granted `nheuron.prep.AWS_PROFILE`. a bare env var satisfies an org-scoped slug, so a test or wish meant for org B runs in org A's account. expected: an org-scoped ask never takes a bare env var, or takes it only when the caller opts in (ci).\n2. **`sourceAllKeysIntoEnv` spawns `rhx` with no `env` option.** under jest, `process.env` in a setup file is the sandbox copy, while a bare `spawnSync` inherits the worker's REAL env. a setup file that deletes AWS_PROFILE before `keyrack.source` sees the delete ignored, and defect 1 then fires. fix (as patched): pass `env: process.env` on all three `spawnSync` calls. no change outside a sandbox.\n\n## .repro\n\n```ts\n// jest setup file, run by a runner that exported AWS_PROFILE=<org A profile>\ndelete process.env.AWS_PROFILE;\nkeyrack.source({ env: 'prep', owner: 'ehmpath', org: 'nheuron', mode: 'lenient' }); // nheuron.prep.AWS_PROFILE locked\nprocess.env.AWS_PROFILE; // '<org A profile>' — expected undefined\n```\n\n## .why\n\na wrong-account call is the worst miss keyrack can make: it fails as a 403 or \"does not exist\" far from its cause, and a write lands in the wrong org.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 10,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "824"
+}

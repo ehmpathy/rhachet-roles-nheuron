@@ -87,7 +87,7 @@ describe('getAuthStatusDisplay', () => {
         });
         expect(result).toContain('status: anonymous');
         expect(result).toContain(
-          'run: rhx keyrack unlock --owner ehmpath --env prep',
+          'run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod',
         );
         // the hint must not send them at the command that throws
         expect(result).not.toContain('run gather.auth --from ses');
@@ -106,7 +106,7 @@ describe('getAuthStatusDisplay', () => {
             '🔑 gather.auth --from ses',
             '   ├─ status: anonymous',
             '   ├─ address: jelly@one.nheuron.com',
-            '   └─ hint: ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep',
+            '   └─ hint: ses authenticates via AWS_PROFILE from a keyrack slot. run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod, then pass the same --org nheuron --env prod to this skill. still anonymous after both? keyrack skips a locked key without a word; check it: rhx keyrack get --owner ehmpath --org nheuron --env prod --key AWS_PROFILE',
           ].join('\n'),
         );
       });

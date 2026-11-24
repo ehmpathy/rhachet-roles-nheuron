@@ -46,6 +46,10 @@ const config: Config = {
     // disagree about which tests exist (`rule.require.hermetic-tests`)
     '!**/.agent/**',
   ],
+  // `.temp/` is gitignored scratch (patch edit dirs, stray snapshot copies). in the module map,
+  // a stray `.snap` there reads as an obsolete snapshot and fails the local gate where ci,
+  // which never holds it, passes (`rule.require.hermetic-tests`)
+  modulePathIgnorePatterns: ['<rootDir>/.temp/'],
   setupFilesAfterEnv: ['./jest.unit.env.ts'],
 
   // use 50% of threads to leave headroom for other processes

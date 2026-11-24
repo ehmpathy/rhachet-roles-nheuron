@@ -1,86 +1,89 @@
-# provision: the one.nheuron.com mail dns
+# provision: the mail dns
 
 ## .what
 
-the dns half of jelly's mailbox — the inbound MX, the SPF TXT, the 3 easy-dkim CNAMEs, and the
-DMARC TXT, declared as cloudflare resources in the `nheuron.com` zone.
+the dns half of jelly's mailboxes — per domain, the inbound MX, the SPF TXT, the 3 easy-dkim
+CNAMEs, and the DMARC TXT, in the `nheuron.com` zone. three domains, two envs:
+
+| env | domains |
+|-----|---------|
+| prep | `one.prep.nheuron.com` |
+| prod | `one.prod.nheuron.com`, `one.nheuron.com` (alias) |
 
 ## .why
 
-a human once pasted these by hand. declared, `apply` writes them and `plan` proves they hold —
-so the whole mail loop is reproducible rather than a console ritual.
+the records must match what ses expects, character for character. both paths below derive
+them from one pure transformer (`asSesMailDnsRecords`), so neither relies on a hand copy.
 
 ---
 
-## prereqs
+## two paths, one derivation
+
+| path | who writes the records | robot credential on the zone |
+|------|------------------------|------------------------------|
+| **hand** (current for nheuron.com) | a human, in the cloudflare console | none |
+| **declared** | `declastruct apply` of `resources.mail.dns.ts` | a zone-scoped token |
+
+the hand path exists because a cloudflare token is account-wide unless scoped. a token scoped
+to one zone (Zone Resources = `nheuron.com`, `Zone:Read` + `DNS:Edit`) makes the declared path
+safe; until one exists, the human enters the records.
+
+### the hand path
+
+```sh
+# after the env's mail wish applies:
+rhx mail.dns.records.get --env prep
+rhx mail.dns.records.get --env prod
+```
+
+each reads the dkim tokens live from the applied identities and prints every record. enter each
+in the `nheuron.com` zone, proxy **off**. then verify (below).
+
+### the declared path
 
 | prereq | why |
 |--------|-----|
-| the mail wish applied | it emits the 3 dkim tokens this wish needs |
-| a cloudflare **user** token | My Profile > API Tokens — NOT an account token |
+| both mail wishes applied | each identity mints the dkim tokens this wish needs |
+| a cloudflare **user** token, scoped to the `nheuron.com` zone | My Profile > API Tokens — NOT an account token |
 | token scopes: `Zone:Read` + `DNS:Edit` | the minimum to declare records in a zone |
 | the `nheuron.com` zone exists | this wish declares records in it, never the zone's registration |
 
-fill the credentials:
+the keys live in the nheuron prod slot (the zone's slot):
 
 ```sh
-rhx keyrack fill --owner ehmpath --env prep
-#   CLOUDFLARE_API_TOKEN
-#   CLOUDFLARE_ACCOUNT_ID
+rhx keyrack set --owner ehmpath --org nheuron --env prod --key CLOUDFLARE_API_TOKEN
+rhx keyrack set --owner ehmpath --org nheuron --env prod --key CLOUDFLARE_ACCOUNT_ID
+rhx keyrack set --owner ehmpath --org nheuron --env prod --key SES_DKIM_TOKENS
 ```
 
----
-
-## the one apply-sourced input: the dkim tokens
-
-aws generates 3 dkim tokens when the ses identity is created and holds them stable for its
-life (they change only on a delete+recreate). they are the sole dynamic value in the set.
-
-1. apply `provision/aws.mail/account=prep/resources.mail.ts`
-2. read the `setSesEmailIdentity` log — `metadata.dnsRecords` carries the 3 tokens
-3. `rhx keyrack fill --owner ehmpath --env prep` → fill `SES_DKIM_TOKENS`, comma-separated
-4. `rhx keyrack unlock --owner ehmpath --env prep`, then apply this wish
-
-the wish fails loud with that exact hint while `SES_DKIM_TOKENS` is empty, so the order cannot
-be gotten wrong silently.
-
-### why keyrack rather than a literal in the file
-
-the two applies run in sequence — aws mints the tokens, then cloudflare declares them — so
-their values cannot exist in the source at commit time. a hardcoded placeholder would make the
-committed wish un-applyable until someone edits code, which puts a **source change between two
-infra applies**. read from the sourced env, the wish is applyable exactly as committed: fill,
-unlock, apply.
+`SES_DKIM_TOKENS` is one map across every env: `<domain>=t1,t2,t3;<domain>=t1,t2,t3`. each
+`mail.dns.records.get` run prints its env's segment; join the two with `;`. the wish refuses
+loud, and names each absent domain, until every domain holds tokens.
 
 they are **not** a secret — they become public dns the moment they are declared. they ride
-keyrack because it is the one env source this repo reads at all, and because the fill step is
-the natural place to hand an apply-emitted value to the next apply.
-
----
-
-## apply
+keyrack because it is the one env source this repo reads, and because they are unknowable until
+each mail wish applies, which keeps the wish applyable exactly as committed.
 
 ```sh
-rhx keyrack unlock --owner ehmpath --env prep
-
+rhx keyrack unlock --owner ehmpath --org nheuron --env prod
 npx declastruct plan  --wish 'provision/cloudflare/resources.mail.dns.ts'
 npx declastruct apply --wish 'provision/cloudflare/resources.mail.dns.ts'
 ```
 
 ---
 
-## the records
+## the records, per domain
 
 | type | name | value | purpose |
 |------|------|-------|---------|
-| MX | `one.nheuron.com` | `10 inbound-smtp.us-east-1.amazonaws.com` | route inbound to ses |
-| TXT | `one.nheuron.com` | `v=spf1 include:amazonses.com ~all` | spf — authorize ses to send |
-| CNAME ×3 | `<token>._domainkey.one.nheuron.com` | `<token>.dkim.amazonses.com` | easy-dkim |
-| TXT | `_dmarc.one.nheuron.com` | `v=DMARC1; p=none` | dmarc, monitor mode |
+| MX | `<domain>` | `10 inbound-smtp.us-east-1.amazonaws.com` | route inbound to ses |
+| TXT | `<domain>` | `v=spf1 include:amazonses.com ~all` | spf — authorize ses to send |
+| CNAME ×3 | `<token>._domainkey.<domain>` | `<token>.dkim.amazonses.com` | easy-dkim |
+| TXT | `_dmarc.<domain>` | `v=DMARC1; p=none` | dmarc, monitor mode |
 
 ### ⚠️ dns-only, never proxied
 
-every record is declared `proxied: false` (grey-cloud). a proxied mx or txt breaks mail.
+every record is `proxied: false` (grey-cloud). a proxied mx or txt breaks mail.
 
 ### v2 easy dkim — no `_amazonses` TXT
 
@@ -89,28 +92,24 @@ v1 shape and does not apply here.
 
 ### the apex is untouched
 
-the records name `one.nheuron.com` within the `nheuron.com` zone. the apex mx stays free for
+every record names a `one.*` subdomain within the `nheuron.com` zone. the apex mx stays free for
 whatever else the domain serves — the whole point of the subdomain.
 
 ---
 
 ## verify
 
-after propagation (minutes to an hour), the ses identity moves from
-`verificationStatus: unresolved` to verified:
+after propagation (minutes to an hour), each identity moves from `unresolved` to verified; the
+env's plan reads them back:
 
 ```sh
-npx declastruct plan --wish 'provision/aws.mail/account=prep/resources.mail.ts'
+rhx provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --org nheuron --mode plan
 ```
 
-then send a test email to `jelly@one.nheuron.com` and collect it:
-
-```sh
-rhx gather.mail --from ses --address jelly@one.nheuron.com --since 2026-09-01
-```
+then the live loop: `provision/runbook.bootstrap-nheuron-mailbox.md` phase 8.
 
 ## .see also
 
-- `asSesMailDnsRecords.ts` — the pure derivation of the record set
-- `provision/aws.mail/account=prep/readme.md` — the aws half
-- `.behavior/v2026_07_30.collect-from-ses/1.vision.yield.md` — deliverable (a)
+- `asSesMailDnsRecords.ts` — the pure derivation of each domain's record set
+- `asDkimTokensByDomain.ts` — the parse of the token map
+- `provision/aws.mail/readme.md` — the aws half

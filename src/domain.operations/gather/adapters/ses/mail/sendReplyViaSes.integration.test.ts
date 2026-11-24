@@ -43,10 +43,10 @@ const getSesMailboxOrThrow = (): string => {
       'TEST_LIVE=ses targets the live send, but ses is not configured',
       {
         expected: ['SES_MAIL_BUCKET', 'SES_REGION', 'SES_CONFIG_SET'],
-        hint: 'run: rhx keyrack unlock --owner ehmpath --env prep (and AWS_PROFILE=nheuron-prep)',
+        hint: 'run: rhx keyrack unlock --owner ehmpath --org nheuron --env prep (its AWS_PROFILE lands in nheuron-prep)',
       },
     );
-  return 'jelly@one.nheuron.com';
+  return 'jelly@one.prep.nheuron.com';
 };
 
 /**

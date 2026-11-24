@@ -5,7 +5,8 @@
 # .what = reads AWS_PROFILE for --env from keyrack and reports the
 #         caller identity (account, arn) it lands in; with
 #         --expect management, also asserts the account is the
-#         management account of its aws organization
+#         management account of its aws organization; with --expect
+#         member, asserts it is NOT (a member account of its org)
 #
 # .why  = every root apply must first prove it runs as the org manager:
 #         a wrong profile silently declares the org, sso, or budgets
@@ -16,12 +17,15 @@
 #   rhx aws.caller.get --env sudo
 #   rhx aws.caller.get --env sudo --expect management
 #   rhx aws.caller.get --env prep
+#   rhx aws.caller.get --env prod --org nheuron --expect member
 #   rhx aws.caller.get help
 #
 # options:
 #   --env ENV        keyrack env: sudo, prep, prod, or test (required)
+#   --org ORG        optional keyrack org (default: the repo's default org)
 #   --expect EXPECT  optional assertion: management (the account must be
-#                    the management account of its organization)
+#                    the management account of its organization) or member
+#                    (the account must belong to an org it does not manage)
 #
 # guarantee:
 #   - read-only: sts + organizations describe calls only, never a write
@@ -38,16 +42,14 @@ show_help() {
   echo "🐈 heres the deal..."
   echo ""
   echo "⛵ aws.caller.get"
-  echo ""
-  echo "usage:"
-  echo "  rhx aws.caller.get --env <env> [--expect management]"
-  echo ""
-  echo "options:"
-  echo "  --env     keyrack env: sudo, prep, prod, or test (required)"
-  echo "  --expect  management — assert the account manages its aws organization"
-  echo ""
-  echo "example:"
-  echo "  rhx aws.caller.get --env sudo --expect management"
+  echo "   ├─ usage: rhx aws.caller.get --env <env> [--org <org>] [--expect management|member]"
+  echo "   ├─ options"
+  echo "   │  ├─ --env     keyrack env: sudo, prep, prod, or test (required)"
+  echo "   │  ├─ --org     keyrack org (optional; default: the repo's default org)"
+  echo "   │  └─ --expect  management = the account manages its aws organization"
+  echo "   │               member = the account belongs to an org it does not manage"
+  echo "   └─ example"
+  echo "      └─ rhx aws.caller.get --env sudo --expect management"
   exit 0
 }
 
@@ -67,6 +69,7 @@ require_val() {
 
 # parse arguments
 ENV=""
+ORG=""
 EXPECT=""
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -75,8 +78,13 @@ while [[ $# -gt 0 ]]; do
       ENV="$2"
       shift 2
       ;;
+    --org)
+      require_val --org "${2:-}"
+      ORG="$2"
+      shift 2
+      ;;
     --expect)
-      require_val --expect "${2:-}" "management"
+      require_val --expect "${2:-}" "management, member"
       EXPECT="$2"
       shift 2
       ;;
@@ -117,12 +125,12 @@ if [[ "$ENV" != "sudo" && "$ENV" != "prep" && "$ENV" != "prod" && "$ENV" != "tes
   echo "   └─ must be: sudo, prep, prod, or test"
   exit 2
 fi
-if [[ -n "$EXPECT" && "$EXPECT" != "management" ]]; then
+if [[ -n "$EXPECT" && "$EXPECT" != "management" && "$EXPECT" != "member" ]]; then
   echo "🐈 belay that..."
   echo ""
   echo "⛵ aws.caller.get"
   echo "   ├─ invalid expect: $EXPECT"
-  echo "   └─ must be: management"
+  echo "   └─ must be: management or member"
   exit 2
 fi
 
@@ -131,19 +139,24 @@ unset AWS_PROFILE AWS_DEFAULT_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AW
 
 echo "🐈 chartin course..."
 echo ""
-echo "⛵ aws.caller.get --env $ENV"
+# the keyrack org flag, only when one was named (else keyrack reads its default org)
+ORG_ARGS=()
+[[ -n "$ORG" ]] && ORG_ARGS=(--org "$ORG")
+ORG_LABEL="${ORG:+ --org $ORG}"
+
+echo "⛵ aws.caller.get --env $ENV$ORG_LABEL"
 echo "   ├─ eyes on target..."
 
 # read the profile name from keyrack (a name, not a secret)
-PROFILE=$(rhx keyrack get --owner ehmpath --env "$ENV" --key AWS_PROFILE --output value 2>/dev/null || echo "")
+PROFILE=$(rhx keyrack get --owner ehmpath ${ORG_ARGS[@]+"${ORG_ARGS[@]}"} --env "$ENV" --key AWS_PROFILE --output value 2>/dev/null || echo "")
 if [[ -z "$PROFILE" ]]; then
   echo "   └─ halted: absent credentials"
   echo ""
   echo "🐈 wet paws..."
   echo ""
   echo "⛵ aws.caller.get"
-  echo "   ├─ absent AWS_PROFILE from keyrack for env=$ENV"
-  echo "   └─ hint: rhx keyrack unlock --owner ehmpath --env $ENV --key AWS_PROFILE"
+  echo "   ├─ absent AWS_PROFILE from keyrack for env=$ENV$ORG_LABEL"
+  echo "   └─ hint: rhx keyrack unlock --owner ehmpath$ORG_LABEL --env $ENV --key AWS_PROFILE"
   exit 1
 fi
 echo "   ├─ profile: $PROFILE"
@@ -157,7 +170,7 @@ CALLER_JSON=$(aws sts get-caller-identity --profile "$PROFILE" --output json 2>&
   echo "⛵ aws.caller.get"
   echo "   ├─ sts get-caller-identity failed for profile $PROFILE"
   echo "   ├─ error: $(printf '%s' "$CALLER_JSON" | head -n 1)"
-  echo "   └─ hint: rhx keyrack unlock --owner ehmpath --env $ENV --key AWS_PROFILE"
+  echo "   └─ hint: rhx keyrack unlock --owner ehmpath$ORG_LABEL --env $ENV --key AWS_PROFILE"
   exit 1
 }
 ACCOUNT=$(printf '%s' "$CALLER_JSON" | jq -r '.Account')
@@ -170,12 +183,12 @@ if [[ -z "$EXPECT" ]]; then
   echo ""
   echo "🐈 smooth sailin!"
   echo ""
-  echo "⛵ aws.caller.get --env $ENV"
+  echo "⛵ aws.caller.get --env $ENV$ORG_LABEL"
   echo "   └─ account: $ACCOUNT"
   exit 0
 fi
 
-# expect management: the account must equal its organization's management account
+# both expectations read the organization's management account
 echo "   ├─ arn: $ARN"
 ORG_JSON=$(aws organizations describe-organization --profile "$PROFILE" --output json 2>&1) || {
   echo "   └─ blocked: no organization visible"
@@ -185,10 +198,34 @@ ORG_JSON=$(aws organizations describe-organization --profile "$PROFILE" --output
   echo "⛵ aws.caller.get"
   echo "   ├─ account $ACCOUNT cannot describe an organization"
   echo "   ├─ error: $(printf '%s' "$ORG_JSON" | head -n 1)"
-  echo "   └─ fix: point keyrack env=$ENV at the management account's profile"
+  echo "   └─ fix: point keyrack env=$ENV$ORG_LABEL at an account inside an aws organization"
   exit 2
 }
 MANAGEMENT=$(printf '%s' "$ORG_JSON" | jq -r '.Organization.MasterAccountId')
+
+# expect member: the account must NOT be its organization's manager
+if [[ "$EXPECT" == "member" ]]; then
+  if [[ "$ACCOUNT" == "$MANAGEMENT" ]]; then
+    echo "   └─ blocked: this is the management account"
+    echo ""
+    echo "🐈 belay that..."
+    echo ""
+    echo "⛵ aws.caller.get"
+    echo "   ├─ caller account: $ACCOUNT"
+    echo "   ├─ management account: $MANAGEMENT"
+    echo "   └─ fix: point keyrack env=$ENV$ORG_LABEL at a member account's profile"
+    exit 2
+  fi
+  echo "   └─ member: yes (manager is $MANAGEMENT)"
+  echo ""
+  echo "🐈 smooth sailin!"
+  echo ""
+  echo "⛵ aws.caller.get --env $ENV$ORG_LABEL --expect member"
+  echo "   └─ account: $ACCOUNT (a member of its organization)"
+  exit 0
+fi
+
+# expect management: the account must equal its organization's management account
 if [[ "$ACCOUNT" != "$MANAGEMENT" ]]; then
   echo "   └─ blocked: not the management account"
   echo ""

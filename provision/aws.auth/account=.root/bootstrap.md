@@ -6,7 +6,7 @@ the one step declastruct cannot do for itself: create the `nheuron-root` aws acc
 organization, by hand, once.
 
 each step below this one is declared — `resources.accounts.ts` mints `nheuron-prod` and
-`nheuron-prep` as member accounts, and the mail wish applies into prep.
+`nheuron-prep` as member accounts, and a mail wish applies into each.
 
 ## .why
 
@@ -65,9 +65,8 @@ address. they never land in git — keyrack is the one source
 (`rule.require.credentials-from-keyrack`).
 
 ```sh
-rhx keyrack fill --owner ehmpath --env prep
-#   NHEURON_PROD_ACCOUNT_EMAIL   -> a fresh address for nheuron-prod
-#   NHEURON_PREP_ACCOUNT_EMAIL   -> a fresh address for nheuron-prep
+rhx keyrack set --owner ehmpath --env sudo --key NHEURON_PROD_ACCOUNT_EMAIL   # a fresh address for nheuron-prod
+rhx keyrack set --owner ehmpath --env sudo --key NHEURON_PREP_ACCOUNT_EMAIL   # a fresh address for nheuron-prep
 ```
 
 ⚠️ **the two addresses must differ**, and aws reads them case-insensitively — `A@x.com` and
@@ -82,27 +81,22 @@ mid-apply. if you see `two declared aws accounts name the same root email`, that
 ### 4. apply the account wish, as the root
 
 ```sh
-rhx keyrack unlock --owner ehmpath --env prep
+# plan — read what it would mint
+rhx provision.root --wish provision/aws.auth/account=.root/resources.accounts.ts --key NHEURON_PROD_ACCOUNT_EMAIL --key NHEURON_PREP_ACCOUNT_EMAIL --mode plan
 
-# 1. CONFIRM THE ACCOUNT FIRST — the code cannot carry this guard
-aws sts get-caller-identity
-#    read `Account`. it must be nheuron-root's id.
-
-# 2. plan — read what it would mint
-npx declastruct plan --wish provision/aws.auth/account=.root/resources.accounts.ts
-
-# 3. then apply
-npx declastruct apply --wish provision/aws.auth/account=.root/resources.accounts.ts
+# then apply the reviewed plan
+rhx provision.root --wish provision/aws.auth/account=.root/resources.accounts.ts --key NHEURON_PROD_ACCOUNT_EMAIL --key NHEURON_PREP_ACCOUNT_EMAIL --mode apply
 ```
 
-`AWS_PROFILE` must name a profile for **`nheuron-root`** here. the wish reads the management
-account id from those credentials, so a profile for the wrong account declares the wrong org.
+the wish reads the management account id from the credentials, so a profile for the wrong
+account declares the wrong org. `provision.root` refuses before any declastruct call unless env
+`sudo` lands in the management account.
 
-⚠️ the guard is manual because it cannot be otherwise: the wish's whole job is to learn the
+⚠️ the guard lives in the skill, never the wish: the wish's whole job is to learn the
 management account id **from** the credentials, so it has no independent value to check that id
-against. that is the same reason the mail wish leaves its account check to a human
-(`provision/aws.mail/account=prep/readme.md`), and it is why `AWS_PROFILE` changes between this
-step and that one — one key, two accounts, in sequence.
+against. the organization itself is that value — `aws.caller.get --expect management` compares
+the caller to the org's manager. the mail wishes take the mirror guard (`--expect member`, via
+`provision.member`), and read a different keyrack slot: org `nheuron`, env `prep` or `prod`.
 
 ### 5. verify
 
@@ -121,7 +115,7 @@ each member is reachable by assume of `OrganizationAccountAccessRole` from the r
 
 | step | where |
 |------|-------|
-| the mail infra (ses + s3 + iam) | `provision/aws.mail/account=prep/readme.md` |
+| the mail infra (ses + s3 + iam) | `provision/aws.mail/readme.md` |
 | the mail dns records | `provision/cloudflare/readme.md` |
 
 ## .see also

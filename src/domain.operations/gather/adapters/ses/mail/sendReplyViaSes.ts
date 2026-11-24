@@ -93,7 +93,7 @@ export const sendReplyViaSes = async (
     BadRequestError.throw('ses config set absent, cannot send', {
       expected: ['SES_CONFIG_SET'],
       why: 'ses binds a configuration set per-send; without one, no bounce, complaint, or delivery event is emitted',
-      hint: 'run: rhx keyrack unlock --owner ehmpath --env prep',
+      hint: 'run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod',
     });
 
   const ses = context.sdkSes ?? new SESClient({ region: config.region });

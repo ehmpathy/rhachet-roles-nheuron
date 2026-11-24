@@ -60,7 +60,7 @@ describe('resources.mail.dns', () => {
       then('it names the token to create and the keyrack fill', () => {
         expect(result.error.message).toContain('Zone:Read + DNS:Edit');
         expect(result.error.message).toContain(
-          'rhx keyrack fill --owner ehmpath --env prep',
+          'rhx keyrack fill --owner ehmpath --org nheuron --env prod',
         );
       });
 
@@ -81,13 +81,20 @@ describe('resources.mail.dns', () => {
 
       then('it refuses with a caller-must-fix error', () => {
         expect(result.error).toBeInstanceOf(BadRequestError);
-        expect(result.error.message).toContain('SES_DKIM_TOKENS is empty');
+        expect(result.error.message).toContain(
+          'SES_DKIM_TOKENS lacks a domain',
+        );
+      });
+
+      then('it names every absent domain, across both envs', () => {
+        expect(result.error.message).toContain('one.prep.nheuron.com');
+        expect(result.error.message).toContain('one.prod.nheuron.com');
+        expect(result.error.message).toContain('"one.nheuron.com"');
       });
 
       then('it names the apply order: the aws mail wish first', () => {
-        expect(result.error.message).toContain(
-          'apply provision/aws.mail/account=prep/resources.mail.ts first',
-        );
+        expect(result.error.message).toContain('apply each env mail wish');
+        expect(result.error.message).toContain('rhx mail.dns.records.get');
       });
     });
   });
@@ -99,7 +106,7 @@ describe('resources.mail.dns', () => {
    *   only under `TEST_LIVE=cloudflare`; targeted with no token, the plan fails loud
    */
   given.runIf(isProvisionLiveTargeted({ mechanism: 'cloudflare' }))(
-    '[case3] the prep keyrack is unlocked for a live cloudflare run (TEST_LIVE=cloudflare)',
+    '[case3] the nheuron prod slot is unlocked for a live cloudflare run (TEST_LIVE=cloudflare)',
     () => {
       when('[t0] the wish is planned against the live zone', () => {
         const result = useBeforeAll(async () => ({

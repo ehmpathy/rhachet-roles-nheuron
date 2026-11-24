@@ -38,8 +38,10 @@ import type { GatheredMailMechanism } from '@src/domain.objects/GatheredMailMech
 export const getAuthFixHintForMechanism = (input: {
   mechanism: GatheredMailMechanism;
 }): string => {
+  // a lenient source skips a locked key without a word, so a human who already passed the
+  // flags reads `anonymous` with no cause. the last clause names the command that shows it
   if (input.mechanism === 'ses')
-    return 'ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep';
+    return 'ses authenticates via AWS_PROFILE from a keyrack slot. run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod, then pass the same --org nheuron --env prod to this skill. still anonymous after both? keyrack skips a locked key without a word; check it: rhx keyrack get --owner ehmpath --org nheuron --env prod --key AWS_PROFILE';
 
   if (input.mechanism === 'gmail')
     return 'gmail authenticates via a service account. fill GMAIL_SERVICE_ACCOUNT_JSON + GMAIL_SERVICE_ACCOUNT_SUBJECT, then run: rhx keyrack unlock --owner ehmpath --env test';

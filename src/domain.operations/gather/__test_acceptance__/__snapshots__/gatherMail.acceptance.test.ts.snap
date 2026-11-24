@@ -7,6 +7,8 @@ usage:
   gather.mail.sh [options]
 
 options:
+  --org, --env         the keyrack slot to source first (ses: AWS_PROFILE + SES_*).
+                       omit both to use the env as it stands
   --from <mechanism>   mail source: gmail, ses (required)
   --address <email>    email address to collect from (required)
   --since <date>       only list mail since this date (ISO format)
@@ -48,7 +50,7 @@ examples:
   gather.mail.sh --from gmail --address user@gmail.com --query "from:boss@company.com"
   gather.mail.sh --from gmail --address user@gmail.com/labels=work,urgent
   gather.mail.sh --from gmail --address user@gmail.com --format json
-  gather.mail.sh --from ses --address jelly@one.nheuron.com --since 2026-08-01
+  gather.mail.sh --from ses --address jelly@one.nheuron.com --org nheuron --env prod
 "
 `;
 
@@ -121,7 +123,7 @@ exports[`gather.mail given: [case8] ses collection with no aws configured when: 
 
 {
   "mechanism": "ses",
-  "hint": "ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep"
+  "hint": "ses authenticates via AWS_PROFILE from a keyrack slot. run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod, then pass the same --org nheuron --env prod to this skill. still anonymous after both? keyrack skips a locked key without a word; check it: rhx keyrack get --owner ehmpath --org nheuron --env prod --key AWS_PROFILE"
 }
 "
 `;
@@ -153,6 +155,81 @@ exports[`gather.mail given: [case10] a /labels= scope against ses when: [t0] gat
   "why": "labels are a gmail concept; rfc822 mail in s3 carries none",
   "hint": "drop the /labels= suffix from --address"
 }
+"
+`;
+
+exports[`gather.mail given: [case11] positive path: real ses mailbox (TEST_LIVE=ses) when: [t0] gather.mail reads the applied mailbox then: returns each mail parsed, with sender and subject 1`] = `
+{
+  "mails": [
+    {
+      "attachments": "<array>",
+      "ceiver": {
+        "address": "<string>",
+        "mechanism": "<string>",
+      },
+      "deliveredAt": "<string>",
+      "exid": "<string>",
+      "isObfuscated": "<boolean>",
+      "labels": "<array>",
+      "sender": {
+        "address": "<string>",
+        "mechanism": "<string>",
+      },
+      "snippet": "<string>",
+      "subject": "<string>",
+    },
+  ],
+  "scope": {
+    "labels": [],
+    "query": null,
+  },
+  "stats": {
+    "cached": "<number>",
+    "foundUptil": "<string>",
+    "listed": "<number>",
+    "synced": "<number>",
+  },
+}
+`;
+
+exports[`gather.mail given: [case11] positive path: real ses mailbox (TEST_LIVE=ses) when: [t0] gather.mail reads the applied mailbox then: returns the same mailbox as a tree 1`] = `
+"🪼 boop!
+
+🫙 gather.mail --from ses --address jelly@one.prep.nheuron.com
+   ├─ scope: <scope>
+   ├─ listed: <number>
+   ├─ synced: <number>
+   ├─ cached: <number>
+   └─ mails
+      ├─ <date> | <sender>
+      │  └─ <subject>"
+`;
+
+exports[`gather.mail given: [case11] positive path: real ses mailbox (TEST_LIVE=ses) when: [t1] gather.mail reads a range that holds no mail then: the json lists no mail, with every key still present 1`] = `
+{
+  "mails": [],
+  "scope": {
+    "labels": [],
+    "query": null,
+  },
+  "stats": {
+    "cached": "<number>",
+    "foundUptil": "<string>",
+    "listed": "<number>",
+    "synced": "<number>",
+  },
+}
+`;
+
+exports[`gather.mail given: [case11] positive path: real ses mailbox (TEST_LIVE=ses) when: [t1] gather.mail reads a range that holds no mail then: the tree says so, under its full header 1`] = `
+"🪼 boop!
+
+🫙 gather.mail --from ses --address jelly@one.prep.nheuron.com
+   ├─ scope: <scope>
+   ├─ listed: <number>
+   ├─ synced: <number>
+   ├─ cached: <number>
+   └─ (no mails to display)
 "
 `;
 
@@ -216,7 +293,23 @@ exports[`gather.mail given: [case16] the passthrough flags rhachet appends when:
 
 {
   "mechanism": "ses",
-  "hint": "ses authenticates via AWS_PROFILE. run: rhx keyrack unlock --owner ehmpath --env prep"
+  "hint": "ses authenticates via AWS_PROFILE from a keyrack slot. run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod, then pass the same --org nheuron --env prod to this skill. still anonymous after both? keyrack skips a locked key without a word; check it: rhx keyrack get --owner ehmpath --org nheuron --env prod --key AWS_PROFILE"
+}
+"
+`;
+
+exports[`gather.mail given: [case17] the keyrack slot flags on the shell entrypoint when: [t0] --org is passed with no --env then: exits 2 and names both flags, before any keyrack call 1`] = `
+"✋ ConstraintError: --org needs --env
+   └─ fix: pass both, e.g. --org nheuron --env prod
+"
+`;
+
+exports[`gather.mail given: [case17] the keyrack slot flags on the shell entrypoint when: [t1] neither --org nor --env is passed then: passes every arg to the cli, which reaches the auth check 1`] = `
+"✋ ConstraintError: not authenticated
+
+{
+  "mechanism": "ses",
+  "hint": "ses authenticates via AWS_PROFILE from a keyrack slot. run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod, then pass the same --org nheuron --env prod to this skill. still anonymous after both? keyrack skips a locked key without a word; check it: rhx keyrack get --owner ehmpath --org nheuron --env prod --key AWS_PROFILE"
 }
 "
 `;

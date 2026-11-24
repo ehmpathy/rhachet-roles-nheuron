@@ -44,6 +44,8 @@ const config: Config = {
     // place in the suite. see `jest.unit.config.ts` for the full account
     '!**/.agent/**',
   ],
+  // gitignored scratch stays out of the module map. see `jest.unit.config.ts`
+  modulePathIgnorePatterns: ['<rootDir>/.temp/'],
   setupFilesAfterEnv: ['./jest.integration.env.ts'],
 
   // use 50% of threads to leave headroom for other processes

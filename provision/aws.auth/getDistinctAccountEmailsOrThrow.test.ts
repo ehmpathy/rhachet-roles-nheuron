@@ -29,16 +29,21 @@ describe('getDistinctAccountEmailsOrThrow', () => {
   given('[case2] one address pasted into both entries', () => {
     // teeth: this is the case the guard is CHOSEN for. it passes the absence check, so
     // without this guard the apply reaches aws and halts with the org half-provisioned
-    const error = getError(() =>
-      getDistinctAccountEmailsOrThrow({
-        emails: {
-          'nheuron-prod': 'nheuron@example.com',
-          'nheuron-prep': 'nheuron@example.com',
-        },
-      }),
-    );
-
     when('[t0] the emails are checked', () => {
+      // the guard is synchronous, so getError hands back the Error itself, never a Promise
+      const error = getError(() =>
+        getDistinctAccountEmailsOrThrow({
+          emails: {
+            'nheuron-prod': 'nheuron@example.com',
+            'nheuron-prep': 'nheuron@example.com',
+          },
+        }),
+      );
+
+      then('it is an Error, caught synchronously', () => {
+        expect(error).toBeInstanceOf(Error);
+      });
+
       then('it refuses, rather than let the apply start', () => {
         expect(error.message).toContain('same root email');
       });

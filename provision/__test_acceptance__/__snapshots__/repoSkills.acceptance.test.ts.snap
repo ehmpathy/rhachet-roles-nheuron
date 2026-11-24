@@ -1,0 +1,563 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`repo skills given: [case1] mail.dns.records.get when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ mail.dns.records.get
+   ├─ usage: rhx mail.dns.records.get --env <prep|prod> [--format tree|bind]
+   ├─ prints the dns records each domain of the env's mailbox owes
+   └─ --format bind = a zone file for cloudflare dns → records → import and export
+"
+`;
+
+exports[`repo skills given: [case1] mail.dns.records.get when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.dns.records.get
+   ├─ invalid or absent --env: (absent)
+   └─ must be: prep or prod
+",
+}
+`;
+
+exports[`repo skills given: [case2] mail.identity.status.get when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ mail.identity.status.get
+   ├─ usage: rhx mail.identity.status.get --env <prep|prod>
+   └─ prints whether ses has verified each domain of the env's mailbox
+"
+`;
+
+exports[`repo skills given: [case2] mail.identity.status.get when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.identity.status.get
+   ├─ invalid or absent --env: (absent)
+   └─ must be: prep or prod
+",
+}
+`;
+
+exports[`repo skills given: [case3] mail.roundtrip.prove when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ mail.roundtrip.prove
+   ├─ usage: rhx mail.roundtrip.prove --env <prep|prod> --address <mailbox>
+   └─ sends a nonce probe to the mailbox itself, then gathers it back
+"
+`;
+
+exports[`repo skills given: [case3] mail.roundtrip.prove when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.roundtrip.prove
+   ├─ invalid or absent --env: (absent)
+   └─ must be: prep or prod
+",
+}
+`;
+
+exports[`repo skills given: [case4] aws.caller.get when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ aws.caller.get
+   ├─ usage: rhx aws.caller.get --env <env> [--org <org>] [--expect management|member]
+   ├─ options
+   │  ├─ --env     keyrack env: sudo, prep, prod, or test (required)
+   │  ├─ --org     keyrack org (optional; default: the repo's default org)
+   │  └─ --expect  management = the account manages its aws organization
+   │               member = the account belongs to an org it does not manage
+   └─ example
+      └─ rhx aws.caller.get --env sudo --expect management
+"
+`;
+
+exports[`repo skills given: [case4] aws.caller.get when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ aws.caller.get
+   ├─ absent required arg: --env
+   └─ must be: sudo, prep, prod, or test
+",
+}
+`;
+
+exports[`repo skills given: [case5] provision.member when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ provision.member
+   ├─ usage: rhx provision.member --wish <path> --env <env> [--org <org>] --mode <mode>
+   ├─ options
+   │  ├─ --wish   path to a declastruct resources.ts (required)
+   │  ├─ --env    keyrack env: test, prep, or prod (required)
+   │  ├─ --org    keyrack org (optional; default: the repo's default org)
+   │  ├─ --mode   plan or apply (required)
+   │  └─ --plan   plan file path (optional; defaults to <wish>.plan.json)
+   └─ example
+      └─ rhx provision.member --wish provision/aws.mail/account=prod/resources.mail.ts --env prod --org nheuron --mode plan
+"
+`;
+
+exports[`repo skills given: [case5] provision.member when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.member
+   ├─ wish absent or not found: (absent)
+   └─ hint: pass --wish <path to a declastruct resources.ts>
+",
+}
+`;
+
+exports[`repo skills given: [case6] provision.root when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ provision.root
+   ├─ usage: rhx provision.root --wish <path> --mode <mode>
+   ├─ options
+   │  ├─ --wish   path to a declastruct resources.ts (required)
+   │  ├─ --mode   plan or apply (required)
+   │  ├─ --plan   plan file path (optional; defaults to <wish>.plan.json)
+   │  └─ --key    an extra sudo key the wish reads (repeatable; AWS_PROFILE is always unlocked)
+   └─ example
+      └─ rhx provision.root --wish provision/aws.budget/account=.root/resources.ts --mode plan
+"
+`;
+
+exports[`repo skills given: [case6] provision.root when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.root
+   ├─ absent required arg: --wish
+   └─ hint: rhx provision.root --wish <path> --mode plan
+",
+}
+`;
+
+exports[`repo skills given: [case7] package.patch when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ package.patch
+   ├─ usage: rhx package.patch --package <name>@<version> --mode open|commit
+   ├─ options
+   │  ├─ --package  the installed package to patch, as name@version (required)
+   │  └─ --mode     open = copy it out to edit · commit = write patches/*.patch (required)
+   └─ example
+      ├─ rhx package.patch --package declastruct-aws@1.13.0 --mode open
+      ├─ edit files under .temp/patch.declastruct-aws@1.13.0/
+      └─ rhx package.patch --package declastruct-aws@1.13.0 --mode commit
+"
+`;
+
+exports[`repo skills given: [case7] package.patch when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ package.patch
+   ├─ absent required arg: --package
+   └─ fix: pass name@version, e.g. declastruct-aws@1.13.0
+",
+}
+`;
+
+exports[`repo skills given: [case8] test.live when: [t0] help is asked for then: the help surface is pinned 1`] = `
+"🐈 heres the deal...
+
+⛵ test.live
+   ├─ usage: rhx test.live --live <ses|cloudflare|aws.accounts|gmail>[,…] <git.repo.test args>
+   └─ example: rhx test.live --live ses --what integration --scope sendReplyViaSes
+"
+`;
+
+exports[`repo skills given: [case8] test.live when: [t1] it is called with no args then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ test.live
+   ├─ absent required arg: --live
+   └─ pass a comma list of: ses, cloudflare, aws.accounts, gmail
+",
+}
+`;
+
+exports[`repo skills given: [live1] aws.caller.get --env prep --org nheuron (TEST_LIVE=ses) when: [t0] it runs against the live prep account then: the result surface is pinned, masked 1`] = `
+"🐈 chartin course...
+
+⛵ aws.caller.get --env prep --org nheuron
+   ├─ eyes on target...
+   ├─ profile: nheuron.prep
+   ├─ account: <account>
+   └─ arn: arn:aws:sts::<account>:assumed-role/AWSReservedSSO_everyday-power_<hash>/<session>
+
+🐈 smooth sailin!
+
+⛵ aws.caller.get --env prep --org nheuron
+   └─ account: <account>
+"
+`;
+
+exports[`repo skills given: [live2] mail.dns.records.get --env prep (TEST_LIVE=ses) when: [t0] it runs against the live prep account then: the result surface is pinned, masked 1`] = `
+"🐈 heres the chart...
+
+⛵ mail.dns.records.get --env prep
+   ├─ zone: nheuron.com
+   ├─ proxy: off (dns only, grey cloud) on every record
+   ├─ records (6)
+   │  ├─ MX
+   │  │  ├─ name: one.prep.nheuron.com
+   │  │  ├─ priority: 10
+   │  │  └─ value: inbound-smtp.us-east-1.amazonaws.com
+   │  ├─ TXT
+   │  │  ├─ name: one.prep.nheuron.com
+   │  │  └─ value: v=spf1 include:amazonses.com ~all
+   │  ├─ CNAME
+   │  │  ├─ name: <dkim>._domainkey.one.prep.nheuron.com
+   │  │  └─ value: <dkim>.dkim.amazonses.com
+   │  ├─ CNAME
+   │  │  ├─ name: <dkim>._domainkey.one.prep.nheuron.com
+   │  │  └─ value: <dkim>.dkim.amazonses.com
+   │  ├─ CNAME
+   │  │  ├─ name: <dkim>._domainkey.one.prep.nheuron.com
+   │  │  └─ value: <dkim>.dkim.amazonses.com
+   │  └─ TXT
+   │     ├─ name: _dmarc.one.prep.nheuron.com
+   │     └─ value: v=DMARC1; p=none
+   │
+   └─ SES_DKIM_TOKENS segment (join the envs with ;)
+      └─ one.prep.nheuron.com=<dkim>,<dkim>,<dkim>
+"
+`;
+
+exports[`repo skills given: [live3] mail.dns.records.get --env prep --format bind (TEST_LIVE=ses) when: [t0] it runs against the live prep account then: the result surface is pinned, masked 1`] = `
+"; ses mailbox records for env=prep, zone nheuron.com — import with proxy off
+one.prep.nheuron.com.	300	IN	MX	10 inbound-smtp.us-east-1.amazonaws.com.
+one.prep.nheuron.com.	300	IN	TXT	"v=spf1 include:amazonses.com ~all"
+<dkim>._domainkey.one.prep.nheuron.com.	300	IN	CNAME	<dkim>.dkim.amazonses.com.
+<dkim>._domainkey.one.prep.nheuron.com.	300	IN	CNAME	<dkim>.dkim.amazonses.com.
+<dkim>._domainkey.one.prep.nheuron.com.	300	IN	CNAME	<dkim>.dkim.amazonses.com.
+_dmarc.one.prep.nheuron.com.	300	IN	TXT	"v=DMARC1; p=none"
+"
+`;
+
+exports[`repo skills given: [live4] mail.identity.status.get --env prep (TEST_LIVE=ses) when: [t0] it runs against the live prep account then: the result surface is pinned, masked 1`] = `
+"🐈 heres the chart...
+
+⛵ mail.identity.status.get --env prep
+   ├─ identities (1)
+   │  └─ one.prep.nheuron.com
+   │     ├─ verified for send: true
+   │     └─ dkim: SUCCESS
+   │
+   └─ every domain verified
+"
+`;
+
+exports[`repo skills given: [live6] provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --org nheuron --mode plan (TEST_LIVE=ses) when: [t0] it runs against the live prep account then: the result surface is pinned, masked 1`] = `
+"🐈 smooth sailin!
+
+⛵ provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --org nheuron --mode plan
+   └─ planned → provision/aws.mail/account=prep/resources.mail.ts.plan.json
+"
+`;
+
+exports[`repo skills given: [live7] mail.roundtrip.prove --env prep --address jelly@one.prep.nheuron.com (TEST_LIVE=ses) when: [t0] it runs against the live prep account then: the result surface is pinned, masked 1`] = `
+"🐈 chartin course...
+
+⛵ mail.roundtrip.prove --env prep --address jelly@one.prep.nheuron.com
+   ├─ probe: roundtrip-<probe>
+   ├─ sent: <message-id>
+   ├─ gathered: after <n>s
+   └─ 🎉 roundtrip proven: jelly@one.prep.nheuron.com sent to itself and read it back
+"
+`;
+
+exports[`repo skills given: [refusal1] mail.dns.records.get --env bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.dns.records.get
+   ├─ invalid or absent --env: bogus
+   └─ must be: prep or prod
+",
+}
+`;
+
+exports[`repo skills given: [refusal2] mail.roundtrip.prove --env prep when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.roundtrip.prove
+   ├─ invalid or absent --address: (absent)
+   └─ pass the mailbox, e.g. jelly@one.nheuron.com
+",
+}
+`;
+
+exports[`repo skills given: [refusal3] aws.caller.get --env prep --expect bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ aws.caller.get
+   ├─ invalid expect: bogus
+   └─ must be: management or member
+",
+}
+`;
+
+exports[`repo skills given: [refusal4] provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --mode bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.member
+   ├─ invalid or absent --mode: bogus
+   └─ must be: plan or apply
+",
+}
+`;
+
+exports[`repo skills given: [refusal5] provision.root --wish provision/aws.budget/account=.root/resources.ts --mode bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.root
+   ├─ invalid or absent --mode: bogus
+   └─ must be: plan or apply
+",
+}
+`;
+
+exports[`repo skills given: [refusal6] package.patch --package declastruct-aws --mode open when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ package.patch
+   ├─ --package needs an exact version: declastruct-aws
+   └─ fix: pass name@version, e.g. declastruct-aws@1.13.0
+",
+}
+`;
+
+exports[`repo skills given: [refusal7] test.live --live ses,bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ test.live
+   ├─ unknown live gate: bogus
+   └─ pass a comma list of: ses, cloudflare, aws.accounts, gmail
+",
+}
+`;
+
+exports[`repo skills given: [refusal8] aws.caller.get --env bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ aws.caller.get
+   ├─ invalid env: bogus
+   └─ must be: sudo, prep, prod, or test
+",
+}
+`;
+
+exports[`repo skills given: [refusal9] aws.caller.get --env when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ aws.caller.get
+   ├─ absent value for --env
+   ├─ fix: pass one of sudo, prep, prod, test
+   └─ hint: rhx aws.caller.get help
+",
+}
+`;
+
+exports[`repo skills given: [refusal10] aws.caller.get --env prep --bogus x when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ aws.caller.get
+   ├─ unknown argument: --bogus
+   └─ hint: rhx aws.caller.get help
+",
+}
+`;
+
+exports[`repo skills given: [refusal11] mail.dns.records.get --env prep --format bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.dns.records.get
+   ├─ invalid --format: bogus
+   └─ must be: tree or bind
+",
+}
+`;
+
+exports[`repo skills given: [refusal12] mail.dns.records.get --env prep --bogus x when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.dns.records.get
+   ├─ unknown argument: --bogus
+   └─ hint: rhx mail.dns.records.get help
+",
+}
+`;
+
+exports[`repo skills given: [refusal13] mail.identity.status.get --env prep --bogus x when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.identity.status.get
+   ├─ unknown argument: --bogus
+   └─ hint: rhx mail.identity.status.get help
+",
+}
+`;
+
+exports[`repo skills given: [refusal14] mail.roundtrip.prove --env prep --bogus x when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ mail.roundtrip.prove
+   ├─ unknown argument: --bogus
+   └─ hint: rhx mail.roundtrip.prove help
+",
+}
+`;
+
+exports[`repo skills given: [refusal15] provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env bogus --mode plan when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.member
+   ├─ invalid or absent --env: bogus
+   └─ must be: test, prep, or prod (a root wish runs via provision.root)
+",
+}
+`;
+
+exports[`repo skills given: [refusal16] provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --mode plan --bogus x when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.member
+   ├─ unknown argument: --bogus
+   └─ hint: rhx provision.member help
+",
+}
+`;
+
+exports[`repo skills given: [refusal17] provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --mode apply --plan .temp/absent.plan.json when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.member
+   ├─ plan not found: .temp/absent.plan.json
+   └─ hint: run --mode plan first
+",
+}
+`;
+
+exports[`repo skills given: [refusal18] provision.root --wish provision/absent/resources.ts --mode plan when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.root
+   ├─ wish not found: provision/absent/resources.ts
+   └─ hint: pass a path to a declastruct resources.ts
+",
+}
+`;
+
+exports[`repo skills given: [refusal19] provision.root --wish provision/aws.budget/account=.root/resources.ts --mode plan --bogus x when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.root
+   ├─ unknown argument: --bogus
+   └─ hint: rhx provision.root help
+",
+}
+`;
+
+exports[`repo skills given: [refusal20] provision.root --wish provision/aws.budget/account=.root/resources.ts --mode apply --plan .temp/absent.plan.json when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ provision.root
+   ├─ plan not found: .temp/absent.plan.json
+   └─ hint: run --mode plan first
+",
+}
+`;
+
+exports[`repo skills given: [refusal21] package.patch --package declastruct-aws@1.13.0 --mode bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ package.patch
+   ├─ invalid mode: bogus
+   └─ fix: pass open or commit
+",
+}
+`;
+
+exports[`repo skills given: [refusal22] package.patch --package declastruct-aws@1.13.0 when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ package.patch
+   ├─ absent required arg: --mode
+   └─ fix: pass open or commit
+",
+}
+`;
+
+exports[`repo skills given: [refusal23] package.patch --package declastruct-aws@1.13.0 --mode open --bogus when: [t0] it is called then: the refusal surface is pinned 1`] = `
+{
+  "stderr": "",
+  "stdout": "🐈 belay that...
+
+⛵ package.patch
+   ├─ unknown argument: --bogus
+   └─ fix: see rhx package.patch help
+",
+}
+`;

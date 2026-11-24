@@ -22,6 +22,11 @@ the forks taken mid-drive on best-guess rather than escalated, per
 | [F15](inventory.of=fulcrums.case=F15-provision-wishes-source-at-load.md) | the provision wishes source keyrack, and refuse absent account emails, at module load | clean | open | 72% |
 | [F16](inventory.of=fulcrums.case=F16-error-header-names-two-classes.md) | the error header named two classes (`ConstraintError: BadRequestError:`); cut in 5.3, the `helpful-errors` upgrade caught as a dream | clean | taken: (b), fixed in 5.3 | 90% |
 | [F17](inventory.of=fulcrums.case=F17-obfuscated-null-body-reads-as-the-obfuscation.md) | an obfuscated mail's absent body reads as the obfuscation literal, not `null` — a reversed assertion, approval owed | clean | ruled: (a) revert (director) | 90% |
+| [F18](inventory.of=fulcrums.case=F18-cloudflare-dns-wish-kept-beside-the-hand-step.md) | the cloudflare dns wish kept as the optional path beside the hand-entered records | clean | open | 85% |
+| [F19](inventory.of=fulcrums.case=F19-ses-hints-name-the-nheuron-prod-slot.md) | ses hints name the exact `--org nheuron --env prod` slot, not a generic placeholder | clean | open | 80% |
+| [F20](inventory.of=fulcrums.case=F20-apex-alias-is-a-second-identity-in-prod.md) | `one.nheuron.com` aliases prod as a second ses identity in nheuron-prod, not a dns cname | clean | open | 88% |
+| [F21](inventory.of=fulcrums.case=F21-one-dkim-token-map-across-envs.md) | one `SES_DKIM_TOKENS` map (`<domain>=t1,t2,t3;…`) in the prod slot feeds a dns wish that spans every env | clean | open | 75% |
+| [F22](inventory.of=fulcrums.case=F22-member-slot-tier-is-emergency-admin.md) | `everyday-power` gains an inline bundle (role reads open, writes allowlisted to `role/nheuron-mail-*`, no AttachRolePolicy), so the member slots stay on it for the mail apply | clean | ruled (d) by wisher | 85% |
 
 ## ⚠️ a note on when these were recorded
 

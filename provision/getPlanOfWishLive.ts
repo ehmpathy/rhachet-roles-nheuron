@@ -20,9 +20,10 @@ export type ProvisionLiveMechanism = 'ses' | 'cloudflare' | 'aws.accounts';
 export const isProvisionLiveTargeted = (input: {
   mechanism: ProvisionLiveMechanism;
 }): boolean =>
+  // a comma or a space separates gates: a list split on one alone reads `ses cloudflare` as a
+  // single unknown gate, and every case behind it skips without a word
   (process.env.TEST_LIVE ?? '')
-    .split(',')
-    .map((part) => part.trim())
+    .split(/[\s,]+/)
     .includes(input.mechanism);
 
 /**
@@ -51,10 +52,14 @@ export const getPlanOfWishLive = (input: {
   );
 
   // run the plan; a non-zero exit throws here with the cli's own stderr attached
+  // .note = env passed explicitly: under jest, `process.env` is the sandbox copy the test env
+  //   file prepared (the live slot's AWS_PROFILE), while a bare spawn inherits the worker's real
+  //   env, so the plan would run as whatever profile the runner exported
   execSync(`npx declastruct plan --wish '${input.wish}' --into '${into}'`, {
     cwd: path.join(__dirname, '..'),
     stdio: 'pipe',
     timeout: 300_000,
+    env: process.env,
   });
 
   // read the plan back; an absent file means the cli exited 0 without a plan

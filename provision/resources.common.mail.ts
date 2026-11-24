@@ -1,10 +1,10 @@
 /**
- * .what = the parameters that name the jelly@one.nheuron.com mailbox and its aws resources
+ * .what = the parameters that name each env's jelly mailbox and its aws resources
  * .why = the mail wish (aws) and the dns wish (cloudflare) both need the same domain + region.
  *   one module holds them, so a change to the mail domain cannot leave the two wishes disagreed.
  *
  * .note = it sits at `provision/`, the COMMON ANCESTOR of its two consumers
- *   (`provision/aws.mail/account=prep/` and `provision/cloudflare/`), rather than inside
+ *   (`provision/aws.mail/account=prod/` and `provision/cloudflare/`), rather than inside
  *   either one. aws and cloudflare are separate bounded contexts — separate providers,
  *   separate applies — so for one wish to import the other's internal module would couple
  *   them: a rename inside the aws wish would break the unrelated cloudflare wish, and
@@ -19,17 +19,44 @@
  */
 
 /**
- * the mail SUBDOMAIN, never the apex — keeps `nheuron.com`'s own mx free and bounds the blast
- * radius. `one` is a domain term: a clone IS one connection into the external brain
- * (see `domain.terms/one.md`), not a numeral.
+ * the env of a mailbox — one mailbox per member account. prep is the one tests run against, so
+ * a defect never lands on the address real mail reaches; prod holds the public address
  */
-export const MAIL_DOMAIN = 'one.nheuron.com';
+export type MailEnv = 'prep' | 'prod';
 
 /**
- * jelly's address — ONE address for both legs: receive (the recipient the rule names) and
- * send-from (covered by the verified DOMAIN identity, so it owes no email identity of its own)
+ * the local part every mailbox shares — `jelly@<domain>`, on each domain of its env
  */
-export const MAIL_MAILBOX = `jelly@${MAIL_DOMAIN}`;
+export const MAIL_LOCAL_PART = 'jelly';
+
+/**
+ * .what = the domains and the inbound store of each env's mailbox
+ *
+ * .note = each domain is a mail SUBDOMAIN, never the apex — keeps `nheuron.com`'s own mx free
+ *   and bounds the blast radius. `one` is a domain term: a clone IS one connection into the
+ *   external brain (see `domain.terms/one.md`), not a numeral.
+ *
+ * .note = prod lists two domains: `one.prod.nheuron.com`, and `one.nheuron.com` as its alias.
+ *   the alias is a second ses identity in the SAME account — its mx at the same inbound
+ *   endpoint, named by the same receipt rule, into the same bucket. never a dns cname: a cname
+ *   cannot share a name with the mx + txt records, and ses verifies each domain on its own.
+ *
+ * .note = a bucket name is globally unique, so each env's bucket carries its env. the rule set,
+ *   rule, and config set names are account-local, so both envs share them (below).
+ */
+export const MAIL_BY_ENV: Record<
+  MailEnv,
+  { domains: readonly string[]; bucket: string }
+> = {
+  prep: {
+    domains: ['one.prep.nheuron.com'],
+    bucket: 'nheuron-mail-inbound-one-prep',
+  },
+  prod: {
+    domains: ['one.prod.nheuron.com', 'one.nheuron.com'],
+    bucket: 'nheuron-mail-inbound-one-prod',
+  },
+};
 
 /**
  * the region. ses INBOUND receipt runs in a subset of regions only (us-east-1, us-west-2,
@@ -38,12 +65,9 @@ export const MAIL_MAILBOX = `jelly@${MAIL_DOMAIN}`;
 export const MAIL_REGION = 'us-east-1';
 
 /**
- * the cloudflare zone that holds the records. `one.nheuron.com` records live within it.
+ * the dns zone that holds every env's records
  */
 export const MAIL_ZONE = 'nheuron.com';
-
-/** the inbound store. an s3 bucket name is globally unique, so it is keyed to the mail domain */
-export const MAIL_BUCKET = 'nheuron-mail-inbound-one';
 
 /** the account's active receipt rule set (aws allows exactly one active set per region) */
 export const MAIL_RULE_SET = 'nheuron-mail-inbound';

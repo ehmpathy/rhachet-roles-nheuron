@@ -1,0 +1,3 @@
+patchedDependencies:
+  declastruct-aws@1.13.0: patches/declastruct-aws@1.13.0.patch
+  rhachet: patches/rhachet.patch

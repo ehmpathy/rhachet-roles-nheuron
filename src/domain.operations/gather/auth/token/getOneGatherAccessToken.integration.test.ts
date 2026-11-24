@@ -1,13 +1,20 @@
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
-import { given, then, when } from 'test-fns';
+import { getError, given, then, useThen, when } from 'test-fns';
 
 import { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 
 import { getOneGatherAccessToken } from './getOneGatherAccessToken';
 import { getTokenCacheDir } from './getTokenCacheDir';
 import { upsertGatherAccessToken } from './upsertGatherAccessToken';
+
+/**
+ * .what = an error's message plus its metadata, as one searchable text
+ * .why = the fix hint rides in the error's metadata, not its message
+ */
+const asErrorText = (input: { error: Error }): string =>
+  `${input.error.message} ${JSON.stringify((input.error as { metadata?: unknown }).metadata ?? null)}`;
 
 describe('getOneGatherAccessToken', () => {
   const testDir = path.join(
@@ -53,19 +60,22 @@ describe('getOneGatherAccessToken', () => {
     });
 
     when('[t0] getOneGatherAccessToken is called', () => {
-      then('returns stored token', async () => {
-        const token = await getOneGatherAccessToken({ repo, cwd: testDir });
-        expect(token).not.toBeNull();
-        expect(token!.mechanism).toBe('gmail');
-        expect(token!.address).toBe('hastoken@gmail.com');
-        expect(token!.accessToken).toBe('stored_access');
-        expect(token!.refreshToken).toBe('stored_refresh');
+      // one disk read, shared below; held under a key, since a null read proxies as `{}`
+      const scene = useThen('the read succeeds', async () => ({
+        token: await getOneGatherAccessToken({ repo, cwd: testDir }),
+      }));
+
+      then('returns stored token', () => {
+        expect(scene.token).not.toBeNull();
+        expect(scene.token!.mechanism).toBe('gmail');
+        expect(scene.token!.address).toBe('hastoken@gmail.com');
+        expect(scene.token!.accessToken).toBe('stored_access');
+        expect(scene.token!.refreshToken).toBe('stored_refresh');
       });
 
-      then('reconstructs expiresAt as Date', async () => {
-        const token = await getOneGatherAccessToken({ repo, cwd: testDir });
-        expect(token!.expiresAt).toEqual(expiresAt);
-        expect(token!.expiresAt).toBeInstanceOf(Date);
+      then('reconstructs expiresAt as Date', () => {
+        expect(scene.token!.expiresAt).toEqual(expiresAt);
+        expect(scene.token!.expiresAt).toBeInstanceOf(Date);
       });
     });
   });
@@ -111,21 +121,23 @@ describe('getOneGatherAccessToken', () => {
     });
 
     when('[t0] the token is read back', () => {
-      then('it REFUSES, rather than hands on an unknown term', async () => {
-        await expect(
-          getOneGatherAccessToken({ repo, cwd: testDir }),
-        ).rejects.toThrow('token cache names an unknown mechanism');
+      // one disk read, shared below; held under a key, since a proxied Error drops its fields
+      const scene = useThen('the read is refused', async () => ({
+        error: await getError(getOneGatherAccessToken({ repo, cwd: testDir })),
+      }));
+
+      then('it REFUSES, rather than hands on an unknown term', () => {
+        expect(scene.error.message).toContain(
+          'token cache names an unknown mechanism',
+        );
       });
 
-      then('the refusal names the fix', async () => {
+      then('the refusal names the fix', () => {
         // a human who meets this needs the delete + re-auth line, not a bare rejection
         // (`rule.require.errors-name-the-fix`)
-        const error = await getOneGatherAccessToken({
-          repo,
-          cwd: testDir,
-        }).catch((caught: Error) => caught);
-
-        expect(JSON.stringify(error)).toContain('gather.auth --from gmail');
+        expect(asErrorText({ error: scene.error })).toContain(
+          'gather.auth --from gmail',
+        );
       });
     });
   });
@@ -169,21 +181,21 @@ describe('getOneGatherAccessToken', () => {
     });
 
     when('[t0] the token is read back', () => {
-      then('it REFUSES rather than hand on the text "undefined"', async () => {
+      // one disk read, shared below; held under a key, since a proxied Error drops its fields
+      const scene = useThen('the read is refused', async () => ({
+        error: await getError(getOneGatherAccessToken({ repo, cwd: testDir })),
+      }));
+
+      then('it REFUSES rather than hand on the text "undefined"', () => {
         // ⚠️ the teeth: under the bare `String(parsed.accessToken)` this RESOLVED with a token
         // whose accessToken was the literal 'undefined'
-        await expect(
-          getOneGatherAccessToken({ repo, cwd: testDir }),
-        ).rejects.toThrow('token cache lacks accessToken');
+        expect(scene.error.message).toContain('token cache lacks accessToken');
       });
 
-      then('the refusal names the fix', async () => {
-        const error = await getOneGatherAccessToken({
-          repo,
-          cwd: testDir,
-        }).catch((caught: Error) => caught);
-
-        expect(JSON.stringify(error)).toContain('gather.auth --from gmail');
+      then('the refusal names the fix', () => {
+        expect(asErrorText({ error: scene.error })).toContain(
+          'gather.auth --from gmail',
+        );
       });
     });
   });

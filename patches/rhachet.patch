@@ -1,0 +1,163 @@
+diff --git a/dist/contract/sdk.keyrack.d.ts b/dist/contract/sdk.keyrack.d.ts
+index 6bd6aa250f4beec6426fc8186c8ad0f1f86b69b3..d5cc147a01df031cbdb2440c2e871028ce04f40d 100644
+--- a/dist/contract/sdk.keyrack.d.ts
++++ b/dist/contract/sdk.keyrack.d.ts
+@@ -120,5 +120,9 @@ export declare const keyrack: {
+         key?: string | undefined;
+         reach?: import("../domain.objects/keyrack/KeyrackKeyReach").KeyrackKeyReach | undefined;
+         mode?: "strict" | "lenient" | undefined;
++        /**
++         * .what = the keyrack org slot to source from (default: the manifest's first org)
++         */
++        org?: string | undefined;
+     }) => void;
+ };
+diff --git a/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/mechAdapterAwsSso.js b/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/mechAdapterAwsSso.js
+index a2e904a2eb4da140dc74486e36ef6b06e6d90050..cc88908f981ade35f220e9c4bd9b2d82183e496e 100644
+--- a/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/mechAdapterAwsSso.js
++++ b/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/mechAdapterAwsSso.js
+@@ -109,10 +109,14 @@ exports.mechAdapterAwsSso = {
+         // object is registered under EPHEMERAL_VIA_GITHUB_OIDC too, so a hardcoded name would
+         // report an oidc key's refusal as an sso one — a correct refusal that names the wrong mech
+         (0, assertKeyrackReachAbsent_1.assertKeyrackReachAbsent)({ reach: input.reach, mech: input.mech });
+-        // extract org from keySlug (org.env.keyName)
+-        const org = input.keySlug.split('.')[0] ?? '';
++        // extract org + env from keySlug (org.env.keyName); the owner rides the input
++        const [org = '', env = null] = input.keySlug.split('.');
+         // run guided setup
+-        const { profileName } = await (0, setupAwsSsoWithGuide_1.setupAwsSsoWithGuide)({ org });
++        const { profileName } = await (0, setupAwsSsoWithGuide_1.setupAwsSsoWithGuide)({
++            org,
++            env,
++            owner: input.owner ?? null,
++        });
+         return { source: profileName };
+     },
+     /**
+diff --git a/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/setupAwsSsoWithGuide.js b/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/setupAwsSsoWithGuide.js
+index f78994507beb279a32cc4aa7919772ed366af753..38996e52f9ff8a7d910e13c78f1db5ab33e0c512 100644
+--- a/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/setupAwsSsoWithGuide.js
++++ b/dist/domain.operations/keyrack/adapters/mechanisms/aws.sso/setupAwsSsoWithGuide.js
+@@ -56,6 +56,32 @@ const promptUser = (question) => {
+         });
+     });
+ };
++/**
++ * .what = suggest a `$awsOrg.$env.$owner` profile name for an sso account
++ * .why = each segment names one truth, so the name reads what it is and never collides:
++ *   - awsOrg = the aws org the account belongs to, read from the account name's own prefix
++ *     (`nheuron-prep` → `nheuron`); the keyrack slot's org stands in only when the account
++ *     name carries no prefix. never the slot's org alone: a profile for the nheuron-root
++ *     account, set through an ehmpathy slot, would claim the ehmpathy org — and the portal
++ *     picker labels each portal by the prefix its profiles share
++ *   - env = the keyrack env of the slot (prep, prod, sudo, …)
++ *   - owner = the keyrack owner of the slot, so two owners on one host never share a profile
++ *
++ * .example = { org: 'nheuron', env: 'prep', owner: 'ehmpath', accountName: 'nheuron-prep' } → 'nheuron.prep.ehmpath'
++ * .example = { org: 'ehmpathy', env: 'sudo', owner: 'ehmpath', accountName: 'nheuron-root' } → 'nheuron.sudo.ehmpath'
++ * .example = { org: 'ehmpathy', env: 'prep', owner: 'ehmpath', accountName: 'Production' } → 'ehmpathy.prep.ehmpath'
++ */
++const asSuggestedAwsSsoProfileName = (input) => {
++    // the aws org: the account name's own prefix when it has one, else the slot's org
++    const segments = input.accountName
++        .toLowerCase()
++        .split(/[^a-z0-9]+/)
++        .filter((segment) => segment.length > 0);
++    const awsOrg = segments.length > 1 ? segments[0] : input.org.toLowerCase();
++    // join the segments that are known; an absent owner drops its segment, never prints a blank
++    return [awsOrg, input.env, input.owner].filter((segment) => !!segment).join('.');
++};
++exports.asSuggestedAwsSsoProfileName = asSuggestedAwsSsoProfileName;
+ /**
+  * .what = interactive guided setup wizard for aws sso profiles
+  * .why = encapsulates the full sso setup flow in the vault adapter layer
+@@ -240,16 +266,16 @@ const setupAwsSsoWithGuide = async (input) => {
+     process.stdout.write('\x1b[1A\x1b[2K');
+     console.log(`   │     ├─ ${roleIndex + 1} ✓`);
+     console.log(`   │     └─ as ${selectedRole.roleName}`);
+-    // profile name with smart suggestion
+-    // strip redundant prefix: if account name starts with org, use just the suffix
+-    const accountSlug = selectedAccount.accountName
+-        .toLowerCase()
+-        .replace(/[^a-z0-9]/g, '');
+-    const orgLower = input.org.toLowerCase();
+-    const accountSuffix = accountSlug.startsWith(orgLower)
+-        ? accountSlug.slice(orgLower.length)
+-        : accountSlug;
+-    const suggestedName = `${input.org}.${accountSuffix || accountSlug}`;
++    // profile name with smart suggestion, named after the ACCOUNT's org — never merely the
++    // keyrack slot's org. the portal picker labels each portal by the prefix its profiles share,
++    // so a profile named after the slot (e.g. `ehmpathy.nheuronroot` for the nheuron-root account,
++    // set through an ehmpathy slot) mislabels the whole portal as the slot's org
++    const suggestedName = asSuggestedAwsSsoProfileName({
++        org: input.org,
++        env: input.env ?? null,
++        owner: input.owner ?? null,
++        accountName: selectedAccount.accountName,
++    });
+     console.log('   │');
+     console.log('   ├─ what should we call it?');
+     console.log('   │  ├─ suggested');
+diff --git a/dist/domain.operations/keyrack/adapters/vaults/aws.config/vaultAdapterAwsConfig.js b/dist/domain.operations/keyrack/adapters/vaults/aws.config/vaultAdapterAwsConfig.js
+index f8a10a9967c5cf81275cfd39f756d63b68593011..84420bb68d319e14188d48bbd7023e6bde95a907 100644
+--- a/dist/domain.operations/keyrack/adapters/vaults/aws.config/vaultAdapterAwsConfig.js
++++ b/dist/domain.operations/keyrack/adapters/vaults/aws.config/vaultAdapterAwsConfig.js
+@@ -556,6 +556,8 @@ exports.vaultAdapterAwsConfig = {
+                     keySlug: input.slug,
+                     reach: input.reach,
+                     mech,
++                    // the keyrack owner names the suggested profile's last segment
++                    owner: context?.owner ?? null,
+                 })).source
+                 : null);
+         if (!profileName) {
+diff --git a/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.d.ts b/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.d.ts
+index 88bc3e71a5e3159b42d0b32ce3755ac622de93d9..4dd77b4e88eb5415df6f6a7badf3d1dfbad0fdf6 100644
+--- a/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.d.ts
++++ b/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.d.ts
+@@ -46,6 +46,13 @@ export declare const sourceAllKeysIntoEnv: (input: {
+      * .why = a reach is an identity axis of ONE key, so it cannot ride a repo sweep (q2)
+      */
+     reach?: KeyrackKeyReach;
++    /**
++     * optional: the org member to read from — must sit on the manifest's `org:` allowlist
++     *
++     * .why = a repo whose fleet spans orgs reads a member's keys without a rewrite of the
++     *        default org's slots, the same reach the cli grants via `--org <member>`
++     */
++    org?: string;
+     /**
+      * when 'strict', failfast if any keys are not granted (default: 'strict')
+      */
+diff --git a/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.js b/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.js
+index eaa3cfa2005c0c41278648f8f41ab57e0fa8e5dc..2ae7ed9e2a3c4de59cfbb589bdcbf321a4dfb8fe 100644
+--- a/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.js
++++ b/dist/domain.operations/keyrack/sourceAllKeysIntoEnv.js
+@@ -63,8 +63,11 @@ const sourceAllKeysIntoEnv = (input) => {
+         keyed: !!input.key,
+         hint: 'name the key too: sourceAllKeysIntoEnv({ key, reach })',
+     });
++    // the org member to read from — rides as --org, which the cli checks against the
++    // manifest allowlist and re-slugs under; absent, the manifest's default org, as before
++    const orgArgs = input.org ? ['--org', input.org] : [];
+     // build args based on whether key filter is provided
+-    const args = input.key
++    const argsBase = input.key
+         ? [
+             'keyrack',
+             'get',
+@@ -89,9 +92,14 @@ const sourceAllKeysIntoEnv = (input) => {
+             '--owner',
+             input.owner,
+         ];
++    const args = [...argsBase, ...orgArgs];
+     // call keyrack get --json to get structured data
+     const jsonResult = (0, child_process_1.spawnSync)(RHX_BIN, [...args, '--json'], {
+         encoding: 'utf8', // eslint-disable-line @cspell/spellchecker -- node api
++        // pass the caller's env explicitly: under a jest sandbox, `process.env` here is the
++        // sandbox copy while a bare spawn inherits the worker's real env, so an AWS_PROFILE the
++        // caller deleted would still reach the child and pass through as the asked-for key
++        env: process.env,
+     });
+     // if command failed to execute, get formatted output and exit
+     if (jsonResult.error) {

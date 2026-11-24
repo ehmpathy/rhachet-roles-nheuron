@@ -1,8 +1,8 @@
-# runbook: bootstrap the `jelly@one.nheuron.com` mailbox
+# runbook: bootstrap jelly's mailboxes (prep + prod)
 
 follow this top to bottom. each line is either a url to open, a command to run, or a value to
-fill. do not skip the `aws sts get-caller-identity` checks — they are the only guard against the
-one un-recoverable mistake (apply the mail wish under the wrong account).
+fill. every apply runs through `rhx provision.root` or `rhx provision.member`, whose account
+guard stops the one un-recoverable mistake (apply the mail wish under the wrong account).
 
 ## legend
 
@@ -110,8 +110,7 @@ the one sso step a human owns. all later sso state is declared.
 ⛳ the identity center instance lives in `us-east-1` and the profile lands in root:
 ```sh
 rhx keyrack unlock --owner ehmpath --env sudo --key AWS_PROFILE
-aws sts get-caller-identity                       # Account = nheuron-root's id
-aws sso-admin list-instances --region us-east-1   # lists exactly one instance
+rhx aws.caller.get --env sudo --expect management   # nheuron-root's id, manages the org
 ```
 
 ---
@@ -119,23 +118,20 @@ aws sso-admin list-instances --region us-east-1   # lists exactly one instance
 ## phase 4 — apply the root wishes: accounts, then sso 🤖
 
 1. the member emails (`NHEURON_PROD_ACCOUNT_EMAIL`, `NHEURON_PREP_ACCOUNT_EMAIL`) and the sso
-   user email live in keyrack env `prep`. fill any absent one:
+   user email live in keyrack env `sudo`, set by name:
    ```sh
-   rhx keyrack fill --owner ehmpath --env prep
+   rhx keyrack set --owner ehmpath --env sudo --key NHEURON_PROD_ACCOUNT_EMAIL
    ```
    > these throw at module load if absent — the wish refuses to plan without them.
 
-2. ⚠️ **guard: confirm you are the root before you apply.** `aws sts get-caller-identity` must
-   read nheuron-root's id. the wish learns the management-account id FROM these credentials, so
-   a wrong profile silently builds the org under the wrong account.
-
-3. plan, read the diff, then apply — accounts first (the sso assignments target them):
+2. plan, read the diff, then apply — accounts first (the sso assignments target them).
+   `rhx provision.root` refuses before any declastruct call unless env `sudo` lands in the
+   management account; `--key` hands each sudo email the wish reads:
    ```sh
-   npx declastruct plan  --wish 'provision/aws.auth/account=.root/resources.accounts.ts'
-   npx declastruct apply --wish 'provision/aws.auth/account=.root/resources.accounts.ts'
-   npx declastruct plan  --wish 'provision/aws.auth/account=.root/resources.admin.sso.ts'
-   npx declastruct apply --wish 'provision/aws.auth/account=.root/resources.admin.sso.ts'
+   rhx provision.root --wish provision/aws.auth/account=.root/resources.accounts.ts --key NHEURON_PROD_ACCOUNT_EMAIL --key NHEURON_PREP_ACCOUNT_EMAIL --mode plan
+   rhx provision.root --wish provision/aws.auth/account=.root/resources.accounts.ts --key NHEURON_PROD_ACCOUNT_EMAIL --key NHEURON_PREP_ACCOUNT_EMAIL --mode apply
    ```
+   then the same pair for `resources.admin.sso.ts`.
    - an account made by hand from the organizations console is found by its email and left
      as is; the plan may show a tag diff only.
 
@@ -144,106 +140,98 @@ center shows `vlad` assigned to all three.
 
 ---
 
-## phase 5 — register the `nheuron-prep` profile 🤖
+## phase 5 — register the `nheuron-prep` and `nheuron-prod` profiles 🧑
 
-the mail wish applies INTO `nheuron-prep`. its assignment came from phase 4; only the keyrack
-profile is left:
+one mailbox per member account: prep (`jelly@one.prep.nheuron.com`, the one tests run against)
+and prod (`jelly@one.prod.nheuron.com`, plus its alias `jelly@one.nheuron.com`). each profile
+lives in the **nheuron** org slot, apart from the shared ehmpathy slots:
 ```sh
-rhx keyrack set --key AWS_PROFILE --owner ehmpath --env prep --vault aws.config
+rhx keyrack set --owner ehmpath --org nheuron --env prep --key AWS_PROFILE --vault aws.config
+rhx keyrack set --owner ehmpath --org nheuron --env prod --key AWS_PROFILE --vault aws.config
 ```
 - sso region = `us-east-1` · client region = `us-east-1`
-- account = `nheuron-prep`
+- account = `nheuron-prep` / `nheuron-prod` · role = **`everyday-power`**
+  - it reads every iam role and writes only `role/nheuron-mail-*`, which is all the mail wish
+    declares (`roleEverydayPowerPolicyBundle` in `aws.auth/account=.root/resources.admin.sso.ts`)
+  - the sso wish of phase 4 must be applied with that bundle first; before it, the plan halts
+    at `iam:GetRole` AccessDenied
 
-⛳ `aws sts get-caller-identity` under the prep profile reads the `nheuron-prep` id.
+the mailbox keys per env (values: see the table at the end):
+```sh
+rhx keyrack set --owner ehmpath --org nheuron --env <env> --key SES_MAIL_BUCKET
+rhx keyrack set --owner ehmpath --org nheuron --env <env> --key SES_REGION
+rhx keyrack set --owner ehmpath --org nheuron --env <env> --key SES_CONFIG_SET
+```
 
----
-
-## phase 6 — apply the mail wish into `nheuron-prep` 🤖
-
-⚠️ **this is the worst-miss trap.** if you apply this under `nheuron-root` (or any wrong
-account), the mailbox lands in the management account and the second vault wall dissolves. the
-bucket name is global, so the only fix is a full teardown. **check the caller first.**
-
-1. guard:
-   ```sh
-   AWS_PROFILE=nheuron-prep aws sts get-caller-identity
-   ```
-   the account id must be `nheuron-prep`.
-
-2. plan, read the diff (8 resources: identity → bucket → bucket-policy → rule-set → rule → role
-   + inline grant → config-set + event-dest → account-details), then apply:
-   ```sh
-   AWS_PROFILE=nheuron-prep npx declastruct plan  --wish 'provision/aws.mail/account=prep/resources.mail.ts'
-   AWS_PROFILE=nheuron-prep npx declastruct apply --wish 'provision/aws.mail/account=prep/resources.mail.ts'
-   ```
-
-3. ⛳ **grab the 3 DKIM tokens** from the apply log. the `setSesEmailIdentity` step prints three
-   cname tokens (each a long hex string). copy all three — phase 7 needs them.
-
-⛳ the ses console (https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/identities)
-shows identity `one.nheuron.com` with `verificationStatus: unresolved` (it
-stays unresolved until the dns lands) · the s3 bucket `nheuron-mail-inbound-one` exists · you
-have 3 dkim tokens saved.
+⛳ `rhx aws.caller.get --env <env> --org nheuron --expect member` reads each member account id.
 
 ---
 
-## phase 7 — apply the cloudflare dns wish 🤖
+## phase 6 — apply each mail wish 🤖
 
-1. 🧑 create a cloudflare **USER** api token (not an account token):
-   https://dash.cloudflare.com/profile/api-tokens → **Create Token** → grant
-   **Zone:Read** + **DNS:Edit**, scoped to the `nheuron.com` zone.
-2. find your cloudflare **account id** in the dash url or the zone overview page.
-3. fill the three values into keyrack (env `prep`):
-   ```sh
-   rhx keyrack fill --owner ehmpath --env prep
-   ```
-   - `CLOUDFLARE_API_TOKEN` = the user token from step 1
-   - `CLOUDFLARE_ACCOUNT_ID` = the account id from step 2
-   - `SES_DKIM_TOKENS` = the 3 tokens from phase 6, comma-separated, no spaces
-     (e.g. `tok1,tok2,tok3`)
-   > ⚠️ the mail readme's line about "copy the tokens into `resources.mail.dns.ts`" is stale.
-   > the dns wish reads `SES_DKIM_TOKENS` from keyrack — the keyrack path is the true one.
-4. unlock + apply:
-   ```sh
-   rhx keyrack unlock --owner ehmpath --env prep
-   npx declastruct plan  --wish 'provision/cloudflare/resources.mail.dns.ts'
-   npx declastruct apply --wish 'provision/cloudflare/resources.mail.dns.ts'
-   ```
-   (cloudflare apply uses the api token, not an aws profile — no sts guard needed here.)
+⚠️ **this is the worst-miss trap.** applied under the management account, a mailbox lands
+there and the second vault wall dissolves; the bucket name is global, so the only fix is a full
+teardown. `rhx provision.member` refuses before any declastruct call unless the slot lands in a
+member account.
 
-⛳ the `nheuron.com` zone shows 6 new records, all **DNS-only** (grey cloud, `proxied: false`):
-1 MX, 1 SPF TXT, 3 DKIM CNAMEs, 1 DMARC TXT.
+per env, prep first:
+
+1. plan, read the diff (identity per domain → bucket → bucket-policy → rule-set → rule → role
+   + inline grant → config-set + event-dest → account-details):
+   ```sh
+   rhx provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --org nheuron --mode plan
+   ```
+2. apply the reviewed plan:
+   ```sh
+   rhx provision.member --wish provision/aws.mail/account=prep/resources.mail.ts --env prep --org nheuron --mode apply
+   ```
+3. repeat both with `prep` → `prod`.
+
+⛳ each identity reads `verificationStatus: unresolved` until the dns lands · each env's bucket
+exists.
+
+---
+
+## phase 7 — enter the dns records 🧑
+
+the robot holds no credential on the zone. each run reads the dkim tokens live from the env's
+identities and prints every record, from the same derivation the declared dns wish uses:
+```sh
+rhx mail.dns.records.get --env prep
+rhx mail.dns.records.get --env prod
+```
+enter each in the `nheuron.com` zone, proxy **off**.
+
+⛳ the zone holds 6 records per domain, 18 in all, every one **DNS-only** (grey cloud): per
+domain 1 MX, 1 SPF TXT, 3 DKIM CNAMEs, 1 DMARC TXT.
+
+> the declared path (`provision/cloudflare/resources.mail.dns.ts`) stays applyable for a
+> zone-scoped token; see `provision/cloudflare/readme.md`.
 
 ---
 
 ## phase 8 — verify + run the live loop 🤖
 
-1. **await dns propagation.** ses moves the identity from `unresolved` to verified once the dkim
-   cnames propagate — minutes to a few hours. re-check in the ses console
-   (https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/identities) until it reads
-   verified.
+1. **await dns propagation.** ses moves each identity from `unresolved` to verified once its dkim
+   cnames propagate — minutes to a few hours. the env's plan reads them back.
 
-2. auth-check the mailbox identity:
+2. 🤖 **prep: the live suites.** `TEST_LIVE=ses` sources the nheuron prep slot:
+   - integration: the live plan, the keyrack ↔ constants clamp, and a send from jelly to jelly
+     (verified via the domain, so it clears the ses sandbox with no outside address on record)
+   - acceptance: `gather.mail` reads the prep mailbox
+
+3. 🤖 **prod: the round trip on the public address.** send as `jelly@one.nheuron.com` to itself,
+   then read it back:
    ```sh
-   AWS_PROFILE=nheuron-prep aws sts get-caller-identity
+   rhx keyrack unlock --owner ehmpath --org nheuron --env prod
+   rhx gather.mail --from ses --address jelly@one.nheuron.com --since 2026-11-01
    ```
 
-3. 🧑 send a test email **to** `jelly@one.nheuron.com` from your own address (email #4).
+4. 🧑 send a test email **to** `jelly@one.nheuron.com` from your own address — the external
+   inbound half. it appears on the next `gather.mail`.
 
-4. 🤖 **read it back** — this is the command that closes r008 blocker.1:
-   ```sh
-   rhx keyrack unlock --owner ehmpath --env prep
-   rhx gather.mail --from ses --address jelly@one.nheuron.com --since 2026-09-01
-   ```
-   ⛳ your test email appears, parsed (from, subject, snippet).
-
-5. 🤖 **reply as jelly** — the send half, r008 blocker.2 — via the `sendReplyViaSes`
-   communicator (from `jelly@one.nheuron.com` to your address).
-   ⛳ your address receives jelly's reply.
-
-⛳ **done.** the whole loop runs on the real mailbox — deliverable (c). the two blocked r008
-points are now closeable: re-run the credential-gated acceptance proof, then re-arrive the
-`5.1.execution.from_vision` stone.
+⛳ **done.** both mailboxes run the whole loop — deliverable (c). replies to an outside address
+wait on the sandbox exit (resource 8), which aws reviews out of band.
 
 ---
 
@@ -253,10 +241,11 @@ these are read by the ses adapter at gather time and must equal the constants ba
 provision code (`provision/resources.common.mail.ts`). a mismatch fails quietly — the gather
 reads an empty or wrong bucket with no loud error.
 
-| keyrack key (env `prep`) | must equal |
-|---|---|
-| `SES_MAIL_BUCKET` | `nheuron-mail-inbound-one` |
-| `SES_REGION` | `us-east-1` |
-| `SES_CONFIG_SET` | `nheuron-mail-events` |
+| keyrack key (org `nheuron`) | env `prep` | env `prod` |
+|---|---|---|
+| `SES_MAIL_BUCKET` | `nheuron-mail-inbound-one-prep` | `nheuron-mail-inbound-one-prod` |
+| `SES_REGION` | `us-east-1` | `us-east-1` |
+| `SES_CONFIG_SET` | `nheuron-mail-events` | `nheuron-mail-events` |
 
-set them once (phase 7 unlock is a good moment) and confirm they match before phase 8 step 4.
+phase 5 sets them; `provision/resources.common.mail.integration.test.ts` clamps the prep three
+under `TEST_LIVE=ses`.

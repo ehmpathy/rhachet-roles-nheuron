@@ -10,9 +10,11 @@
 #   ./gather.mail.sh --from gmail --address user@gmail.com --since 2024-01-01
 #   ./gather.mail.sh --from gmail --address user@gmail.com --format json
 #   ./gather.mail.sh --from gmail --address user@gmail.com/labels=work,urgent
-#   ./gather.mail.sh --from ses --address jelly@one.nheuron.com --since 2026-08-01
+#   ./gather.mail.sh --from ses --address jelly@one.nheuron.com --org nheuron --env prod
 #
 # options:
+#   --org, --env  the keyrack slot to source first (ses: AWS_PROFILE + SES_*).
+#               omit both to use the env as it stands
 #   --from      mail source: gmail, ses (required)
 #   --address   email address to collect from (required)
 #   --since     only LIST mail since this date (ISO format). it narrows what
@@ -41,4 +43,6 @@ set -euo pipefail
 # the entrypoint RETURNS its exit code rather than calls process.exit itself, so that a
 # caller who imports it as a library keeps its own process. the shell owns the exit —
 # 0 ok, 2 caller-must-fix, 1 unexpected (rule.require.exit-code-semantics)
-exec node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- "$@"
+source "$(dirname "${BASH_SOURCE[0]}")/gather._.keyrack.sh"
+gather_keyrack_source "$@"
+exec node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- "${GATHER_ARGS[@]}"

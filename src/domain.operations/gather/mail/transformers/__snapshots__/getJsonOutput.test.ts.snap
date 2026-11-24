@@ -1,5 +1,21 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`getJsonOutput given: [case3] an empty mails array when: [t0] the output is formed then: handles empty mails array 1`] = `
+{
+  "mails": [],
+  "scope": {
+    "labels": [],
+    "query": null,
+  },
+  "stats": {
+    "cached": 0,
+    "foundUptil": null,
+    "listed": 0,
+    "synced": 0,
+  },
+}
+`;
+
 exports[`getJsonOutput given: [case6] a full document when: [t0] the output is formed then: emits a stable json document, key for key 1`] = `
 "{
   "scope": {

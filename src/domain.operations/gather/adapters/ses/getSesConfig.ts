@@ -78,7 +78,7 @@ export const getSesConfig = (): SesConfig => {
     BadRequestError.throw('ses config absent', {
       present: { bucket: !!bucket, region: !!region },
       expected: ['SES_MAIL_BUCKET', 'SES_REGION'],
-      hint: 'run: rhx keyrack unlock --owner ehmpath --env prep',
+      hint: 'run: rhx keyrack unlock --owner ehmpath --org nheuron --env prod; a gather.* skill also takes --org nheuron --env prod to source that slot',
     });
 
   return {

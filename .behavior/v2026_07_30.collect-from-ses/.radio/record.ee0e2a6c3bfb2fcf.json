@@ -1,0 +1,19 @@
+{
+  "key": "ee0e2a6c3bfb2fcf",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet"
+  },
+  "exid": null,
+  "title": "fix(keyrack): suggest aws sso profile as $awsOrg.$env.$owner and thread owner",
+  "description": "## .what\n\ntwo keyrack aws.sso defects, both patched locally in a consumer via `patches/rhachet.patch`:\n\n1. **suggested profile name takes the slot org, not the aws org.** `setupAwsSsoWithGuide` suggests `$slotOrg.$accountName`. an account of org B set through a slot of org A becomes `a.bnamesquashed` (seen: `ehmpathy.nheuronroot`). the sso portal picker labels each portal by the prefix its profiles share, so org B's portal is then labeled `A`, and two portals read the same label.\n2. **owner never reaches the guide.** `vaultAdapterAwsConfig.acquireForSet` drops `context.owner`, and `mechAdapterAwsSso` passes only `org`, so no suggestion can carry env or owner.\n\n## .fix (as patched)\n\n- default suggestion = `$awsOrg.$env.$owner`. aws org = first segment of a multi-segment account name (`nheuron-prep` → `nheuron`), else the slot org. env comes from the key slug, owner from context. empty segments drop out\n- thread `owner: context?.owner ?? null` from `acquireForSet` into the mech, and `env` from `keySlug.split('.')`\n- clamp cases:\n  - `{org:nheuron, env:prep, owner:ehmpath, accountName:nheuron-prep}` → `nheuron.prep.ehmpath`\n  - `{org:ehmpathy, env:sudo, owner:ehmpath, accountName:nheuron-root}` → `nheuron.sudo.ehmpath`\n  - `{org:ehmpathy, env:prep, owner:ehmpath, accountName:Production}` → `ehmpathy.prep.ehmpath`\n  - owner null → `nheuron.prod`\n\n## .also seen\n\n- `keyrack set` rewrites `.agent/keyrack.yml` and strips every comment in it\n- the `keyrack.source` sdk input lacks `org?: string` in its `.d.ts`, though `sourceAllKeysIntoEnv` can pass `--org`\n\n## .why\n\na duplicate portal label sends a human into the wrong aws org at sso pick time. the root fix is the name each profile is born with.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 8,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "815"
+}

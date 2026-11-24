@@ -6,6 +6,7 @@ import type { GatherAuthStatus } from '@src/domain.objects/GatherAuthStatus';
 import type { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
 
+import { getAuthFixHintForMechanism } from '../../../auth/transformers/getAuthFixHintForMechanism';
 import { genOncePerCall } from '../../../genOncePerCall';
 import { getSesConfigOrNull } from '../getSesConfigOrNull';
 import {
@@ -95,7 +96,7 @@ export const getSesAuthAdapter = (): GatherAuthAdapter => {
       _adapterContext: { log: GatherLogMethods },
     ) => {
       BadRequestError.throw('ses needs no auth flow', {
-        hint: 'ses authenticates via AWS_PROFILE from keyrack. run: rhx keyrack unlock --owner ehmpath --env prep',
+        hint: getAuthFixHintForMechanism({ mechanism: 'ses' }),
       });
     },
 
@@ -109,7 +110,7 @@ export const getSesAuthAdapter = (): GatherAuthAdapter => {
       _adapterContext: { log: GatherLogMethods },
     ) => {
       BadRequestError.throw('ses tokens do not refresh', {
-        hint: 'ses authenticates via AWS_PROFILE from keyrack, which has no refresh flow. run: rhx keyrack unlock --owner ehmpath --env prep',
+        hint: getAuthFixHintForMechanism({ mechanism: 'ses' }),
       });
     },
 

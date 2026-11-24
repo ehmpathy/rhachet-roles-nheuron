@@ -1,5 +1,16 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`getTreeOutput given: [case1] a bare run with no mails when: [t0] the tree is formed then: handles empty mails array 1`] = `
+"🪼 boop!
+
+🫙 gather.mail --from gmail --address test@gmail.com
+   ├─ scope: whole mailbox
+   ├─ listed: 0
+   ├─ synced: 0
+   ├─ cached: 0
+   └─ (no mails to display)"
+`;
+
 exports[`getTreeOutput given: [case5] a bare run and a narrowed run when: [t0] each tree is formed then: renders a bare and a narrowed run, for a human to vibecheck 1`] = `
 {
   "bare": "🪼 boop!

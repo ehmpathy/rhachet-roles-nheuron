@@ -2,6 +2,7 @@ import type { DeclastructProvider } from 'declastruct';
 import {
   DeclaredAwsIamPolicyBundle,
   DeclaredAwsIamPolicyDocument,
+  DeclaredAwsIamPolicyStatement,
   type DeclaredAwsOrganizationAccount,
   DeclaredAwsSsoAccountAssignment,
   type DeclaredAwsSsoInstance,
@@ -39,6 +40,63 @@ const log = genLogMethods();
 const ADMIN_USERNAME = 'vlad';
 
 /**
+ * .what = the everyday-power policy: PowerUserAccess, plus the iam a member-account wish needs
+ * .why = PowerUserAccess grants no iam at all, so a wish that declares a role (the mail wish's
+ *   `nheuron-mail-clone`) cannot even plan under it. same shape as ahbode/infrastructure
+ *   `roleEverydayPowerPolicyBundle`: role reads open, role writes allowlisted by name
+ * .note = scope is tighter than ahbode's `svc-*`:
+ *   - writes reach only `role/nheuron-mail-*`; a new role family is a conscious one-line add
+ *   - no AttachRolePolicy: the mail role carries an inline grant only, so this tier can never
+ *     attach a managed policy such as AdministratorAccess to a role
+ *   - residual: PutRolePolicy still writes any inline document onto an allowlisted role. a
+ *     permissions boundary would close that; the allowlist bounds it to the mail roles today
+ */
+const roleEverydayPowerPolicyBundle = DeclaredAwsIamPolicyBundle.as({
+  managed: ['arn:aws:iam::aws:policy/PowerUserAccess'],
+  inline: new DeclaredAwsIamPolicyDocument({
+    statements: [
+      // account alias read, for environment detection
+      new DeclaredAwsIamPolicyStatement({
+        sid: 'IamAccountAliasRead',
+        effect: 'Allow',
+        action: 'iam:ListAccountAliases',
+        resource: '*',
+      }),
+      // role reads, so a declastruct plan can decide KEEP vs UPDATE for any role
+      new DeclaredAwsIamPolicyStatement({
+        sid: 'IamRoleRead',
+        effect: 'Allow',
+        action: [
+          'iam:GetRole',
+          'iam:GetRolePolicy',
+          'iam:ListRolePolicies',
+          'iam:ListAttachedRolePolicies',
+          'iam:ListInstanceProfilesForRole',
+          'iam:ListRoleTags',
+        ],
+        resource: 'arn:aws:iam::*:role/*',
+      }),
+      // role writes, allowlisted to the mail roles the mail wish declares
+      new DeclaredAwsIamPolicyStatement({
+        sid: 'MailRoleManagement',
+        effect: 'Allow',
+        action: [
+          'iam:CreateRole',
+          'iam:DeleteRole',
+          'iam:UpdateRole',
+          'iam:UpdateAssumeRolePolicy',
+          'iam:PutRolePolicy',
+          'iam:DeleteRolePolicy',
+          'iam:TagRole',
+          'iam:UntagRole',
+        ],
+        resource: 'arn:aws:iam::*:role/nheuron-mail-*',
+      }),
+    ],
+  }),
+});
+
+/**
  * .what = sso permission sets + account assignments for the human admin
  * .why = admins sign in via `aws sso login` (keyrack), never root credentials. the hand-made
  *   floor (one user, `emergency-admin`, one assignment to root) exists only so this wish can
@@ -46,10 +104,11 @@ const ADMIN_USERNAME = 'vlad';
  *   `resources.admin.sso.ts`
  *
  * .note = two tiers, by blast radius:
- *   - emergency-admin (AdministratorAccess, PT1H) — the only tier that may write iam. adopted
- *     from the hand-made floor by name. short session: an unattended laptop must not carry
- *     org-rewrite power all day
- *   - everyday-power (PowerUserAccess, PT12H) — daily work in prep + prod; no iam writes
+ *   - emergency-admin (AdministratorAccess, PT1H) — the only tier with unscoped iam writes.
+ *     adopted from the hand-made floor by name. short session: an unattended laptop must not
+ *     carry org-rewrite power all day
+ *   - everyday-power (PowerUserAccess + roleEverydayPowerPolicyBundle, PT12H) — daily work in
+ *     prep + prod, the mail wish apply included; iam writes only on allowlisted role names
  */
 export const getResourcesOfAdminSso = async (): Promise<
   DomainEntity<any>[]
@@ -87,10 +146,7 @@ export const getResourcesOfAdminSso = async (): Promise<
     name: 'everyday-power',
     description: 'power user access for daily work',
     sessionDuration: 'PT12H',
-    policy: DeclaredAwsIamPolicyBundle.as({
-      managed: ['arn:aws:iam::aws:policy/PowerUserAccess'],
-      inline: new DeclaredAwsIamPolicyDocument({ statements: [] }),
-    }),
+    policy: roleEverydayPowerPolicyBundle,
     tags: null,
   });
 

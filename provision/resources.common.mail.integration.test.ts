@@ -3,7 +3,7 @@ import { given, then, when } from 'test-fns';
 import { getSesConfig } from '@src/domain.operations/gather/adapters/ses/getSesConfig';
 
 import {
-  MAIL_BUCKET,
+  MAIL_BY_ENV,
   MAIL_CONFIG_SET,
   MAIL_REGION,
 } from './resources.common.mail';
@@ -34,11 +34,12 @@ const isLiveTargeted = (input: { mechanism: 'gmail' | 'ses' }): boolean =>
  */
 describe('resources.common.mail ↔ ses keyrack config', () => {
   given.runIf(isLiveTargeted({ mechanism: 'ses' }))(
-    '[case1] the prep keyrack is unlocked for a live ses run (TEST_LIVE=ses)',
+    '[case1] the nheuron prep slot is unlocked for a live ses run (TEST_LIVE=ses)',
     () => {
       when('[t0] the runtime ses config is read', () => {
-        then('its bucket equals the bucket the wish applies', () => {
-          expect(getSesConfig().bucket).toEqual(MAIL_BUCKET);
+        then('its bucket equals the bucket the prep wish applies', () => {
+          // a live ses run sources the nheuron prep slot (jest.integration.env.ts)
+          expect(getSesConfig().bucket).toEqual(MAIL_BY_ENV.prep.bucket);
         });
 
         then('its region equals the region the wish applies', () => {

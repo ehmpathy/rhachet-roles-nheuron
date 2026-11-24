@@ -28,6 +28,8 @@ usage:
   gather.mail.sh [options]
 
 options:
+  --org, --env         the keyrack slot to source first (ses: AWS_PROFILE + SES_*).
+                       omit both to use the env as it stands
   --from <mechanism>   mail source: gmail, ses (required)
   --address <email>    email address to collect from (required)
   --since <date>       only list mail since this date (ISO format)
@@ -69,7 +71,7 @@ examples:
   gather.mail.sh --from gmail --address user@gmail.com --query "from:boss@company.com"
   gather.mail.sh --from gmail --address user@gmail.com/labels=work,urgent
   gather.mail.sh --from gmail --address user@gmail.com --format json
-  gather.mail.sh --from ses --address jelly@one.nheuron.com --since 2026-08-01
+  gather.mail.sh --from ses --address jelly@one.nheuron.com --org nheuron --env prod
 `.trim(),
   );
 };

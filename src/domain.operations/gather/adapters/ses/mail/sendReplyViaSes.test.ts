@@ -1,6 +1,6 @@
 import type { SendRawEmailCommand } from '@aws-sdk/client-ses';
 import { BadRequestError } from 'helpful-errors';
-import { getError, given, then, when } from 'test-fns';
+import { getError, given, then, useThen, when } from 'test-fns';
 
 import type { GatherLogMethods } from '@src/domain.objects/GatherLogMethods';
 
@@ -155,7 +155,8 @@ describe('sendReplyViaSes', () => {
       // ⚠️ this is the counterweight to [case1] and [case2]. without it, a guard that refused
       // EVERY send would still pass them both, and the respond path would be dead for a
       // correctly-configured mailbox with no test to say so.
-      then('it passes both guards and returns the message id', async () => {
+      // one send, shared by both assertions below
+      const scene = useThen('the reply is sent', async () => {
         const fakeSes = asFakeSes();
         const result = await sendWithEnv({
           env: {
@@ -165,21 +166,16 @@ describe('sendReplyViaSes', () => {
           },
           fakeSes,
         });
-        expect(result).toEqual({ messageId: 'fake-message-id' });
+        return { result, commandsSeen: fakeSes.commandsSeen };
       });
 
-      then('the send names the config set, once', async () => {
-        const fakeSes = asFakeSes();
-        await sendWithEnv({
-          env: {
-            bucket: 'nheuron-mail-inbound-one',
-            region: 'us-east-1',
-            configSet: 'nheuron-mail-events',
-          },
-          fakeSes,
-        });
-        expect(fakeSes.commandsSeen).toHaveLength(1);
-        expect(fakeSes.commandsSeen[0]?.input.ConfigurationSetName).toBe(
+      then('it passes both guards and returns the message id', () => {
+        expect(scene.result).toEqual({ messageId: 'fake-message-id' });
+      });
+
+      then('the send names the config set, once', () => {
+        expect(scene.commandsSeen).toHaveLength(1);
+        expect(scene.commandsSeen[0]?.input.ConfigurationSetName).toBe(
           'nheuron-mail-events',
         );
       });

@@ -157,7 +157,7 @@ const getAllMailKeysFromSes = async (
     return BadRequestError.throw('ses inbound bucket does not exist', {
       bucket: input.bucket,
       prefix: input.prefix,
-      hint: "the mail infra is not applied yet. run: npx declastruct apply --wish 'provision/aws.mail/account=prep/resources.mail.ts'",
+      hint: "the mail infra is not applied yet. run: npx declastruct apply --wish 'provision/aws.mail/account=prod/resources.mail.ts'",
     });
   }
 };

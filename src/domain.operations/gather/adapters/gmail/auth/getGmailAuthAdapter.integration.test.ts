@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as path from 'path';
-import { getError, given, then, when } from 'test-fns';
+import { getError, given, then, useThen, when } from 'test-fns';
 
 import { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 import { getAuthFixHintForMechanism } from '@src/domain.operations/gather/auth/transformers/getAuthFixHintForMechanism';
@@ -47,47 +47,33 @@ describe('getGmailAuthAdapter.genAuthRefresh', () => {
 
   given('[case1] no token has ever been cached', () => {
     when('[t0] a refresh is attempted', () => {
-      then('it refuses, since there is no refresh token to spend', async () => {
-        const error = await getError(() =>
+      // one disk read, shared below; held under a key, since a proxied Error drops its fields
+      const scene = useThen('the refresh is refused', async () => ({
+        error: await getError(() =>
           getGmailAuthAdapter({ cwd: testDir }).genAuthRefresh(
             { repo },
             { log },
           ),
-        );
+        ),
+      }));
 
-        expect(error.message).toContain('no refresh token found');
+      then('it refuses, since there is no refresh token to spend', () => {
+        expect(scene.error.message).toContain('no refresh token found');
       });
 
-      then('the hint names the fix that works', async () => {
-        const error = await getError(() =>
-          getGmailAuthAdapter({ cwd: testDir }).genAuthRefresh(
-            { repo },
-            { log },
-          ),
-        );
-
+      then('the hint names the fix that works', () => {
         // asserted against the shared source, never a re-typed copy
-        expect(error.message).toContain(
+        expect(scene.error.message).toContain(
           getAuthFixHintForMechanism({ mechanism: 'gmail' }),
         );
-        expect(error.message).toContain('GMAIL_SERVICE_ACCOUNT_JSON');
+        expect(scene.error.message).toContain('GMAIL_SERVICE_ACCOUNT_JSON');
       });
 
-      then(
-        'the hint does NOT name a command that refuses the human',
-        async () => {
-          // ⚠️ the teeth. `gather.auth --from gmail` throws `gmail has no interactive auth
-          // flow` and exits 2, so a hint that names it sends the human at a dead end
-          const error = await getError(() =>
-            getGmailAuthAdapter({ cwd: testDir }).genAuthRefresh(
-              { repo },
-              { log },
-            ),
-          );
-
-          expect(error.message).not.toContain('gather.auth');
-        },
-      );
+      then('the hint does NOT name a command that refuses the human', () => {
+        // ⚠️ the teeth. `gather.auth --from gmail` throws `gmail has no interactive auth
+        // flow` and exits 2, so a hint that names it sends the human at a dead end
+        expect(scene.error.message).not.toContain('gather.auth');
+      });
     });
   });
 });

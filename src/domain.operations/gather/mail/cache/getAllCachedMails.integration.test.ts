@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
-import { getError, given, then, when } from 'test-fns';
+import { getError, given, then, useThen, when } from 'test-fns';
 
 import { GatheredMail } from '@src/domain.objects/GatheredMail';
 import { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
@@ -78,16 +78,21 @@ describe('getAllCachedMails', () => {
     });
 
     when('[t0] getAllCachedMails is called', () => {
-      then('returns all cached mails', async () => {
-        const mails = await getAllCachedMails({ repo, cwd: testDir });
+      // one cache walk, shared below; held under a key, since a proxied array drops its methods
+      const scene = useThen('the read succeeds', async () => ({
+        mails: await getAllCachedMails({ repo, cwd: testDir }),
+      }));
 
-        expect(mails).toHaveLength(2);
-        expect(mails.map((m) => m.exid).sort()).toEqual(['msg_1', 'msg_2']);
+      then('returns all cached mails', () => {
+        expect(scene.mails).toHaveLength(2);
+        expect(scene.mails.map((m) => m.exid).sort()).toEqual([
+          'msg_1',
+          'msg_2',
+        ]);
       });
 
-      then('reconstructs domain objects correctly', async () => {
-        const mails = await getAllCachedMails({ repo, cwd: testDir });
-        const mail2 = mails.find((m) => m.exid === 'msg_2')!;
+      then('reconstructs domain objects correctly', () => {
+        const mail2 = scene.mails.find((m) => m.exid === 'msg_2')!;
 
         expect(mail2.subject).toBe('Second');
         expect(mail2.body).toBe('Body content');
@@ -145,22 +150,21 @@ describe('getAllCachedMails', () => {
     });
 
     when('[t0] getAllCachedMails is called', () => {
-      then('it throws rather than return an Invalid Date', async () => {
+      // one cache walk, shared below; held under a key, since a proxied Error drops its fields
+      const scene = useThen('the read is refused', async () => ({
+        error: await getError(() => getAllCachedMails({ repo, cwd: testDir })),
+      }));
+
+      then('it throws rather than return an Invalid Date', () => {
         // ⚠️ the teeth. drop the guard and this RESOLVES with one mail whose deliveredAt is
         // an Invalid Date — which then silently fails every range comparison downstream
-        const error = await getError(() =>
-          getAllCachedMails({ repo, cwd: testDir }),
-        );
-        expect(error.message).toContain('unreadable deliveredAt');
+        expect(scene.error.message).toContain('unreadable deliveredAt');
       });
 
-      then('the error names the file, so the fix is actionable', async () => {
-        const error = await getError(() =>
-          getAllCachedMails({ repo, cwd: testDir }),
-        );
+      then('the error names the file, so the fix is actionable', () => {
         // an error that says "the cache is corrupt" with no path leaves a human to grep
         // their own home directory (`rule.require.errors-name-the-fix`)
-        expect(error.message).toContain('msg_drift');
+        expect(scene.error.message).toContain('msg_drift');
       });
     });
   });
@@ -220,20 +224,19 @@ describe('getAllCachedMails', () => {
     });
 
     when('[t0] getAllCachedMails is called', () => {
-      then('it throws rather than carry a non-domain mechanism', async () => {
+      // one cache walk, shared below; held under a key, since a proxied Error drops its fields
+      const scene = useThen('the read is refused', async () => ({
+        error: await getError(() => getAllCachedMails({ repo, cwd: testDir })),
+      }));
+
+      then('it throws rather than carry a non-domain mechanism', () => {
         // ⚠️ the teeth. revert the guard to a bare `as GatheredMailMechanism` and this
         // RESOLVES with one mail whose sender.mechanism is the literal 'telepathy'
-        const error = await getError(() =>
-          getAllCachedMails({ repo, cwd: testDir }),
-        );
-        expect(error.message).toContain('unknown sender mechanism');
+        expect(scene.error.message).toContain('unknown sender mechanism');
       });
 
-      then('the error names the file, so the fix is actionable', async () => {
-        const error = await getError(() =>
-          getAllCachedMails({ repo, cwd: testDir }),
-        );
-        expect(error.message).toContain('msg_badmech');
+      then('the error names the file, so the fix is actionable', () => {
+        expect(scene.error.message).toContain('msg_badmech');
       });
     });
   });
@@ -256,21 +259,20 @@ describe('getAllCachedMails', () => {
     });
 
     when('[t0] getAllCachedMails is called', () => {
-      then('it throws an error a human can act on', async () => {
+      // one cache walk, shared below; held under a key, since a proxied Error drops its fields
+      const scene = useThen('the read is refused', async () => ({
+        error: await getError(() => getAllCachedMails({ repo, cwd: testDir })),
+      }));
+
+      then('it throws an error a human can act on', () => {
         // ⚠️ the teeth. drop the guard and this rejects with v8's bare
         // `Unexpected end of JSON input` — a message with no file and no fix
-        const error = await getError(() =>
-          getAllCachedMails({ repo, cwd: testDir }),
-        );
-        expect(error.message).toContain('not valid json');
+        expect(scene.error.message).toContain('not valid json');
       });
 
-      then('the error names the file and the remedy', async () => {
-        const error = await getError(() =>
-          getAllCachedMails({ repo, cwd: testDir }),
-        );
-        expect(error.message).toContain('msg_torn');
-        expect(error.message).toContain('re-gather');
+      then('the error names the file and the remedy', () => {
+        expect(scene.error.message).toContain('msg_torn');
+        expect(scene.error.message).toContain('re-gather');
       });
     });
   });
