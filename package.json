@@ -102,7 +102,7 @@
     "esbuild-register": "3.6.0",
     "husky": "8.0.3",
     "jest": "30.2.0",
-    "rhachet": "1.53.0",
+    "rhachet": "1.54.1",
     "rhachet-brains-anthropic": "0.4.3",
     "rhachet-brains-fireworksai": "@declapract{check.minVersion('0.1.1')}",
     "rhachet-brains-openrouter": "0.1.4",
