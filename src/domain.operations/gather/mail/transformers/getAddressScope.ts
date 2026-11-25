@@ -7,8 +7,8 @@ import { GatherAddressScope } from '@src/domain.objects/GatherAddressScope';
  * .why = separates base address from mechanism-specific filters
  *
  * examples:
- *   'vlad@gmail.com' → { address: { given: 'vlad@gmail.com', formed: 'vlad@gmail.com' }, scope: null }
- *   'vlad@gmail.com/labels=work,urgent' → { address: { given: 'vlad@gmail.com/labels=work,urgent', formed: 'vlad@gmail.com' }, scope: { labels: ['work', 'urgent'] } }
+ *   'vlad@example.com' → { address: { given: 'vlad@example.com', formed: 'vlad@example.com' }, scope: null }
+ *   'vlad@example.com/labels=work,urgent' → { address: { given: 'vlad@example.com/labels=work,urgent', formed: 'vlad@example.com' }, scope: { labels: ['work', 'urgent'] } }
  */
 export const getAddressScope = (input: {
   address: string;
@@ -37,7 +37,7 @@ export const getAddressScope = (input: {
 
     const eqIndex = param.indexOf('=');
 
-    // ⚠️ a segment with no '=' is refused, never dropped. `vlad@gmail.com/inbox` reads as a
+    // ⚠️ a segment with no '=' is refused, never dropped. `vlad@example.com/inbox` reads as a
     // narrowed mailbox to the user, but `inbox` is not a key=value scope — a silent drop would
     // return the WHOLE mailbox while the user believes they filtered it. that is the same
     // parsed-then-dropped failhide the cli-flag guard closes one level up

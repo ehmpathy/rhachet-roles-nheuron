@@ -1,0 +1,19 @@
+{
+  "key": "f382b4de9c334f28",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ehmpathy"
+  },
+  "exid": null,
+  "title": "git.commit: read keyrack.yml org as a list, with a multi-org suite",
+  "description": "## .what\n\n`get_org_from_keyrack` (dist/domain.roles/mechanic/skills/git.commit/git.commit.operations.sh, 1.43.0) reads `.agent/keyrack.yml` `org:` as one scalar line. a yaml list under `org:` reads empty, so every `git.commit.set` refuses with `.agent/keyrack.yml#org required` and names `git.commit.uses allow --org <org>`, a remedy that cannot help.\n\n```yaml\norg:\n  - ehmpathy\n  - nheuron\n```\n\nkeyrack itself accepts this form (a repo whose keys span two org slots), so the commit gate and keyrack disagree on one file.\n\n## .ask\n\n1. read `org:` as a scalar OR a list (block form and flow form `[a, b]`)\n2. decide and declare the multi-org gate rule. candidates: the first item is the gate org (matches the scalar behavior today), or every listed org must allow. name which, in the skill help\n3. a refusal on an unreadable `org:` names the shape it read, not a grant to run\n4. a multi-org suite: scalar, block list, flow list, empty list, `org:` absent, list where one org is blocked; each asserts the gate org and the exit code\n\n## .second defect, found on the way\n\nthe published package files carry mode 0555 (`-r-xr-xr-x`). `pnpm patch-commit` then fails with `ERR_PNPM_PATCH_FAILED Could not apply patch`, because the applier writes in place into a read-only file. so a consumer cannot hold a local pnpm patch of any file in this package while it waits on a fix. ship files as 0644 / 0755.\n\n## .context\n\nrhachet-roles-nheuron PR #4 (head b0b2766). the commit landed only after its working-tree keyrack.yml held `org: ehmpathy` for the one call; the committed file keeps the list.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 12,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "1480"
+}

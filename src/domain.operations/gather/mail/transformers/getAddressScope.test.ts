@@ -6,22 +6,22 @@ const TEST_CASES = [
   {
     description: 'parses plain email address',
     given: {
-      address: 'vlad@gmail.com',
+      address: 'vlad@example.com',
     },
     expect: {
-      address: { given: 'vlad@gmail.com', formed: 'vlad@gmail.com' },
+      address: { given: 'vlad@example.com', formed: 'vlad@example.com' },
       scope: null,
     },
   },
   {
     description: 'parses email with single label scope',
     given: {
-      address: 'vlad@gmail.com/labels=work',
+      address: 'vlad@example.com/labels=work',
     },
     expect: {
       address: {
-        given: 'vlad@gmail.com/labels=work',
-        formed: 'vlad@gmail.com',
+        given: 'vlad@example.com/labels=work',
+        formed: 'vlad@example.com',
       },
       scope: { labels: ['work'] },
     },
@@ -29,12 +29,12 @@ const TEST_CASES = [
   {
     description: 'parses email with multiple labels',
     given: {
-      address: 'vlad@gmail.com/labels=work,urgent',
+      address: 'vlad@example.com/labels=work,urgent',
     },
     expect: {
       address: {
-        given: 'vlad@gmail.com/labels=work,urgent',
-        formed: 'vlad@gmail.com',
+        given: 'vlad@example.com/labels=work,urgent',
+        formed: 'vlad@example.com',
       },
       scope: { labels: ['work', 'urgent'] },
     },
@@ -55,12 +55,12 @@ const TEST_CASES = [
   {
     description: 'parses address with multiple scope params',
     given: {
-      address: 'vlad@gmail.com/labels=work&after=2024-01-01',
+      address: 'vlad@example.com/labels=work&after=2024-01-01',
     },
     expect: {
       address: {
-        given: 'vlad@gmail.com/labels=work&after=2024-01-01',
-        formed: 'vlad@gmail.com',
+        given: 'vlad@example.com/labels=work&after=2024-01-01',
+        formed: 'vlad@example.com',
       },
       scope: { labels: ['work'], after: ['2024-01-01'] },
     },
@@ -88,7 +88,7 @@ describe('getAddressScope', () => {
           // ⚠️ the teeth. revert the guard to `if (eqIndex === -1) return acc` and no error is
           // thrown — `inbox` is dropped and the whole mailbox comes back as if unfiltered
           const error = await getError(async () =>
-            getAddressScope({ address: 'vlad@gmail.com/inbox' }),
+            getAddressScope({ address: 'vlad@example.com/inbox' }),
           );
           expect(error.message).toContain(
             "segment 'inbox' is not a key=value pair",
@@ -105,7 +105,7 @@ describe('getAddressScope', () => {
         then('it tolerates the empty segment', () => {
           // an empty segment names no scope, so it is skipped rather than refused
           const result = getAddressScope({
-            address: 'vlad@gmail.com/labels=work&',
+            address: 'vlad@example.com/labels=work&',
           });
           expect(result.scope).toEqual({ labels: ['work'] });
         });

@@ -5,8 +5,8 @@ import { DomainLiteral } from 'domain-objects';
  * .why = separates base address from mechanism-specific filters
  *
  * examples:
- *   'vlad@gmail.com' → { address: { given: 'vlad@gmail.com', formed: 'vlad@gmail.com' }, scope: null }
- *   'vlad@gmail.com/labels=work,urgent' → { address: { given: 'vlad@gmail.com/labels=work,urgent', formed: 'vlad@gmail.com' }, scope: { labels: ['work', 'urgent'] } }
+ *   'vlad@example.com' → { address: { given: 'vlad@example.com', formed: 'vlad@example.com' }, scope: null }
+ *   'vlad@example.com/labels=work,urgent' → { address: { given: 'vlad@example.com/labels=work,urgent', formed: 'vlad@example.com' }, scope: { labels: ['work', 'urgent'] } }
  */
 export interface GatherAddressScope {
   address: {

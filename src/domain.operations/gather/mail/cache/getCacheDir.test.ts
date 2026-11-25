@@ -23,11 +23,11 @@ describe('getCacheDir', () => {
       then('it is keyed by mechanism and address', () => {
         const repo = new GatheredMailRepo({
           mechanism: 'gmail',
-          address: 'vlad@gmail.com',
+          address: 'vlad@example.com',
         });
 
         expect(getCacheDir({ repo, cwd: CWD })).toBe(
-          `${ROOT}/mechanism=gmail/address=vlad@gmail.com`,
+          `${ROOT}/mechanism=gmail/address=vlad@example.com`,
         );
       });
     });

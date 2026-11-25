@@ -15,7 +15,7 @@ exports[`getTreeOutput given: [case5] a bare run and a narrowed run when: [t0] e
 {
   "bare": "🪼 boop!
 
-🫙 gather.mail --from gmail --address vlad@gmail.com
+🫙 gather.mail --from gmail --address vlad@example.com
    ├─ scope: whole mailbox
    ├─ listed: 2
    ├─ synced: 2
@@ -27,7 +27,7 @@ exports[`getTreeOutput given: [case5] a bare run and a narrowed run when: [t0] e
          └─ Second",
   "narrowed": "🪼 boop!
 
-🫙 gather.mail --from gmail --address vlad@gmail.com
+🫙 gather.mail --from gmail --address vlad@example.com
    ├─ scope: labels=work query="from:boss@co.com"
    ├─ listed: 1
    ├─ synced: 1
