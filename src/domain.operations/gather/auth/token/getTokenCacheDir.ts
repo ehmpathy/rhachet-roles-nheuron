@@ -11,7 +11,7 @@ export const getTokenCacheDir = (input: { cwd: string | null }): string => {
     '.agent',
     '.cache',
     'repo=nheuron',
-    'role=gatherer',
+    'role=collector',
     'skill=gather.auth',
     'tokens',
   );

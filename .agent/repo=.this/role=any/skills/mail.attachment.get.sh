@@ -81,7 +81,7 @@ PROFILE=$(rhx keyrack get --owner ehmpath --org nheuron --env "$ENV" --key AWS_P
 BUCKET=$(rhx keyrack get --owner ehmpath --org nheuron --env "$ENV" --key SES_MAIL_BUCKET --output value 2>/dev/null || echo "")
 [[ -n "$BUCKET" ]] || belay "absent: nheuron.$ENV.SES_MAIL_BUCKET" "fix: rhx keyrack unlock --owner ehmpath --org nheuron --env $ENV --key SES_MAIL_BUCKET"
 
-# read, parse, write — via the sdk + mailparser the gatherer already depends on
+# read, parse, write — via the sdk + mailparser the collector already depends on
 cd "$REPO_ROOT"
 AWS_PROFILE="$PROFILE" MAIL_BUCKET="$BUCKET" MAIL_KEY="$KEY" MAIL_ENV="$ENV" npx tsx -e "
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';

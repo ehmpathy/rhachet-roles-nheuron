@@ -2,47 +2,44 @@
 
 ## .what
 
-the cases that hit a real mail api run only when `TEST_LIVE` names their mechanism.
-ci never sets it, so ci never needs live credentials.
+cases that hit a real api run only when `TEST_LIVE` names their gate. ci never sets it, so ci
+needs no live credential. `rhx test.live` sets the gate and runs `git.repo.test` under it.
 
-| case | mechanism | needs |
+| gate | what it exercises | keyrack slot |
 |---|---|---|
-| `gatherMail` `[case7]` (acceptance) | `gmail` | `GMAIL_SERVICE_ACCOUNT_JSON` + `GMAIL_SERVICE_ACCOUNT_SUBJECT` (keyrack `test`) |
-| `sendReplyViaSes` `[case1]` (integration) | `ses` | the applied `jelly@one.nheuron.com` mailbox, `SES_MAIL_BUCKET` + `SES_REGION` + `SES_CONFIG_SET` (keyrack `prep`), `AWS_PROFILE=nheuron-prep`. sends one real mail, mailbox to itself |
-| `gatherMail` `[case11]` (acceptance) | `ses` | the same mailbox and keys, with at least one mail held — the send above supplies it |
-| `resources.mail` `[case3]` (integration) | `ses` | `AWS_PROFILE=nheuron-prep`. runs `declastruct plan` on the mail wish; reads every declared resource back from aws |
-| `resources.mail.dns` `[case3]` (integration) | `cloudflare` | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` + `SES_DKIM_TOKENS` (keyrack `prep`). plans the dns wish against the live zone |
-| `resources.accounts` `[case1]` (integration) | `aws.accounts` | `AWS_PROFILE=nheuron-root` + the two account root emails (keyrack `prep`). plans the account triplet against the live organization |
+| `ses` | the prep mailbox `jelly@one.prep.nheuron.com`: a real send (mailbox to itself), a real `gather.mail` read, a `declastruct plan` of the mail wish | `--org nheuron --env prep`: `AWS_PROFILE`, `SES_MAIL_BUCKET`, `SES_REGION`, `SES_CONFIG_SET` |
+| `cloudflare` | a plan of the mail dns wish against the live `nheuron.com` zone | `--env prod`: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `SES_DKIM_TOKENS` |
+| `aws.accounts` | plans of the root wishes (account triplet, sso admins, spend lockdown) against the live organization | the management-account slot (`--env sudo`) |
+| `gmail` | the gmail mechanism via a service account | `--env test`: `GMAIL_SERVICE_ACCOUNT_JSON`, `GMAIL_SERVICE_ACCOUNT_SUBJECT` |
 
 ## .how
 
 ```sh
-# gmail
-rhx keyrack unlock --owner ehmpath --env test
-TEST_LIVE=gmail npm run test:acceptance -- gatherMail
+# ses: unlock the prep slot, then run the gated suites
+rhx keyrack unlock --owner ehmpath --org nheuron --env prep
+rhx test.live --live ses --what integration --mode apply
+rhx test.live --live ses --what acceptance --mode apply
 
-# ses: send first, then read it back
-rhx keyrack unlock --owner ehmpath --env prep
-AWS_PROFILE=nheuron-prep TEST_LIVE=ses npm run test:integration -- sendReplyViaSes
-AWS_PROFILE=nheuron-prep TEST_LIVE=ses npm run test:acceptance -- gatherMail
+# several gates at once
+rhx test.live --live ses,cloudflare --what integration --mode apply
 
-# both
-TEST_LIVE=gmail,ses npm run test:acceptance -- gatherMail
-
-# provision wishes: a real plan, never an apply
-rhx keyrack unlock --owner ehmpath --env prep
-AWS_PROFILE=nheuron-prep TEST_LIVE=ses npm run test:integration -- resources.mail
-TEST_LIVE=cloudflare npm run test:integration -- resources.mail.dns
-AWS_PROFILE=nheuron-root TEST_LIVE=aws.accounts npm run test:integration -- resources.accounts
+# narrow to one suite
+rhx test.live --live ses --what integration --scope sendReplyViaSes --mode apply
 ```
+
+keyrack can leave a key locked after a whole-slot unlock. a gate that throws "absent" with the
+slot unlocked → unlock that key alone: `rhx keyrack unlock --owner ehmpath --org nheuron --env prep --key <KEY>`.
+
+provision gates run `declastruct plan`, never an apply.
 
 ## .the contract
 
-- flag absent → the case skips by name (`○ skipped … (TEST_LIVE=gmail)`)
-- flag names the mechanism, credential absent → the case throws `BadRequestError` with the fix
+- gate absent → the case skips by name (`○ skipped … (TEST_LIVE=ses)`)
+- gate named, credential absent → the case throws with the unlock command as its hint
 - a skip therefore means "not asked", never "asked, and the key was absent"
 
 ## .see also
 
 - `howto.create-gmail-service-account.md` — mint the gmail credential
-- `.behavior/v2026_07_30.collect-from-ses/blocker/account-setup.md` — stand up the ses mailbox
+- `provision/aws.mail/readme.md` — stand up a mailbox
+- `provision/runbook.bootstrap-nheuron-mailbox.md` — the full nheuron bootstrap, in order

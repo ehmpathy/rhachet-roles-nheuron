@@ -14,7 +14,7 @@ const readSince = (input: {
 /**
  * .what = clamps the precedence that makes a bare re-run incremental
  * .why = the prior cursor was persisted every run and read by no one. two artifacts promised
- *   otherwise — the field's own doc-comment, and the gatherer readme's "subsequent calls only
+ *   otherwise — the field's own doc-comment, and the collector readme's "subsequent calls only
  *   fetch new mail since last sync" — so the feature was documented and absent.
  *
  * .note = [case2] is the teeth. under the old code it returned `undefined` (no bound at all),

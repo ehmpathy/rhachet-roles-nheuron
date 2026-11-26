@@ -1,12 +1,12 @@
 import { Role } from 'rhachet';
 
 /**
- * .what = gatherer role definition
+ * .what = collector role definition
  * .why = enables mail collection from gmail and other async comms sources
  */
-export const ROLE_GATHERER: Role = Role.build({
-  slug: 'gatherer',
-  name: 'Gatherer',
+export const ROLE_COLLECTOR: Role = Role.build({
+  slug: 'collector',
+  name: 'Collector',
   purpose: 'collect mail and async comms from external sources',
   readme: { uri: `${__dirname}/readme.md` },
   traits: [],
@@ -17,9 +17,9 @@ export const ROLE_GATHERER: Role = Role.build({
   // ⚠️ .note = NO role-local briefs DIR, deliberately. this once named `${__dirname}/briefs`
   //   — a directory that holds no file, and git does not track an empty directory, so it was
   //   absent on every fresh clone and in ci while it read as present here.
-  //   the gatherer's knowledge lives at the repo level in `.agent/repo=.this/role=any/briefs/`,
+  //   the collector's knowledge lives at the repo level in `.agent/repo=.this/role=any/briefs/`,
   //   which the brain dir's boot.md render already loads. name a dir here only alongside a brief
-  //   that belongs to the gatherer ALONE (`rule.prefer.wet-over-dry` — carry no path with no content).
+  //   that belongs to the collector ALONE (`rule.prefer.wet-over-dry` — carry no path with no content).
   // .note = no onBoot hook: boot.md renders each enrolled role's briefs, and rhachet refuses a
   //   hook that boots its own role as redundant.
   briefs: {

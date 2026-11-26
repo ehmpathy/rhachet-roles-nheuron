@@ -55,16 +55,16 @@ sake:
 | the choice | the wall it builds |
 |------------|--------------------|
 | a **separate aws org + account triplet** for nheuron | the brain's infra shares no blast radius with any other project |
-| **prod / prep** split, mail lands in prep | a compromise of the demonstration cannot reach real cognition |
+| **prod / prep** split, a mailbox per account; live tests touch prep alone | a compromise of the test mailbox cannot reach real cognition |
 | a **dedicated subdomain**, never the apex | the apex mx and its other mail stay out of reach |
 | **one named mailbox**, not a domain catch-all | reads exactly its own mail, never the domain's |
 | **least-privilege inline grant** (read one prefix, send as one domain) | a stolen credential still cannot roam |
 | **keyrack-only credentials**, never a literal or a committed `.env` | one place to rotate, one place to audit, none to leak |
-| the gatherer's **security obfuscation** (mfa codes, resets, tokens) | even a legitimate read of the vault does not surface the crown jewels |
+| the collector's **security obfuscation** (mfa codes, resets, tokens) | even a legitimate read of the vault does not surface the crown jewels |
 
-the last row is the pattern's own proof: the gatherer already shows only the *existence* of a
+the last row is the pattern's own proof: the collector shows only the *existence* of a
 security-sensitive mail, never its content. that is a fort knox **inside** the mailbox — the
-innermost vault, built before this philosophy was written down.
+innermost vault.
 
 ## .it must be yours, or it is not a vault
 

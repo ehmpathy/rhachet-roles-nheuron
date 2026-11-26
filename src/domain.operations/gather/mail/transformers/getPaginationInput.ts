@@ -8,7 +8,7 @@ import { asSinceDateOrThrow } from './asSinceDateOrThrow';
  * .why = this is what makes a bare re-run INCREMENTAL. `GatheredMailSyncStats.mailFoundUptil`
  *   was computed, cursor-regression-guarded, and persisted on every run — and then read by no
  *   one, because the range was built from the `--since` flag alone. so the field's own
- *   doc-comment and the gatherer readme both promised "subsequent calls only fetch new mail
+ *   doc-comment and the collector readme both promised "subsequent calls only fetch new mail
  *   since last sync", while every run re-scanned the whole window (`rule.forbid.surprises`).
  *
  * .note = the caller's `--since` WINS. the cursor is a default, never an override — a human

@@ -7,7 +7,7 @@
 #         each rule's recipients + s3 action, and the newest objects in the
 #         mail bucket
 #
-# .why  = "i sent it, the gatherer shows naught" has three suspects: dns
+# .why  = "i sent it, the collector shows naught" has three suspects: dns
 #         never routes the mail to ses, ses receives it but no rule takes
 #         it, or a rule takes it but writes elsewhere. this names the hop
 #         that drops it, with no raw aws cli call to approve

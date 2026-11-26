@@ -276,7 +276,7 @@ describe('gather.mail', () => {
           '.agent',
           '.cache',
           'repo=nheuron',
-          'role=gatherer',
+          'role=collector',
           'skill=gather.auth',
           'tokens',
           'mechanism=gmail',
@@ -695,7 +695,7 @@ describe('gather.mail', () => {
     when('[t0] gather.mail runs as `rhx gather.mail` would call it', () => {
       then('reads its own flags and reaches the auth check', () => {
         const result = execAndCapture(
-          `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --skill gather.mail --repo nheuron --role gatherer --from ses --address jelly@one.nheuron.com`,
+          `node -e "import('rhachet-roles-nheuron/cli/gatherMail').then(m => m.gatherMail()).then(c => process.exit(c))" -- --skill gather.mail --repo nheuron --role collector --from ses --address jelly@one.nheuron.com`,
           { env: getEnvWithoutSes() },
         );
 
@@ -722,7 +722,7 @@ describe('gather.mail', () => {
     when('[t0] --org is passed with no --env', () => {
       then('exits 2 and names both flags, before any keyrack call', () => {
         const result = execAndCapture(
-          `bash src/domain.roles/gatherer/skills/gather.mail.sh --org nheuron --from ses --address jelly@one.nheuron.com`,
+          `bash src/domain.roles/collector/skills/gather.mail.sh --org nheuron --from ses --address jelly@one.nheuron.com`,
           { env: getEnvWithoutSes() },
         );
 
@@ -736,7 +736,7 @@ describe('gather.mail', () => {
     when('[t1] neither --org nor --env is passed', () => {
       then('passes every arg to the cli, which reaches the auth check', () => {
         const result = execAndCapture(
-          `bash src/domain.roles/gatherer/skills/gather.mail.sh --from ses --address jelly@one.nheuron.com`,
+          `bash src/domain.roles/collector/skills/gather.mail.sh --from ses --address jelly@one.nheuron.com`,
           { env: getEnvWithoutSes() },
         );
 

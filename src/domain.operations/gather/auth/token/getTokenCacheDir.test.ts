@@ -8,7 +8,7 @@ describe('getTokenCacheDir', () => {
       then('returns expected path', () => {
         const result = getTokenCacheDir({ cwd: null });
         expect(result).toContain(
-          '.agent/.cache/repo=nheuron/role=gatherer/skill=gather.auth/tokens',
+          '.agent/.cache/repo=nheuron/role=collector/skill=gather.auth/tokens',
         );
       });
     });
@@ -19,7 +19,7 @@ describe('getTokenCacheDir', () => {
       then('uses provided cwd', () => {
         const result = getTokenCacheDir({ cwd: '/custom/path' });
         expect(result).toBe(
-          '/custom/path/.agent/.cache/repo=nheuron/role=gatherer/skill=gather.auth/tokens',
+          '/custom/path/.agent/.cache/repo=nheuron/role=collector/skill=gather.auth/tokens',
         );
       });
     });

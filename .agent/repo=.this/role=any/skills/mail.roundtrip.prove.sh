@@ -8,7 +8,7 @@
 #         so only this run's mail can satisfy the proof
 #
 # .why  = the roundtrip crosses every live part at once: iam grant, dkim-signed
-#         send, public mx, the receipt rule, the s3 store, the gatherer read.
+#         send, public mx, the receipt rule, the s3 store, the collector read.
 #         a self-send is the one roundtrip the ses sandbox permits, since the
 #         verified domain is both sender and recipient
 #

@@ -1,0 +1,19 @@
+{
+  "key": "4a2c2bd14d42939d",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ghlitch"
+  },
+  "exid": null,
+  "title": "deployer: pave ses mailbox ops (identity, inbound walk, attachments, roundtrip)",
+  "description": "## .what\n\npave ses mailbox ops for a declared mail stack, generic over its domains + bucket:\n- `aws.ses.identity.status.get`: per domain, verified-for-send + dkim status\n- `aws.ses.inbound.status.get`: walk the inbound path hop by hop: live mx, ip receipt filters, active receipt rule set (recipients, scan, tls, s3 action), store guards (encryption at rest, public block, bucket policy), newest objects\n- `aws.ses.attachment.get`: pull the attachments of one raw inbound object (or the latest) to a gitignored dir\n- `aws.ses.roundtrip.prove`: send a nonce probe to the mailbox itself, then read it back\n\n## .why\n\nevery ses mailbox owner needs the same four answers: did dns take, where does inbound mail stop, what was attached, does the loop close. prior art (nheuron-specific domains): `ehmpathy/rhachet-roles-nheuron` `.agent/repo=.this/role=any/skills/mail.{identity.status.get,inbound.status.get,attachment.get,roundtrip.prove}.sh` (main). the inbound walk found a real dropped mail in one run.\n\n## .ask\n\n- take domains + bucket from input or the declared wish, never a hardcoded org\n- read-only except the probe send; credentials from keyrack only\n- refusal snapshots + gated live cases",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 16,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "229"
+}

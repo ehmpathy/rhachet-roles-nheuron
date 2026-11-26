@@ -1,9 +1,9 @@
 slug: nheuron
 readme: dist/domain.roles/readme.md
 roles:
-  - slug: gatherer
-    readme: dist/domain.roles/gatherer/readme.md
+  - slug: collector
+    readme: dist/domain.roles/collector/readme.md
     briefs:
       dirs: []
     skills:
-      dirs: dist/domain.roles/gatherer/skills
+      dirs: dist/domain.roles/collector/skills

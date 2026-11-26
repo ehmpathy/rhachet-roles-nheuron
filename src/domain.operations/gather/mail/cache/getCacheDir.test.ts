@@ -5,7 +5,7 @@ import { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
 import { getCacheDir } from './getCacheDir';
 
 const CWD = '/home/vlad/project';
-const ROOT = `${CWD}/.agent/.cache/repo=nheuron/role=gatherer/skill=gather.mail`;
+const ROOT = `${CWD}/.agent/.cache/repo=nheuron/role=collector/skill=gather.mail`;
 
 /**
  * .what = clamps that a cache dir is keyed by BOTH mechanism and address

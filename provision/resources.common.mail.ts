@@ -76,14 +76,14 @@ export const MAIL_RULE_SET = 'nheuron-mail-inbound';
 export const MAIL_RULE = 'to-s3';
 
 /**
- * where ses writes each raw rfc822 message; the gatherer lists + reads this prefix.
+ * where ses writes each raw rfc822 message; the collector lists + reads this prefix.
  * MUST equal `SES_MAIL_OBJECT_KEY_PREFIX` in
  * `src/domain.operations/gather/adapters/ses/getSesConfig.ts` — the reader's half of the
  * same contract.
  *
  * .note = that MUST is CLAMPED, never merely asked for: `resources.common.mail.test.ts`
  *   imports both and asserts they are equal, so a change to one side alone goes red in ci.
- *   the clamp exists because the live symptom of drift is silence — the gatherer lists a
+ *   the clamp exists because the live symptom of drift is silence — the collector lists a
  *   prefix ses never writes, finds zero keys, and reports an empty mailbox with exit 0.
  */
 export const MAIL_OBJECT_KEY_PREFIX = 'inbound/';

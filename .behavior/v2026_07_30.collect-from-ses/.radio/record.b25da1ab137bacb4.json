@@ -1,0 +1,19 @@
+{
+  "key": "b25da1ab137bacb4",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ghlitch"
+  },
+  "exid": null,
+  "title": "deployer: pave provision.root + provision.member for aws org wishes",
+  "description": "## .what\n\npave declastruct provision for an aws organization: `provision.root` (plan/apply a wish against the management account, guarded so it refuses any other account) and `provision.member` (plan/apply a wish against one member account, its profile from a keyrack slot per env + org).\n\n## .why\n\n`provision.declastruct` covers one account. an org needs two more shapes: the root wishes (accounts, sso admins, budgets) that must only ever run in the management account, and per-member wishes (e.g. a mail stack per env). prior art: `ehmpathy/rhachet-roles-nheuron` `.agent/repo=.this/role=any/skills/provision.root.sh` and `provision.member.sh` (main).\n\n## .ask\n\n- same `--wish --mode plan|apply --gate` contract as provision.declastruct\n- root: per-key keyrack unlock loop; refuses when the caller account is not the management account\n- member: `--env --org` picks the slot; refuses with the unlock command when absent\n- acceptance snapshots of each refusal + a gated live plan",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 14,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "227"
+}

@@ -86,7 +86,7 @@ const getTokenPath = (input: { address: string }): string => {
     '.agent',
     '.cache',
     'repo=nheuron',
-    'role=gatherer',
+    'role=collector',
     'skill=gather.auth',
     'tokens',
     'mechanism=gmail',
@@ -389,7 +389,7 @@ describe('gather.auth', () => {
         'exits 0, reads its own flags, and ends its output with a newline',
         () => {
           const result = execAndCapture(
-            `node -e "import('rhachet-roles-nheuron/cli/gatherAuth').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --skill gather.auth --repo nheuron --role gatherer --from ses --address jelly@one.nheuron.com`,
+            `node -e "import('rhachet-roles-nheuron/cli/gatherAuth').then(m => m.gatherAuth()).then(c => process.exit(c))" -- --skill gather.auth --repo nheuron --role collector --from ses --address jelly@one.nheuron.com`,
             { env: getEnvWithoutSes() },
           );
           expect(result.stderr).not.toContain('unknown flag');
@@ -415,7 +415,7 @@ describe('gather.auth', () => {
     when('[t0] --org is passed with no --env', () => {
       then('exits 2 and names both flags, before any keyrack call', () => {
         const result = execAndCapture(
-          `bash src/domain.roles/gatherer/skills/gather.auth.sh --org nheuron --from ses --address jelly@one.nheuron.com`,
+          `bash src/domain.roles/collector/skills/gather.auth.sh --org nheuron --from ses --address jelly@one.nheuron.com`,
           { env: getEnvWithoutSes() },
         );
 
@@ -429,7 +429,7 @@ describe('gather.auth', () => {
     when('[t1] neither --org nor --env is passed', () => {
       then('passes every arg to the cli, which reports the status', () => {
         const result = execAndCapture(
-          `bash src/domain.roles/gatherer/skills/gather.auth.sh --from ses --address jelly@one.nheuron.com`,
+          `bash src/domain.roles/collector/skills/gather.auth.sh --from ses --address jelly@one.nheuron.com`,
           { env: getEnvWithoutSes() },
         );
 

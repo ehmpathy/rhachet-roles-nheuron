@@ -144,7 +144,7 @@ describe('asCliArgOptions', () => {
                   '--repo',
                   'nheuron',
                   '--role',
-                  'gatherer',
+                  'collector',
                   '--from',
                   'ses',
                   '--address',

@@ -6,7 +6,7 @@ import type { GatheredMailRepo } from '@src/domain.objects/GatheredMailRepo';
  * .what = compute full cache directory path for a repo
  * .why = consistent cache location across operations
  *
- * format: {cwd}/.agent/.cache/repo=nheuron/role=gatherer/skill=gather.mail/mechanism={mechanism}/address={address}
+ * format: {cwd}/.agent/.cache/repo=nheuron/role=collector/skill=gather.mail/mechanism={mechanism}/address={address}
  */
 export const getCacheDir = (input: {
   repo: GatheredMailRepo;
@@ -18,7 +18,7 @@ export const getCacheDir = (input: {
     '.agent',
     '.cache',
     'repo=nheuron',
-    'role=gatherer',
+    'role=collector',
     'skill=gather.mail',
     `mechanism=${input.repo.mechanism}`,
     `address=${input.repo.address}`,

@@ -1,5 +1,5 @@
 /**
- * .what = every mail mechanism the gatherer can actually collect from
+ * .what = every mail mechanism the collector can actually collect from
  * .why = identifies which adapter handles this mail
  *
  * ⚠️ .note = this union holds ONLY what is implemented. it once carried `'slack' | 'phone'`

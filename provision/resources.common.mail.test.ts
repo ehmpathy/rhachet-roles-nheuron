@@ -10,7 +10,7 @@ import {
 
 /**
  * .what = clamps the contract between the wish that WRITES mail and the code that READS it
- * .why = the receipt rule declares an `objectKeyPrefix` and the gatherer lists that same
+ * .why = the receipt rule declares an `objectKeyPrefix` and the collector lists that same
  *   prefix. they live either side of an apply boundary, so only agreement makes them work —
  *   and disagreement fails in the cruelest way available: the list returns zero keys, the
  *   gather exits 0, and the mailbox reads as EMPTY rather than as misconfigured
@@ -34,7 +34,7 @@ describe('resources.common.mail', () => {
     '[case1] the object key prefix, declared on both sides of the apply',
     () => {
       when('[t0] the two halves are compared', () => {
-        then('the wish writes exactly where the gatherer reads', () => {
+        then('the wish writes exactly where the collector reads', () => {
           // ⚠️ the teeth. change one side alone and this goes red — where the live symptom
           // would have been a silently empty mailbox
           expect(MAIL_OBJECT_KEY_PREFIX).toEqual(SES_MAIL_OBJECT_KEY_PREFIX);

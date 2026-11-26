@@ -1,4 +1,4 @@
-## gatherer
+## collector
 
 collect mail and async comms from external sources with security-first design.
 
@@ -53,7 +53,7 @@ only the existence of these emails is shown, never the content.
 mail is cached locally for rapid repeated access:
 
 ```
-.agent/.cache/repo=nheuron/role=gatherer/skill=gather.mail/
+.agent/.cache/repo=nheuron/role=collector/skill=gather.mail/
   mechanism={gmail|ses}/
     address={the mailbox}/
 ```

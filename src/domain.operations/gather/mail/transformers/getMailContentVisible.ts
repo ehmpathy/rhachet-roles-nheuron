@@ -1,6 +1,6 @@
 /**
  * .what = what a human may SEE of a mail's content, given whether it is security sensitive
- * .why = the gatherer shows only the EXISTENCE of a security-sensitive mail, never its
+ * .why = the collector shows only the EXISTENCE of a security-sensitive mail, never its
  *   content — an mfa code, a password reset, a login token. that is the innermost wall of
  *   `philosophy.external-brain._.zoom=fort-knox-of-fort-knoxes`: even a legitimate read of
  *   the vault does not surface the crown jewels.

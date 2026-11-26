@@ -110,7 +110,7 @@ send from jelly to jelly proves the loop in the sandbox, with no outside address
 ## then what
 
 ```sh
-# the gatherer reads a mailbox — the env slot picks which
+# the collector reads a mailbox — the env slot picks which
 rhx keyrack unlock --owner ehmpath --org nheuron --env prod
 rhx gather.mail --from ses --address jelly@one.nheuron.com --since 2026-11-01
 ```
@@ -180,7 +180,8 @@ that mail is not recoverable once the bucket is dropped, so archive it first if 
 rhx gather.mail --from ses --address jelly@one.nheuron.com --format json
 ```
 
-the cached copy under `.gather/cache/` survives the teardown; the s3 originals do not.
+the cached copy under `.agent/.cache/repo=nheuron/role=collector/skill=gather.mail/` survives
+the teardown; the s3 originals do not.
 
 ## .see also
 

@@ -74,8 +74,8 @@ the three roles are not a feature list. they are the cognitive loop, externalize
 | **allocator** | 🔦 | attention — shine on what matters now | clarity on what's next |
 
 perceive, associate, attend. that is a mind's inner loop, and each role externalizes one turn
-of it. the `gatherer` role feeds the first turn — every mail it collects is raw perception,
-awaiting linkage.
+of it. the `collector` ships first: every mail its `gather.mail` skill takes in is raw
+perception that waits for linkage.
 
 a loop that only ever collects is a hoard. a loop that only ever connects is a daydream. the
 three compose or none of them pays off.

@@ -18,7 +18,7 @@ an ad-hoc `process.env` read of a raw secret, not a config file, not a prompt.
   mistake; a secret in a tracked file eventually is.
 - **uniform access** — `rhx keyrack unlock --owner ehmpath --env <env>` is the one motion
   every skill, test, and adapter shares. one mental model, one failure mode, one fix.
-- **precedent** — this is how rhachet-roles-ghlitch and the gatherer skills already pull
+- **precedent** — this is how rhachet-roles-ghlitch and the collector skills already pull
   `AWS_PROFILE` and other secrets. keyrack-only keeps this repo consistent with that pattern.
 
 ## .the rule
@@ -38,6 +38,7 @@ an ad-hoc `process.env` read of a raw secret, not a config file, not a prompt.
   `env.prep`, `env.prod`).
 - **unlock** at the boundary: `rhx keyrack unlock --owner ehmpath --env <env>` populates the
   env for the process; code reads it from `process.env` only after keyrack put it there.
+  nheuron's own keys (mailbox, member accounts) live in the `nheuron` org slot: add `--org nheuron`.
 - **fail loud** when a credential is absent: throw a `ConstraintError` that names the unlock
   command (per `rule.require.failfast`), never a silent skip and never a fallback to another
   source.
@@ -63,4 +64,4 @@ point to the `.agent/keyrack.yml` entry a value came from, it is not a keyrack c
 
 - `howto.keyrack.[lesson]` (mechanic) — the unlock motion + error table
 - `rule.require.failfast` — the loud, named error an absent credential must throw
-- `howto.provision-ses-email-infra` — the ses mailbox's `AWS_PROFILE` sourced via keyrack
+- `provision/aws.mail/readme.md` — the ses mailbox's `AWS_PROFILE` + `SES_*` keys, sourced via keyrack

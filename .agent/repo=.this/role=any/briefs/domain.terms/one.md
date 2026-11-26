@@ -73,7 +73,7 @@ canonical verb brief uses it as its worked example (`genClone({ zone, address, c
 concept — so it adds no synonym at the dobj layer.
 
 **first use** — the `one.nheuron.com` mail subdomain, whose mailbox `jelly@one.nheuron.com` is
-the demonstration of the ses gatherer behavior. see
+the demonstration of the ses collector behavior. see
 `.behavior/v2026_07_30.collect-from-ses/1.vision.yield.md`.
 
 ## .usage
