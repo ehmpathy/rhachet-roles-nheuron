@@ -1,0 +1,313 @@
+diff --git a/dist/access/sdks/getAwsOrganizationsClient.js b/dist/access/sdks/getAwsOrganizationsClient.js
+index 9180960e5335e07f10b4fbab6769c435c6825f1d..ad64f34b46c07b76f8515eb0cda6ce79eff433d0 100644
+--- a/dist/access/sdks/getAwsOrganizationsClient.js
++++ b/dist/access/sdks/getAwsOrganizationsClient.js
+@@ -16,7 +16,7 @@ const getAwsOrganizationsClient = async (context) => {
+         helpful_errors_1.BadRequestError.throw('org manager auth required to use organizations client');
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("./getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     return { client, organization };
+ };
+diff --git a/dist/domain.operations/budgetAction/getOneBudgetAction.js b/dist/domain.operations/budgetAction/getOneBudgetAction.js
+index cb74717d2307d1ff50a2c88a0f13819bd0d33cb1..9f99cc766d19ef48a24fb59caf48392e4613a7a1 100644
+--- a/dist/domain.operations/budgetAction/getOneBudgetAction.js
++++ b/dist/domain.operations/budgetAction/getOneBudgetAction.js
+@@ -48,7 +48,9 @@ exports.getOneBudgetAction = (0, as_procedure_1.asProcedure)(async (input, conte
+             // find the action whose ActionType fits the unique tuple
+             const actionFound = (response.Actions ?? []).find((candidate) => candidate.ActionType === unique.kind);
+             if (actionFound)
+-                return (0, castIntoDeclaredAwsBudgetAction_1.castIntoDeclaredAwsBudgetAction)({ action: actionFound });
++                return await asBudgetActionWithUniqueScpRefs({
++                    action: (0, castIntoDeclaredAwsBudgetAction_1.castIntoDeclaredAwsBudgetAction)({ action: actionFound }),
++                }, context);
+             nextToken = response.NextToken;
+         } while (nextToken);
+         // no action of this kind on the budget
+@@ -70,4 +72,46 @@ exports.getOneBudgetAction = (0, as_procedure_1.asProcedure)(async (input, conte
+         });
+     }
+ });
++/**
++ * .what = re-expresses an scp action's policy + target refs by their unique keys
++ * .why = aws returns only ids (PolicyId, TargetIds), but a wish declares the policy by name
++ *        and the target account by email (the only keys knowable before create). a cast by
++ *        primary drifts to UPDATE forever; a lookup by primary yields the unique keys
++ * .note = keeps the primary ref when the lookup finds no resource
++ */
++const asBudgetActionWithUniqueScpRefs = async (input, context) => {
++    // only the scp form carries foreign refs by id
++    const scp = input.action.definition?.scp;
++    if (!scp)
++        return input.action;
++
++    // look up the policy name and the target account email
++    const { getOneOrganizationServiceControlPolicy } = require("../organizationServiceControlPolicy/getOneOrganizationServiceControlPolicy");
++    const { getOneOrganizationAccount } = require("../organizationAccount/getOneOrganizationAccount");
++    const policyFound = scp.policy?.id
++        ? await getOneOrganizationServiceControlPolicy({ by: { primary: { id: scp.policy.id } } }, context)
++        : null;
++    const targetFound = scp.target?.id
++        ? await getOneOrganizationAccount({ by: { primary: { id: scp.target.id } } }, context)
++        : null;
++
++    // rebuild the definition with unique refs where found
++    const { DeclaredAwsBudgetActionDefinition } = require("../../domain.objects/DeclaredAwsBudgetActionDefinition");
++    const { DeclaredAwsBudgetActionScp } = require("../../domain.objects/DeclaredAwsBudgetActionScp");
++    return new DeclaredAwsBudgetAction_1.DeclaredAwsBudgetAction({
++        ...input.action,
++        definition: new DeclaredAwsBudgetActionDefinition({
++            scp: new DeclaredAwsBudgetActionScp({
++                policy: policyFound
++                    ? domain_objects_1.RefByUnique.as({ name: policyFound.name })
++                    : scp.policy,
++                target: targetFound
++                    ? domain_objects_1.RefByUnique.as({ email: targetFound.email })
++                    : scp.target,
++            }),
++            ssm: null,
++            iam: null,
++        }),
++    });
++};
+ //# sourceMappingURL=getOneBudgetAction.js.map
+\ No newline at end of file
+diff --git a/dist/domain.operations/organization/delOrganization.js b/dist/domain.operations/organization/delOrganization.js
+index aa3caaa29b5d29baf4eae4da05c1ae3a71db1607..6c3ccf9663247c2112264a9b7427bf9b908d92bb 100644
+--- a/dist/domain.operations/organization/delOrganization.js
++++ b/dist/domain.operations/organization/delOrganization.js
+@@ -47,7 +47,7 @@ exports.delOrganization = (0, as_procedure_1.asProcedure)(async (input, context)
+         });
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         await client.send(new client_organizations_1.DeleteOrganizationCommand({}));
+diff --git a/dist/domain.operations/organization/getOneOrganization.js b/dist/domain.operations/organization/getOneOrganization.js
+index 5d8386d7bb611c0476fed5d3c1475e4abdf8fcc5..f998085b94ad82023ca57fabeb2806f22b65a5b0 100644
+--- a/dist/domain.operations/organization/getOneOrganization.js
++++ b/dist/domain.operations/organization/getOneOrganization.js
+@@ -26,7 +26,7 @@ exports.getOneOrganization = (0, as_procedure_1.asProcedure)(async (input, conte
+     }
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         // fetch the organization for the current credentials
+diff --git a/dist/domain.operations/organization/getOrganizationRootId.js b/dist/domain.operations/organization/getOrganizationRootId.js
+index 7fc50caaa2fc6faa4f908e9901519308abc5794f..0cecd1bfb29045b118d79ffd466b7d1f4f5ab257 100644
+--- a/dist/domain.operations/organization/getOrganizationRootId.js
++++ b/dist/domain.operations/organization/getOrganizationRootId.js
+@@ -15,7 +15,7 @@ const helpful_errors_1 = require("helpful-errors");
+ exports.getOrganizationRootId = (0, as_procedure_1.asProcedure)(async (input, context) => {
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         // fetch the root ID via ListRoots API
+diff --git a/dist/domain.operations/organization/setOrganization.js b/dist/domain.operations/organization/setOrganization.js
+index 639c05462f5f91ffa1ca3089ff38b9825679cd9c..d42e2aceb07b52aea1ca4a2f746debc9f05e4e55 100644
+--- a/dist/domain.operations/organization/setOrganization.js
++++ b/dist/domain.operations/organization/setOrganization.js
+@@ -28,7 +28,7 @@ exports.setOrganization = (0, as_procedure_1.asProcedure)(async (input, context)
+         });
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     // check if already exists (idempotent findsert)
+     const foundBefore = await (0, getOneOrganization_1.getOneOrganization)({ by: { unique: { managementAccount: desired.managementAccount } } }, context);
+diff --git a/dist/domain.operations/organizationAccount/setOrganizationAccount.js b/dist/domain.operations/organizationAccount/setOrganizationAccount.js
+index bf69769e5670e14624f18fc17b985d01a6dcc7fe..5ac6f6b3cb0f913fd7f01a0197602ec91fa0f6db 100644
+--- a/dist/domain.operations/organizationAccount/setOrganizationAccount.js
++++ b/dist/domain.operations/organizationAccount/setOrganizationAccount.js
+@@ -37,21 +37,26 @@ exports.setOrganizationAccount = (0, as_procedure_1.asProcedure)(async (input, c
+         // findsert: return existing (idempotent, no changes)
+         if (input.findsert)
+             return foundBefore;
+-        // upsert: sync write-only tags if env var is set (for backfilling existing accounts)
++        // upsert: sync the desired user tags (an upsert must write what it declares).
++        // the write-only backfill stays gated: aws never returns these create-time values,
++        // so they are asserted only when the caller opts in for an account they know
+         const canSyncWriteonlyTags = process.env.SYNC_WRITEONLY_TAGS === 'DeclaredAwsOrganizationAccount';
+-        if (!canSyncWriteonlyTags)
+-            return foundBefore;
+-        const iamUserAccessToBilling = desired.iamUserAccessToBilling ?? 'ALLOW';
+-        const roleName = desired.roleName ?? 'OrganizationAccountAccessRole';
+-        await client.send(new client_organizations_1.TagResourceCommand({
+-            ResourceId: foundBefore.id,
+-            Tags: [
++        const userTags = Object.entries(desired.tags ?? {}).map(([Key, Value]) => ({ Key, Value }));
++        const writeonlyTags = canSyncWriteonlyTags
++            ? [
+                 {
+                     Key: '_decla_writeonly_iamUserAccessToBilling',
+-                    Value: iamUserAccessToBilling,
++                    Value: desired.iamUserAccessToBilling ?? 'ALLOW',
+                 },
+-                { Key: '_decla_writeonly_roleName', Value: roleName },
+-            ],
++                { Key: '_decla_writeonly_roleName', Value: desired.roleName ?? 'OrganizationAccountAccessRole' },
++            ]
++            : [];
++        const tagsToWrite = [...userTags, ...writeonlyTags];
++        if (tagsToWrite.length === 0)
++            return foundBefore;
++        await client.send(new client_organizations_1.TagResourceCommand({
++            ResourceId: foundBefore.id,
++            Tags: tagsToWrite,
+         }));
+         // re-fetch to return updated tags
+         return ((await (0, getOneOrganizationAccount_1.getOneOrganizationAccount)({ by: { primary: { id: foundBefore.id } } }, context)) ?? foundBefore);
+diff --git a/dist/domain.operations/organizationPolicyEligibility/delOrganizationPolicyEligibility.js b/dist/domain.operations/organizationPolicyEligibility/delOrganizationPolicyEligibility.js
+index a12f373bceacb64b387a2fee3761b22e7a9380d3..3d40c12376a843f5070714806aa495eee2f943b1 100644
+--- a/dist/domain.operations/organizationPolicyEligibility/delOrganizationPolicyEligibility.js
++++ b/dist/domain.operations/organizationPolicyEligibility/delOrganizationPolicyEligibility.js
+@@ -20,7 +20,7 @@ exports.delOrganizationPolicyEligibility = (0, as_procedure_1.asProcedure)(async
+     if (!found)
+         return { deleted: true }; // already disabled
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     // get root id for disable call
+     const rootId = await (0, getOrganizationRootId_1.getOrganizationRootId)({ by: { auth: true } }, context);
+diff --git a/dist/domain.operations/organizationPolicyEligibility/getOneOrganizationPolicyEligibility.js b/dist/domain.operations/organizationPolicyEligibility/getOneOrganizationPolicyEligibility.js
+index eaf0602aa023e56864b9ea552514eb033a01eb98..f9e6eb2370e9c874b08ec0303ff9050525c4e60c 100644
+--- a/dist/domain.operations/organizationPolicyEligibility/getOneOrganizationPolicyEligibility.js
++++ b/dist/domain.operations/organizationPolicyEligibility/getOneOrganizationPolicyEligibility.js
+@@ -14,7 +14,7 @@ const DeclaredAwsOrganizationPolicyEligibility_1 = require("../../domain.objects
+  */
+ exports.getOneOrganizationPolicyEligibility = (0, as_procedure_1.asProcedure)(async (input, context) => {
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         // list roots to get policy types
+diff --git a/dist/domain.operations/organizationPolicyEligibility/setOrganizationPolicyEligibility.js b/dist/domain.operations/organizationPolicyEligibility/setOrganizationPolicyEligibility.js
+index e93c926bec8eb669b5d77c7a640ee766aa30f980..7b39dc82a62193cfc9774771a55bc480e8d6eb00 100644
+--- a/dist/domain.operations/organizationPolicyEligibility/setOrganizationPolicyEligibility.js
++++ b/dist/domain.operations/organizationPolicyEligibility/setOrganizationPolicyEligibility.js
+@@ -28,7 +28,7 @@ exports.setOrganizationPolicyEligibility = (0, as_procedure_1.asProcedure)(async
+         });
+     }
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     // get root id for enable/disable call
+     const rootId = await (0, getOrganizationRootId_1.getOrganizationRootId)({ by: { auth: true } }, context);
+diff --git a/dist/domain.operations/organizationServiceControlPolicy/delOrganizationServiceControlPolicy.js b/dist/domain.operations/organizationServiceControlPolicy/delOrganizationServiceControlPolicy.js
+index 44e9ef71de676ab6c696963759867077a2384e36..22c9dcf10e06b6b98fce3a6b1b1379f6fbf79be3 100644
+--- a/dist/domain.operations/organizationServiceControlPolicy/delOrganizationServiceControlPolicy.js
++++ b/dist/domain.operations/organizationServiceControlPolicy/delOrganizationServiceControlPolicy.js
+@@ -32,7 +32,7 @@ exports.delOrganizationServiceControlPolicy = (0, as_procedure_1.asProcedure)(as
+     })();
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         // lookup policy to get id
+diff --git a/dist/domain.operations/organizationServiceControlPolicy/getAllOrganizationServiceControlPolicies.js b/dist/domain.operations/organizationServiceControlPolicy/getAllOrganizationServiceControlPolicies.js
+index fcdfc235d3e2ff00d400b9eabd2ce6ffdfdcb925..e4bc5c185b63eaff8c89204fddb1b0616e65e93f 100644
+--- a/dist/domain.operations/organizationServiceControlPolicy/getAllOrganizationServiceControlPolicies.js
++++ b/dist/domain.operations/organizationServiceControlPolicy/getAllOrganizationServiceControlPolicies.js
+@@ -15,7 +15,7 @@ const getOneOrganizationServiceControlPolicy_1 = require("./getOneOrganizationSe
+ exports.getAllOrganizationServiceControlPolicies = (0, as_procedure_1.asProcedure)(async (_input, context) => {
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         const policies = [];
+diff --git a/dist/domain.operations/organizationServiceControlPolicy/getOneOrganizationServiceControlPolicy.js b/dist/domain.operations/organizationServiceControlPolicy/getOneOrganizationServiceControlPolicy.js
+index fb1179e218b9a46bc20ad20bc6771814cda09dfa..9d7d784ff08cce11005d8e1cd0b45d884b4f0e35 100644
+--- a/dist/domain.operations/organizationServiceControlPolicy/getOneOrganizationServiceControlPolicy.js
++++ b/dist/domain.operations/organizationServiceControlPolicy/getOneOrganizationServiceControlPolicy.js
+@@ -26,7 +26,7 @@ exports.getOneOrganizationServiceControlPolicy = (0, as_procedure_1.asProcedure)
+     }
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         // derive policy id from input
+diff --git a/dist/domain.operations/organizationServiceControlPolicy/setOrganizationServiceControlPolicy.js b/dist/domain.operations/organizationServiceControlPolicy/setOrganizationServiceControlPolicy.js
+index fbe73ee5b5f14ca9a6c739587b623d8785cb4bda..47265fc90c5ee40eca6df8a8805ccde17170bf00 100644
+--- a/dist/domain.operations/organizationServiceControlPolicy/setOrganizationServiceControlPolicy.js
++++ b/dist/domain.operations/organizationServiceControlPolicy/setOrganizationServiceControlPolicy.js
+@@ -32,7 +32,7 @@ exports.setOrganizationServiceControlPolicy = (0, as_procedure_1.asProcedure)(as
+         });
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     // check if already exists
+     const foundBefore = await (0, getOneOrganizationServiceControlPolicy_1.getOneOrganizationServiceControlPolicy)({ by: { unique: { name: desired.name } } }, context);
+diff --git a/dist/domain.operations/organizationServiceControlPolicyAttachment/delOrganizationServiceControlPolicyAttachment.js b/dist/domain.operations/organizationServiceControlPolicyAttachment/delOrganizationServiceControlPolicyAttachment.js
+index 3849bfdb5c83086c2601b333bae6b704a8674c1a..f505b923530ee835c7cf631c36c11fc15428d1e2 100644
+--- a/dist/domain.operations/organizationServiceControlPolicyAttachment/delOrganizationServiceControlPolicyAttachment.js
++++ b/dist/domain.operations/organizationServiceControlPolicyAttachment/delOrganizationServiceControlPolicyAttachment.js
+@@ -16,7 +16,7 @@ const asTargetId_1 = require("./asTargetId");
+ exports.delOrganizationServiceControlPolicyAttachment = (0, as_procedure_1.asProcedure)(async (input, context) => {
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     // lookup the policy to get its id
+     const policy = await (0, getOneOrganizationServiceControlPolicy_1.getOneOrganizationServiceControlPolicy)({ by: { unique: input.by.unique.policy } }, context);
+diff --git a/dist/domain.operations/organizationServiceControlPolicyAttachment/getAllOrganizationServiceControlPolicyAttachments.js b/dist/domain.operations/organizationServiceControlPolicyAttachment/getAllOrganizationServiceControlPolicyAttachments.js
+index 25e2673d984bb2e9d07758eeef0e5737176b2d7f..74cc1f1a8d02912dcb65822a9796f6e7a47186fa 100644
+--- a/dist/domain.operations/organizationServiceControlPolicyAttachment/getAllOrganizationServiceControlPolicyAttachments.js
++++ b/dist/domain.operations/organizationServiceControlPolicyAttachment/getAllOrganizationServiceControlPolicyAttachments.js
+@@ -48,7 +48,7 @@ const asTargetRef = (target) => {
+ exports.getAllOrganizationServiceControlPolicyAttachments = (0, as_procedure_1.asProcedure)(async (input, context) => {
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         // forPolicy: list all targets attached to a policy
+diff --git a/dist/domain.operations/organizationServiceControlPolicyAttachment/getOneOrganizationServiceControlPolicyAttachment.js b/dist/domain.operations/organizationServiceControlPolicyAttachment/getOneOrganizationServiceControlPolicyAttachment.js
+index e2fde06a2698478c94d3dc6444ce98219d616aa4..8f24ca23c6b430c6b824b0a3460e2c4dcf25369d 100644
+--- a/dist/domain.operations/organizationServiceControlPolicyAttachment/getOneOrganizationServiceControlPolicyAttachment.js
++++ b/dist/domain.operations/organizationServiceControlPolicyAttachment/getOneOrganizationServiceControlPolicyAttachment.js
+@@ -48,7 +48,7 @@ const asTargetRef = (target) => {
+ exports.getOneOrganizationServiceControlPolicyAttachment = (0, as_procedure_1.asProcedure)(async (input, context) => {
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     try {
+         // lookup the policy to get its id
+diff --git a/dist/domain.operations/organizationServiceControlPolicyAttachment/setOrganizationServiceControlPolicyAttachment.js b/dist/domain.operations/organizationServiceControlPolicyAttachment/setOrganizationServiceControlPolicyAttachment.js
+index 635505da71299761867c13aec590f3189efec06f..8c79c09f20fb426c2bb67cda96aa27c4753dbacb 100644
+--- a/dist/domain.operations/organizationServiceControlPolicyAttachment/setOrganizationServiceControlPolicyAttachment.js
++++ b/dist/domain.operations/organizationServiceControlPolicyAttachment/setOrganizationServiceControlPolicyAttachment.js
+@@ -49,7 +49,7 @@ exports.setOrganizationServiceControlPolicyAttachment = (0, as_procedure_1.asPro
+     const desired = input.findsert;
+     // declare the client
+     const client = new client_organizations_1.OrganizationsClient({
+-        region: context.aws.credentials.region,
++        ...require("../../access/sdks/getAwsClientConfig").getAwsClientConfig({ region: context.aws.credentials.region }),
+     });
+     // lookup the policy to get its id
+     const policy = await (0, getOneOrganizationServiceControlPolicy_1.getOneOrganizationServiceControlPolicy)({ by: { unique: desired.policy } }, context);

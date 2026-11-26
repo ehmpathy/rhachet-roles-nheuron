@@ -1,0 +1,19 @@
+{
+  "key": "a577825f17ac4e62",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ehmpathy"
+  },
+  "exid": null,
+  "title": "feat(mechanic): package.patch skill and a git.repo.test --live gate",
+  "description": "## .what\n\ntwo mechanic skills a consumer (rhachet-roles-nheuron) paved, which every repo needs:\n\n1. **`package.patch --package <name>@<version> --mode open|commit`** — wraps `pnpm patch` / `pnpm patch-commit`. drives pnpm's two interactive prompts (\"choose which version to patch\", \"apply this patch to all versions?\") through a pty with a coproc that answers each prompt only once it has drawn; keystrokes sent on a clock race the render and land in the search box. refuses to report \"opened\" for an edit dir pnpm never made.\n2. **a live-gate flag for `git.repo.test`** — live cases gate on `TEST_LIVE=<service>`, and an env-var prefix (`TEST_LIVE=ses rhx git.repo.test …`) is not a paved shape. the consumer wrapped it as `rhx test.live --live ses <git.repo.test args>`. better as `git.repo.test --live ses,cloudflare`.\n\n## .also seen\n\n`git.repo.test` exports the test env's AWS_PROFILE into the jest process before setup files run; any live case that targets another org's account must clear it, and under jest that clear only reaches child processes if every spawn passes `env: process.env` (see ehmpathy/rhachet keyrack-source dispatch).\n\n## .reference impl\n\n`.agent/repo=.this/role=any/skills/{package.patch,test.live}.sh` in ehmpathy/rhachet-roles-nheuron.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 11,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "1476"
+}

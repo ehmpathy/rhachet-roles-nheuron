@@ -1,0 +1,19 @@
+{
+  "key": "d77d9169698611a9",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "declastruct-aws"
+  },
+  "exid": null,
+  "title": "fix: org client timeouts, account upsert tags, budget action scp refs (proven via downstream pnpm patch)",
+  "description": "## .what\n\nthree defects in declastruct-aws@1.13.0 (also present in 1.13.1), each proven live against a real org\nand held downstream as a pnpm patch until a release ships them. the patch:\nehmpathy/rhachet-roles-nheuron `patches/declastruct-aws@1.13.0.patch` (branch vlad/collect-from-gmail).\n\nfollows #136 (defects 3 + 4 there are this issue's §3 and the extant sso crash).\n\n## 1. organizations clients carry no request timeout → a plan can hang forever\n\n**symptom**: a plan of an scp wish hangs at random on a policy read. a trace showed one\n`ListPolicies` page with no `NextToken` — not a token loop. the socket simply stalled.\n\n**cause**: every organization-family client is built bare —\n`new OrganizationsClient({ region: context.aws.credentials.region })` — so no request timeout\nand no adaptive retry apply. `dist/access/sdks/getAwsClientConfig.js` already holds the right\nconfig (adaptive retry, maxAttempts 8, requestTimeout 120000, connectionTimeout 8000), but the\norganizations and sso-admin clients do not use it.\n\n**fix**: build each with `getAwsClientConfig({ region })` — `getAwsOrganizationsClient` plus the\n15 inline constructors under `domain.operations/organization*/`. sso-admin wants the same.\n\n**proof**: after the patch, accounts / sso / budget wishes plan to completion on every run.\n\n## 2. `setOrganizationAccount` upsert never writes the declared tags → endless UPDATE\n\n**symptom**: an account made outside declastruct (console) plans `UPDATE tags: undefined → {…}`\nforever; apply reports success, re-plan shows the same UPDATE.\n\n**cause**: on upsert of an extant account, the set returns `foundBefore` unchanged unless\n`SYNC_WRITEONLY_TAGS=DeclaredAwsOrganizationAccount`; even then it writes only the\n`_decla_writeonly_*` tags, never `desired.tags`.\n\n**fix**: on upsert, always `TagResourceCommand` with `desired.tags`; keep the write-only backfill\nbehind its env gate (aws never returns those create-time values, so assert them only on opt-in).\n\n**proof**: plan `UPDATE` ×2 → apply `applied: 2` → re-plan `KEEP` ×3.\n\n## 3. budget action scp refs come back by primary → endless UPDATE\n\n**symptom**: a wish that declares an `APPLY_SCP_POLICY` action with\n`policy: RefByUnique({ name })` and `target: RefByUnique({ email })` (the only keys knowable\nbefore create) plans UPDATE forever: remote `RefByPrimary({ id })` vs desired `RefByUnique`.\n\n**cause**: `castIntoDeclaredAwsBudgetAction` casts `PolicyId` / `TargetIds[0]` to primary refs\n(its own note names the asymmetry). `executionRole` already casts back by unique; these two do not.\n\n**fix**: in `getOneBudgetAction`, look up the policy and the target account by primary and\nre-express both refs by unique (`name`, `email`); keep the primary ref when the lookup finds none.\n\n**proof**: budget wish plan `KEEP` ×9 + `UPDATE` ×2 → with the patch, `KEEP` ×11, no apply needed.\n\n## .ask\n\nship all three upstream (source, not dist), with a clamp per defect, so the downstream patch can drop.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 5,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "137"
+}

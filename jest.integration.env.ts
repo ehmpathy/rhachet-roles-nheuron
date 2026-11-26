@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import util from 'util';
 
+import { BadRequestError } from 'helpful-errors';
 import { keyrack } from 'rhachet/keyrack';
 
 // eslint-disable-next-line no-undef
@@ -92,5 +93,49 @@ if (requiresTestDb) {
  *   - fail fast with helpful error if keyrack locked or keys absent
  */
 const keyrackYmlPath = join(process.cwd(), '.agent/keyrack.yml');
+
+// a live ses run reads the nheuron-prep keys (the mailbox tests run against); a live cloudflare
+// run reads the zone keys, which sit in the nheuron prod slot. sourced first: a source never
+// overwrites a value already set, so these win over the test env's AWS_PROFILE for this run alone
+const isLiveSes = /\bses\b/.test(process.env.TEST_LIVE ?? '');
+const isLiveCloudflare = /\bcloudflare\b/.test(process.env.TEST_LIVE ?? '');
+
+// a live run owns the aws identity. a runner (git.repo.test) may have exported the test env's
+// AWS_PROFILE into this process already, and a source never overwrites, so that inherited
+// profile would shadow the live slot's and every call would land in the wrong account
+if (isLiveSes || isLiveCloudflare)
+  for (const key of [
+    'AWS_PROFILE',
+    'AWS_DEFAULT_PROFILE',
+    'AWS_ACCESS_KEY_ID',
+    'AWS_SECRET_ACCESS_KEY',
+    'AWS_SESSION_TOKEN',
+  ])
+    delete process.env[key];
+
+if (existsSync(keyrackYmlPath) && isLiveSes)
+  keyrack.source({
+    env: 'prep',
+    owner: 'ehmpath',
+    org: 'nheuron',
+    mode: 'lenient',
+  });
+if (existsSync(keyrackYmlPath) && isLiveCloudflare)
+  keyrack.source({
+    env: 'prod',
+    owner: 'ehmpath',
+    org: 'nheuron',
+    mode: 'lenient',
+  });
+
+// a live run must hold its own slot's identity before the test env's fills the gap: a lenient
+// source skips a locked or expired profile silently, and the test env's AWS_PROFILE would then
+// stand in for it, so every live call would land in the wrong account
+if ((isLiveSes || isLiveCloudflare) && !process.env.AWS_PROFILE)
+  throw new BadRequestError('live run lacks its aws profile', {
+    expected: isLiveSes ? 'nheuron.prep.AWS_PROFILE' : 'nheuron.prod.AWS_PROFILE',
+    hint: `run: rhx keyrack unlock --owner ehmpath --org nheuron --env ${isLiveSes ? 'prep' : 'prod'} --key AWS_PROFILE`,
+  });
+
 if (existsSync(keyrackYmlPath))
   keyrack.source({ env: 'test', owner: 'ehmpath', mode: 'lenient' });

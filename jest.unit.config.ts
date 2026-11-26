@@ -31,7 +31,25 @@ const config: Config = {
     '!**/*.acceptance.test.ts',
     '!**/*.integration.test.ts',
     '!**/.yalc/**',
+    // ⚠️ `.agent/` is NOT ours to test. two distinct leaks came through it:
+    //
+    //   1. `.agent/repo=*/role=*` are SYMLINKS into node_modules role packages, and jest
+    //      follows them — so this suite ran those packages' own tests as if they were this
+    //      repo's. that inflated the count by 9 suites / 73 tests, and it meant a failure in
+    //      an installed dependency would fail OUR gate, with no fix available from here.
+    //
+    //   2. `.agent/.cache/` holds skill caches, among them `rmsafe`'s trash — so a DELETED
+    //      test file keeps its place in the suite from there. that path is gitignored, so
+    //      the phantom runs locally and never in ci.
+    //
+    // both make the suite report on code this repo does not own, and (2) makes local and ci
+    // disagree about which tests exist (`rule.require.hermetic-tests`)
+    '!**/.agent/**',
   ],
+  // `.temp/` is gitignored scratch (patch edit dirs, stray snapshot copies). in the module map,
+  // a stray `.snap` there reads as an obsolete snapshot and fails the local gate where ci,
+  // which never holds it, passes (`rule.require.hermetic-tests`)
+  modulePathIgnorePatterns: ['<rootDir>/.temp/'],
   setupFilesAfterEnv: ['./jest.unit.env.ts'],
 
   // use 50% of threads to leave headroom for other processes

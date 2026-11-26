@@ -21,7 +21,15 @@ ignores:
   - rhachet-roles-bhrain
   - rhachet-roles-bhuild
   - rhachet-roles-ehmpathy
+  - rhachet-roles-ghlitch
   - rhachet-brains-anthropic
+  - rhachet-brains-fireworksai
+  - rhachet-brains-openrouter
+  - rhachet-brains-xai
   - rhachet-roles-nheuron
   - rhachet-roles-rhachet
   - test-fns
+ignore-patterns:
+  # the actor's brain home (plugins, sessions), also reached via the `.claude` symlink; not our source
+  - .agent/.actors
+  - .claude/plugins

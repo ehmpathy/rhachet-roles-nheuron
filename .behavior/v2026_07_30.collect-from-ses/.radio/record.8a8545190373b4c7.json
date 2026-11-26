@@ -1,0 +1,19 @@
+{
+  "key": "8a8545190373b4c7",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ehmpathy"
+  },
+  "exid": null,
+  "title": "mechanic: pave package.patch, and fold test.live into git.repo.test --live",
+  "description": "## .what\n\ntwo mechanic skills paved in a consumer repo, generic enough to own upstream:\n1. `package.patch --package <name>@<version> --mode open|commit`: wrap `pnpm patch` / `pnpm patch-commit`, answer its interactive prompts under a pty (version pick + apply-to-all), and refuse when the edit dir is absent or already open\n2. `test.live --live <gate>[,<gate>]`: run integration/acceptance suites with `TEST_LIVE` set to the named gates, so live cases run only when targeted and fail loud when targeted with no credential\n\n## .why\n\nprior art: `ehmpathy/rhachet-roles-nheuron` `.agent/repo=.this/role=any/skills/package.patch.sh` and `test.live.sh` (main). package.patch sits beside set.package.*; test.live is a `git.repo.test` flag in all but name.\n\n## .ask\n\n- package.patch beside set.package.install/upgrade\n- fold test.live into `git.repo.test --live <gates>` rather than a peer skill\n- note: package.patch cannot patch a package that ships read-only files (0555); see #1480",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 17,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "1511"
+}

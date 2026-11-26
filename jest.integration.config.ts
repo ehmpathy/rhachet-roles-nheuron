@@ -35,7 +35,17 @@ const config: Config = {
     // here's an example of how to ignore esm module transformation, when needed
     // 'node_modules/(?!(@octokit|universal-user-agent|before-after-hook)/)',
   ],
-  testMatch: ['**/*.integration.test.ts', '!**/.yalc/**', '!**/.scratch/**'],
+  testMatch: [
+    '**/*.integration.test.ts',
+    '!**/.yalc/**',
+    '!**/.scratch/**',
+    // ⚠️ `.agent/` is NOT ours to test — `repo=*/role=*` are symlinks into node_modules role
+    // packages, and `.cache/` holds `rmsafe`'s trash, where a DELETED test file keeps its
+    // place in the suite. see `jest.unit.config.ts` for the full account
+    '!**/.agent/**',
+  ],
+  // gitignored scratch stays out of the module map. see `jest.unit.config.ts`
+  modulePathIgnorePatterns: ['<rootDir>/.temp/'],
   setupFilesAfterEnv: ['./jest.integration.env.ts'],
 
   // use 50% of threads to leave headroom for other processes

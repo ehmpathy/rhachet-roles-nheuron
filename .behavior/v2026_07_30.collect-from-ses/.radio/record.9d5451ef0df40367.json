@@ -1,0 +1,19 @@
+{
+  "key": "9d5451ef0df40367",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ghlitch"
+  },
+  "exid": null,
+  "title": "deployer: pave a generic dns.records.get (optional --filter mail)",
+  "description": "## .what\n\npave a generic `dns.records.get --wish <path> [--filter mail] [--format tree|bind]`: print the dns records a declared wish owes, as a tree or as a bind zone file a human can import by hand.\n\n## .why\n\ndns is often entered by hand (e.g. a cloudflare zone the robot may not write). the human needs the exact records, copy-pasteable. prior art is mail-specific: `ehmpathy/rhachet-roles-nheuron` `.agent/repo=.this/role=any/skills/mail.dns.records.get.sh` (main), which prints mx, spf, dmarc, dkim cnames, and ses verification records. a reviewer asked that it become generic, with mail as an optional filter.\n\n## .ask\n\n- read the records from the declared wish, not a hand list\n- `--filter mail` narrows to mx / spf / dmarc / dkim / verification records\n- `--format bind` emits a zone file for import\n- unit test the record derivation; snapshot both formats",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 15,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "228"
+}

@@ -17,3 +17,5 @@
 coverage
 dist
 node_modules
+*.plan.json
+!.agent/.actors/actor.via.repo=ambient/

@@ -1,0 +1,19 @@
+{
+  "key": "f281da2b17512cd6",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ghlitch"
+  },
+  "exid": null,
+  "title": "deployer: pave aws.caller.get (keyrack slot to account + arn)",
+  "description": "## .what\n\npave `aws.caller.get --env <env> [--org <org>]`: print the account id + caller arn of the keyrack-sourced AWS_PROFILE for one slot, as a tree, with no raw aws cli to approve.\n\n## .why\n\nevery deployer act starts with \"which account am i in, as whom?\". today each consumer repo paves its own copy; the prior art lives at `ehmpathy/rhachet-roles-nheuron` `.agent/repo=.this/role=any/skills/aws.caller.get.sh` (main).\n\n## .ask\n\n- skill reads AWS_PROFILE from keyrack for (owner ehmpath, org, env); refuses with the exact unlock command when absent (exit 2)\n- tree output: profile, account, arn; exit 1 on sts error\n- integration test: refusal snapshots + one live case behind a gate",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 13,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "226"
+}

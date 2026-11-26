@@ -1,0 +1,19 @@
+{
+  "key": "7eb09663994e7f05",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ghlitch"
+  },
+  "exid": null,
+  "title": "budgeter: org spend lockdown — alerts + scp circuit breaker via declastruct",
+  "description": "## .what\n\ngive the budgeter role (a stub today) a paved org spend lockdown: alerts plus a hard circuit\nbreaker, declared via declastruct, applied as the org manager.\n\n## .why\n\nan org needs a ceiling it cannot cross by accident. ahbode has alerts only; nheuron now has both,\nand the pattern is generic. reference: rhachet-roles-nheuron\n`provision/aws.budget/account=.root/resources.ts` + `getAllAdminEmails.ts`.\n\n## .the shape\n\n- one org-wide monthly COST budget in the management account, `costFilters: null` (consolidated\n  billing covers every member)\n- alerts: ACTUAL > warn mark, FORECASTED > ceiling, ACTUAL > ceiling\n- breaker: `DeclaredAwsBudgetAction` kind `APPLY_SCP_POLICY`, AUTOMATIC, at the ceiling, attaches\n  a deny-all SCP (NotAction allowlist: billing, budgets, ce, sts, sso, iam/org reads, support)\n- **one breaker budget per member account.** aws binds an SCP action to ONE target, and\n  declastruct allows one action of each kind per budget — so each member gets a twin budget at\n  the same org-wide ceiling to carry its breaker\n- an execution role trusted by `budgets.amazonaws.com`, plus an inline grant for\n  `organizations:AttachPolicy` / `DetachPolicy` (the declastruct-aws demo role has the trust\n  policy only)\n- alert recipients read live from identity center: every user who holds the admin permission\n  set on the management account. no address in git or keyrack; the list follows the roster\n\n## .limits to state in the brief\n\n- aws evaluates budgets a few times a day and bill data lags hours: spend can pass the ceiling\n  before the freeze lands\n- an SCP never binds the management account — keep it free of workloads\n- the freeze blocks new calls, not resources that already accrue; aws lifts it next period",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": "findsert",
+  "heldSeq": 2,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "216"
+}

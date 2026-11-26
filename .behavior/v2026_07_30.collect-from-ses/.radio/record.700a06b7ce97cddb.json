@@ -1,0 +1,19 @@
+{
+  "key": "700a06b7ce97cddb",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "rhachet-roles-ghlitch"
+  },
+  "exid": null,
+  "title": "feat(provision.declastruct): --org slot and --expect member|management account guard",
+  "description": "## .what\n\ntwo flags on `provision.declastruct`, plus a guard skill, so a repo with more than one keyrack org can provision a member account safely. a consumer (rhachet-roles-nheuron) built them locally as `provision.member`, `provision.root`, and `aws.caller.get --expect`; they should live here.\n\n1. **`--org <org>`** — the keyrack org slot to unlock and source (`keyrack unlock|source --org`). today `--env prep` always sources the repo's default org, so a wish for another org's account plans against the default org's AWS_PROFILE.\n2. **`--expect member|management`** — before any declastruct call, read `sts get-caller-identity` + `organizations describe-organization`; refuse (exit 2) unless the account is the org's manager (`management`) or not (`member`). the worst miss it blocks: a member wish applied in the management account lands its resources there, and a global name (an s3 bucket) then needs a full teardown.\n3. **`aws.caller.get --env --org --expect member|management`** — the same check, standalone, so a human can prove a slot before a plan.\n\n## .why it cannot be done with `--auth via-ambient` alone\n\na wish that sources its own slot (`keyrack.source({ org })`) is passed through by keyrack: if AWS_PROFILE is already in the env (the default org's, from `--env`), keyrack returns it as the asked-for org's key. so `--org` must drive the unlock itself, and the guard is the backstop.\n\n## .reference impl\n\n`.agent/repo=.this/role=any/skills/{provision.member,provision.root,aws.caller.get}.sh` in ehmpathy/rhachet-roles-nheuron. on land, that repo drops `provision.member` + `provision.root` for `provision.declastruct --org --expect`.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": null,
+  "heldSeq": 9,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "222"
+}

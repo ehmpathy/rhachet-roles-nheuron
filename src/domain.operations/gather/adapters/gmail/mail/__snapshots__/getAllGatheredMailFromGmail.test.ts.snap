@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getAllGatheredMailFromGmail given: [case2] a query whose pages never end when: [t0] the walk runs then: the refusal text is stable 1`] = `
+"BadRequestError: gmail fetch exceeded its page cap
+
+{
+  "pageQuant": 200,
+  "pageCap": 200,
+  "mailFoundQuant": 0,
+  "why": "the requested range spans more mail than one fetch should walk in a single pass",
+  "hint": "narrow the range: gather.mail --since <a more recent date>"
+}"
+`;

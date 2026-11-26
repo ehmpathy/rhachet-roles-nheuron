@@ -1,0 +1,19 @@
+{
+  "key": "f61b05ee1abde8d9",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "declastruct-aws"
+  },
+  "exid": null,
+  "title": "defects: budget action perpetual UPDATE, sso assignment ref crash, demo breaker role lacks perms",
+  "description": "## .what\n\nthree defects met while rhachet-roles-nheuron applied sso + a budget breaker on declastruct-aws\n1.13.0 (declastruct 1.9.0, domain-objects 0.31.14), 2026-11-20.\n\n## 1. budget action never converges (perpetual UPDATE)\n\ndeclare `DeclaredAwsBudgetAction.definition.scp` with unique refs (policy `{ name }`, target\n`{ email }`), apply, then re-plan: it reads UPDATE forever. the remote read returns primary refs\n(policy `{ id: 'p-…' }`, target `{ id: '<account id>' }`); the diff counts the two ref forms of\none resource as a change. fix: hydrate the remote to the declared ref form (or compare refs by\nidentity). clamp: apply then re-plan reads KEEP.\n\n## 2. sso account assignment refuses an extant remote\n\n`DeclaredAwsSsoAccountAssignment.nested` types `permissionSet` and `principal` as the generic\n`RefByUnique`. both refs carry a nested `instance` object the generic class does not declare, so\ndeclastruct's diff + serialize throw `DomainObjectNotSafeToManipulateError` on any assignment\nthat already exists remote. it passes only when the principal ref comes from\n`refByUnique(new DeclaredAwsSsoUser({...}))` — a full dobj built just to derive the ref. a\n`RefByUnique.as(...)` or plain-literal principal fails. fix: declare the ref classes with their\nnested shape (or nest the target dobj's ref).\n\n## 3. the demo budget guards were never applied\n\n`provision/aws.infra/account=demo/resources.budget.ts` `getResourcesOfBudgetGuards` ships a\nbreaker role with the trust policy only — budgets also needs `organizations:AttachPolicy` /\n`DetachPolicy` to run the SCP action. defects 1 + 2 above are what the first live apply finds.",
+  "status": null,
+  "via": "gh.issues",
+  "auth": null,
+  "idem": "findsert",
+  "heldSeq": 3,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "136"
+}

@@ -1,8 +1,30 @@
-org: ehmpathy
+org:
+  - ehmpathy
+  - nheuron
 extends:
+  - .agent/repo=bhrain/role=driver/keyrack.yml
+  - .agent/repo=bhrain/role=reviewer/keyrack.yml
+  - .agent/repo=bhuild/role=dispatcher/keyrack.yml
   - .agent/repo=ehmpathy/role=mechanic/keyrack.yml
-env.all: null
-env.prod: null
+env.all:
+  - AWS_PROFILE
 env.prep:
   - EHMPATHY_SEATURTLE_PROD_GITHUB_TOKEN
-env.test: null
+  - FIREWORKS_API_KEY
+  - SES_MAIL_BUCKET
+  - SES_REGION
+  - SES_CONFIG_SET
+  - AWS_PROFILE
+env.prod:
+  - SES_MAIL_BUCKET
+  - SES_REGION
+  - SES_CONFIG_SET
+  - CLOUDFLARE_API_TOKEN
+  - CLOUDFLARE_ACCOUNT_ID
+  - SES_DKIM_TOKENS
+  - AWS_PROFILE
+env.test:
+  - GMAIL_SERVICE_ACCOUNT_JSON
+  - GMAIL_SERVICE_ACCOUNT_SUBJECT
+  - GATHER_GMAIL_CLIENT_ID
+  - GATHER_GMAIL_CLIENT_SECRET
